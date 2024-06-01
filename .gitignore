@@ -1,3 +1,4 @@
+.vscode/
 fuco
 *.o
 *.d
