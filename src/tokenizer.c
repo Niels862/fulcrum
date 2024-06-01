@@ -88,7 +88,38 @@ int fuco_tokenizer_open_next_source(fuco_tokenizer_t *tokenizer) {
     return 0;
 }
 
-int fuco_next_char(fuco_filebuf_t *buf, char *c) {
+void fuco_tokenizer_update_filebuf(fuco_tokenizer_t *tokenizer, fuco_filebuf_t *buf) {
+    if (tokenizer->file != buf->file) {
+        buf->file = tokenizer->file;
+        buf->p = buf->size = 0;
+        fuco_textsource_init(&buf->source, tokenizer->filename);
+    }
+}
+
+void fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
+    static fuco_filebuf_t buf = {
+        .source = {
+            .filename = NULL,
+            .row = 0,
+            .col = 0
+        },
+        .file = NULL,
+        .p = 0,
+        .size = 0
+    };
+
+    tokenizer->last = tokenizer->curr.type;
+
+    fuco_tokenizer_update_filebuf(tokenizer, &buf);
+
+    fuco_filebuf_skip_nontokens(&buf);
+
+    if (buf.size == 0) {
+        tokenizer->curr.type = FUCO_TOKEN_EOF;
+    }
+}
+
+int fuco_filebuf_next_char(fuco_filebuf_t *buf, char *c) {
     if (buf->p >= buf->size) {
         buf->size = fread(buf->data, 1, FUCO_FILEBUF_SIZE, buf->file);
         buf->p = 0;
@@ -111,45 +142,12 @@ int fuco_next_char(fuco_filebuf_t *buf, char *c) {
     return 0;
 }
 
-void fuco_skip_nontokens(fuco_filebuf_t *buf) {
+void fuco_filebuf_skip_nontokens(fuco_filebuf_t *buf) {
     char c;
     int res;
-    while ((res = fuco_next_char(buf, &c)) != 2) {
+    while ((res = fuco_filebuf_next_char(buf, &c)) != 2) {
         if (c != ' ') {
             return;
         }
     }
-}
-
-void fuco_update_filebuf(fuco_tokenizer_t *tokenizer, fuco_filebuf_t *buf) {
-    if (tokenizer->file != buf->file) {
-        buf->file = tokenizer->file;
-        buf->p = buf->size = 0;
-        fuco_textsource_init(&buf->source, tokenizer->filename);
-    }
-}
-
-void fuco_next_token(fuco_tokenizer_t *tokenizer) {
-    static fuco_filebuf_t buf = {
-        .source = {
-            .filename = NULL,
-            .row = 0,
-            .col = 0
-        },
-        .file = NULL,
-        .p = 0,
-        .size = 0
-    };
-
-    tokenizer->last = tokenizer->curr.type;
-
-    fuco_update_filebuf(tokenizer, &buf);
-
-    fuco_skip_nontokens(&buf);
-
-    if (buf.size == 0) {
-        tokenizer->curr.type = FUCO_TOKEN_EOF;
-    }
-
-    fuco_textsource_write(&buf.source, stderr);
 }

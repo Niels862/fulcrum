@@ -64,6 +64,15 @@ void fuco_tokenizer_add_source_filename(fuco_tokenizer_t *tokenizer,
                                         char *filename);
 
 int fuco_tokenizer_open_next_source(fuco_tokenizer_t *tokenizer);
+/* 
+ * Update filebuf:
+ * - if not yet initialized: open first source file
+ * - if current file at EOF: read next file (possibly repeatedly)
+ */
+void fuco_tokenizer_update_filebuf(fuco_tokenizer_t *tokenizer, 
+                                   fuco_filebuf_t *buf);
+
+void fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer);
 
 /*
  * Reads next char fron current file in buf.
@@ -72,17 +81,8 @@ int fuco_tokenizer_open_next_source(fuco_tokenizer_t *tokenizer);
  * - if error: returns 1
  * - otherwise: returns 0
  */
-int fuco_next_char(fuco_filebuf_t *buf, char *c);
+int fuco_filebuf_next_char(fuco_filebuf_t *buf, char *c);
 
-void fuco_skip_nontokens(fuco_filebuf_t *buf);
-
-/* 
- * Update filebuf:
- * - if not yet initialized: open first source file
- * - if current file at EOF: read next file (possibly repeatedly)
- */
-void fuco_update_filebuf(fuco_tokenizer_t *tokenizer, fuco_filebuf_t *buf);
-
-void fuco_next_token(fuco_tokenizer_t *tokenizer);
+void fuco_filebuf_skip_nontokens(fuco_filebuf_t *buf);
 
 #endif

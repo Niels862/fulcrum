@@ -12,11 +12,13 @@ void fuco_strbuf_init(fuco_strbuf_t *buf) {
 void fuco_strbuf_append(fuco_strbuf_t *buf, char *post) {
     FUCO_UNUSED(buf), FUCO_UNUSED(post);
 
-    abort();
+    FUCO_NOT_IMPLEMENTED();
 }
 
 char *fuco_strbuf_dup(fuco_strbuf_t *buf) {
     FUCO_UNUSED(buf);
+
+    FUCO_NOT_IMPLEMENTED();
 
     return NULL;
 }

@@ -8,9 +8,10 @@ int main(int argc, char *argv[]) {
     fuco_tokenizer_t tokenizer;
     fuco_tokenizer_init(&tokenizer);
 
-    fuco_tokenizer_add_source_filename(&tokenizer, fuco_strdup("tests/main.fc"));
+    char *filename = fuco_strdup("tests/main.fc");
+    fuco_tokenizer_add_source_filename(&tokenizer, filename);
     fuco_tokenizer_open_next_source(&tokenizer);
-    fuco_next_token(&tokenizer);
+    fuco_tokenizer_next_token(&tokenizer);
 
     fuco_tokenizer_destruct(&tokenizer);
 
