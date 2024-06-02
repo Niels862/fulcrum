@@ -10,8 +10,24 @@ int main(int argc, char *argv[]) {
 
     char *filename = fuco_strdup("tests/main.fc");
     fuco_tokenizer_add_source_filename(&tokenizer, filename);
-    fuco_tokenizer_open_next_source(&tokenizer);
-    fuco_tokenizer_next_token(&tokenizer);
+    
+    while (true) {
+        if (tokenizer.last == FUCO_TOKEN_EOF) {
+            if (fuco_queue_is_empty(&tokenizer.sources)) {
+                printf("done.\n");
+                break;
+            }
+            fuco_tokenizer_open_next_source(&tokenizer);
+            printf("opened next: '%s'\n", tokenizer.filename);
+        }
+
+        fuco_tokenizer_next_token(&tokenizer);
+        
+        fuco_token_write(&tokenizer.curr, stdout);
+        printf("\n");
+    
+        fuco_tokenizer_discard(&tokenizer);
+    }
 
     fuco_tokenizer_destruct(&tokenizer);
 

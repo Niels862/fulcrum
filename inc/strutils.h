@@ -13,7 +13,11 @@ typedef struct {
 
 void fuco_strbuf_init(fuco_strbuf_t *buf);
 
+void fuco_strbuf_clear(fuco_strbuf_t *buf);
+
 void fuco_strbuf_append(fuco_strbuf_t *buf, char *post);
+
+void fuco_strbuf_append_char(fuco_strbuf_t *buf, char c);
 
 char *fuco_strbuf_dup(fuco_strbuf_t *buf);
 

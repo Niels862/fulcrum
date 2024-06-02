@@ -7,7 +7,7 @@
 #include "queue.h"
 
 typedef enum {
-    FUCO_TOKEN_NULL,
+    FUCO_TOKEN_EMPTY,
     FUCO_TOKEN_INTEGER,
     FUCO_TOKEN_EOF
 } fuco_tokentype_t;
@@ -24,13 +24,15 @@ typedef struct {
     fuco_tokentype_t type;
 } fuco_token_t;
 
-#define FUCO_FILEBUF_SIZE 16
+#define FUCO_FILEBUF_SIZE 1024
 
+/* file is an unowned reference to determine data validity */
 typedef struct {
     fuco_textsource_t source;
     FILE *file;
     size_t p;
     size_t size;
+    int last;
     char data[FUCO_FILEBUF_SIZE];
 } fuco_filebuf_t;
 
@@ -38,10 +40,13 @@ typedef struct {
     FILE *file;
     char *filename;
     fuco_tokentype_t last;
-    fuco_queue_t source_filenames;
+    fuco_queue_t sources;
     fuco_token_t curr;
     fuco_strbuf_t temp;
+    fuco_filebuf_t buf;
 } fuco_tokenizer_t;
+
+bool fuco_is_nontoken(int c);
 
 char *fuco_tokentype_string(fuco_tokentype_t type);
 
@@ -55,6 +60,8 @@ void fuco_token_destruct(fuco_token_t *token);
 
 void fuco_token_write(fuco_token_t *token, FILE *stream);
 
+void fuco_filebuf_init(fuco_filebuf_t *buf);
+
 void fuco_tokenizer_init(fuco_tokenizer_t *tokenizer);
 
 void fuco_tokenizer_destruct(fuco_tokenizer_t *tokenizer);
@@ -64,25 +71,17 @@ void fuco_tokenizer_add_source_filename(fuco_tokenizer_t *tokenizer,
                                         char *filename);
 
 int fuco_tokenizer_open_next_source(fuco_tokenizer_t *tokenizer);
-/* 
- * Update filebuf:
- * - if not yet initialized: open first source file
- * - if current file at EOF: read next file (possibly repeatedly)
- */
-void fuco_tokenizer_update_filebuf(fuco_tokenizer_t *tokenizer, 
-                                   fuco_filebuf_t *buf);
+
+void fuco_tokenizer_update_filebuf(fuco_tokenizer_t *tokenizer);
 
 void fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer);
 
-/*
- * Reads next char fron current file in buf.
- * - if at block boundary: load next block
- * - if at EOF: returns 2
- * - if error: returns 1
- * - otherwise: returns 0
- */
-int fuco_filebuf_next_char(fuco_filebuf_t *buf, char *c);
+int fuco_tokenizer_next_char(fuco_tokenizer_t *tokenizer, int c);
 
-void fuco_filebuf_skip_nontokens(fuco_filebuf_t *buf);
+char fuco_tokenizer_skip_nontokens(fuco_tokenizer_t *tokenizer, int c);
+
+void fuco_tokenizer_handle_curr(fuco_tokenizer_t *tokenizer);
+
+void fuco_tokenizer_discard(fuco_tokenizer_t *tokenizer);
 
 #endif
