@@ -13,7 +13,8 @@ char *fuco_tokentype_string(fuco_tokentype_t type) {
 
 void fuco_textsource_init(fuco_textsource_t *source, char *filename) {
     source->filename = filename;
-    source->row = source->col = 0;
+    source->row = 1;
+    source->col = 0;
 }
 
 void fuco_textsource_write(fuco_textsource_t *source, FILE *stream) {
@@ -74,14 +75,15 @@ int fuco_tokenizer_open_next_source(fuco_tokenizer_t *tokenizer) {
         tokenizer->file = NULL;
     }
 
-    char *filename = fuco_queue_dequeue(&tokenizer->source_filenames);
-    if (filename == NULL) {
+    tokenizer->filename = fuco_queue_dequeue(&tokenizer->source_filenames);
+    if (tokenizer->filename == NULL) {
         return 1;
     }
 
-    tokenizer->file = fopen(filename, "r");
+    tokenizer->file = fopen(tokenizer->filename, "r");
     if (tokenizer->file == NULL) {
-        fprintf(stderr, "Error: could not open file: %s\n", filename);
+        fprintf(stderr, "Error: could not open file: %s\n", 
+                tokenizer->filename);
         return 1;
     }
     
@@ -98,11 +100,6 @@ void fuco_tokenizer_update_filebuf(fuco_tokenizer_t *tokenizer, fuco_filebuf_t *
 
 void fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
     static fuco_filebuf_t buf = {
-        .source = {
-            .filename = NULL,
-            .row = 0,
-            .col = 0
-        },
         .file = NULL,
         .p = 0,
         .size = 0
@@ -114,9 +111,14 @@ void fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
 
     fuco_filebuf_skip_nontokens(&buf);
 
+    tokenizer->curr.source = buf.source;
+
     if (buf.size == 0) {
         tokenizer->curr.type = FUCO_TOKEN_EOF;
     }
+
+    fuco_token_write(&tokenizer->curr, stderr);
+    printf("\n");
 }
 
 int fuco_filebuf_next_char(fuco_filebuf_t *buf, char *c) {
@@ -125,13 +127,6 @@ int fuco_filebuf_next_char(fuco_filebuf_t *buf, char *c) {
         buf->p = 0;
     }
 
-    if (buf->size == 0) {
-        return 2;
-    }
-
-    *c = buf->data[buf->p];
-    buf->p++;
-
     if (*c == '\n') {
         buf->source.row++;
         buf->source.col = 1;
@@ -139,14 +134,27 @@ int fuco_filebuf_next_char(fuco_filebuf_t *buf, char *c) {
         buf->source.col++;
     }
 
+    if (buf->size == 0) {
+        return 2;
+    }
+    
+    *c = buf->data[buf->p];
+    buf->p++;
+
     return 0;
 }
 
 void fuco_filebuf_skip_nontokens(fuco_filebuf_t *buf) {
-    char c;
+    char c = '\0';
     int res;
+    bool comment = false;
     while ((res = fuco_filebuf_next_char(buf, &c)) != 2) {
-        if (c != ' ') {
+        if (c == '#') {
+            comment = true;
+        } else if (c == '\n') {
+            comment = false;
+        } else if (!comment 
+                   && !(c == ' ' || c == '\n' || c == '\r' || c == '\t')) {
             return;
         }
     }
