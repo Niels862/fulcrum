@@ -9,6 +9,7 @@
 typedef enum {
     FUCO_TOKEN_EMPTY,
     FUCO_TOKEN_INTEGER,
+    FUCO_TOKEN_IDENTIFIER,
     FUCO_TOKEN_EOF
 } fuco_tokentype_t;
 
@@ -47,6 +48,10 @@ typedef struct {
 } fuco_tokenizer_t;
 
 bool fuco_is_nontoken(int c);
+
+bool fuco_is_identifier_start(int c);
+
+bool fuco_is_identifier_continue(int c);
 
 char *fuco_tokentype_string(fuco_tokentype_t type);
 

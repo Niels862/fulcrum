@@ -1,4 +1,5 @@
 #include "tokenizer.h"
+#include "assert.h"
 #include <stdlib.h>
 #include <ctype.h>
 
@@ -6,10 +7,19 @@ bool fuco_is_nontoken(int c) {
     return c == ' ' || c == '\n' || c == '\r' || c == '\t';
 }
 
+bool fuco_is_identifier_start(int c) {
+    return isalpha(c) || c == '_';
+}
+
+bool fuco_is_identifier_continue(int c) {
+    return isalpha(c) || isdigit(c) || c == '_';
+}
+
 char *fuco_tokentype_string(fuco_tokentype_t type) {
     static char *strs[] = {
         "null",
         "integer",
+        "identifier",
         "eof"
     };
 
@@ -80,10 +90,13 @@ void fuco_tokenizer_add_source_filename(fuco_tokenizer_t *tokenizer,
 }
 
 int fuco_tokenizer_open_next_source(fuco_tokenizer_t *tokenizer) {
-    if (tokenizer->last != FUCO_TOKEN_EOF) {
-        abort();
+    assert(tokenizer->last == FUCO_TOKEN_EOF);
+    assert(tokenizer->curr.type == FUCO_TOKEN_EMPTY);
+
+    if (fuco_queue_is_empty(&tokenizer->sources)) {
+        return -1;
     }
-    
+
     if (tokenizer->file != NULL) {
         fclose(tokenizer->file);
         tokenizer->file = NULL;
@@ -117,9 +130,7 @@ void fuco_tokenizer_update_filebuf(fuco_tokenizer_t *tokenizer) {
 }
 
 void fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
-    if (tokenizer->curr.type != FUCO_TOKEN_EMPTY) {
-        fprintf(stderr, "Runtime error: unhandled token present\n");
-    }
+    assert(tokenizer->curr.type == FUCO_TOKEN_EMPTY);
 
     tokenizer->curr.source = tokenizer->buf.source;
     fuco_strbuf_clear(&tokenizer->temp);
@@ -137,7 +148,17 @@ void fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
 
         do {
             fuco_strbuf_append_char(&tokenizer->temp, c);
-        } while (isdigit(c = fuco_tokenizer_next_char(tokenizer, c)));
+            c = fuco_tokenizer_next_char(tokenizer, c);
+        } while (isdigit(c));
+
+        tokenizer->curr.lexeme = fuco_strbuf_dup(&tokenizer->temp);
+    } else if (fuco_is_identifier_start(c)) {
+        tokenizer->curr.type = FUCO_TOKEN_IDENTIFIER;
+
+        do {
+            fuco_strbuf_append_char(&tokenizer->temp, c);
+            c = fuco_tokenizer_next_char(tokenizer, c);
+        } while (fuco_is_identifier_continue(c));
 
         tokenizer->curr.lexeme = fuco_strbuf_dup(&tokenizer->temp);
     } else {
@@ -189,11 +210,9 @@ char fuco_tokenizer_skip_nontokens(fuco_tokenizer_t *tokenizer, int c) {
 }
 
 void fuco_tokenizer_handle_curr(fuco_tokenizer_t *tokenizer) {
-    tokenizer->last = tokenizer->curr.type;
+    assert(tokenizer->curr.type != FUCO_TOKEN_EMPTY);
 
-    if (tokenizer->curr.type == FUCO_TOKEN_EMPTY) {
-        fprintf(stderr, "Runtime error: token handled twice");
-    }
+    tokenizer->last = tokenizer->curr.type;
 }
 
 void fuco_tokenizer_discard(fuco_tokenizer_t *tokenizer) {

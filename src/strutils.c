@@ -20,11 +20,12 @@ void fuco_strbuf_append(fuco_strbuf_t *buf, char *post) {
 }
 
 void fuco_strbuf_append_char(fuco_strbuf_t *buf, char c) {
-    if (buf->len + 1 >= buf->cap) {
+    if (buf->len + 2 >= buf->cap) {
         buf->data = realloc(buf->data, 2 * buf->cap);
         buf->cap *= 2;
     }
     buf->data[buf->len] = c;
+    buf->data[buf->len + 1] = '\0';
     buf->len++;
 }
 
