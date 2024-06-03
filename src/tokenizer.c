@@ -1,7 +1,18 @@
 #include "tokenizer.h"
 #include "assert.h"
 #include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
+
+fuco_tokentype_descriptor_t const descriptors[] = {
+    { FUCO_TOKEN_EMPTY, 0, "empty" },
+    { FUCO_TOKEN_INTEGER, FUCO_TOKENTYPE_HAS_LEXEME, "integer" },
+    { FUCO_TOKEN_IDENTIFIER, FUCO_TOKENTYPE_HAS_LEXEME, "identifier" },
+    { FUCO_TOKEN_DEF, FUCO_TOKENTYPE_IS_KEYWORD, "def" },
+    { FUCO_TOKEN_EOF, 0, "eof" }
+};
+
+#define FUCO_N_TOKENTYPES sizeof(descriptors) / sizeof(*descriptors)
 
 bool fuco_is_nontoken(int c) {
     return c == ' ' || c == '\n' || c == '\r' || c == '\t';
@@ -16,14 +27,7 @@ bool fuco_is_identifier_continue(int c) {
 }
 
 char *fuco_tokentype_string(fuco_tokentype_t type) {
-    static char *strs[] = {
-        "null",
-        "integer",
-        "identifier",
-        "eof"
-    };
-
-    return strs[type];
+    return descriptors[type].string;
 }
 
 void fuco_textsource_init(fuco_textsource_t *source, char *filename) {
@@ -72,6 +76,10 @@ void fuco_tokenizer_init(fuco_tokenizer_t *tokenizer) {
     fuco_queue_init(&tokenizer->sources);
     fuco_token_init(&tokenizer->curr);
     fuco_strbuf_init(&tokenizer->temp);
+
+    for (size_t i = 0; i < FUCO_N_TOKENTYPES; i++) {
+        assert(i == descriptors[i].type);
+    }
 }
 
 void fuco_tokenizer_destruct(fuco_tokenizer_t *tokenizer) {
@@ -150,8 +158,6 @@ void fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
             fuco_strbuf_append_char(&tokenizer->temp, c);
             c = fuco_tokenizer_next_char(tokenizer, c);
         } while (isdigit(c));
-
-        tokenizer->curr.lexeme = fuco_strbuf_dup(&tokenizer->temp);
     } else if (fuco_is_identifier_start(c)) {
         tokenizer->curr.type = FUCO_TOKEN_IDENTIFIER;
 
@@ -160,9 +166,21 @@ void fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
             c = fuco_tokenizer_next_char(tokenizer, c);
         } while (fuco_is_identifier_continue(c));
 
-        tokenizer->curr.lexeme = fuco_strbuf_dup(&tokenizer->temp);
+        for (size_t i = 0; i < FUCO_N_TOKENTYPES; i++) {
+            if (descriptors[i].attr & FUCO_TOKENTYPE_IS_KEYWORD
+                && strcmp(descriptors[i].string, tokenizer->temp.data) == 0) {
+                tokenizer->curr.type = descriptors[i].type;
+                break;
+            }
+        }
     } else {
         fprintf(stderr, "Error: unrecognized char: %d\n", c);
+    }
+
+    if (descriptors[tokenizer->curr.type].attr & FUCO_TOKENTYPE_HAS_LEXEME) {
+        tokenizer->curr.lexeme = fuco_strbuf_dup(&tokenizer->temp);
+    } else {
+        tokenizer->curr.lexeme = NULL;
     }
 
     tokenizer->buf.last = c;

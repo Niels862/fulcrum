@@ -10,8 +10,20 @@ typedef enum {
     FUCO_TOKEN_EMPTY,
     FUCO_TOKEN_INTEGER,
     FUCO_TOKEN_IDENTIFIER,
+    FUCO_TOKEN_DEF,
     FUCO_TOKEN_EOF
 } fuco_tokentype_t;
+
+typedef enum {
+    FUCO_TOKENTYPE_IS_KEYWORD = 1,
+    FUCO_TOKENTYPE_HAS_LEXEME = 2
+} fuco_tokentype_attr_t;
+
+typedef struct {
+    fuco_tokentype_t type;
+    fuco_tokentype_attr_t attr;
+    char *string;
+} fuco_tokentype_descriptor_t;
 
 typedef struct {
     char *filename;
@@ -46,6 +58,8 @@ typedef struct {
     fuco_strbuf_t temp;
     fuco_filebuf_t buf;
 } fuco_tokenizer_t;
+
+extern fuco_tokentype_descriptor_t const descriptors[];
 
 bool fuco_is_nontoken(int c);
 
