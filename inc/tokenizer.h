@@ -1,22 +1,36 @@
 #ifndef FUCO_TOKENIZER_H
 #define FUCO_TOKENIZER_H
 
+#include "queue.h"
 #include <stddef.h>
 #include <stdio.h>
 #include "strutils.h"
-#include "queue.h"
+
+typedef struct fuco_node_t fuco_node_t;
 
 typedef enum {
     FUCO_TOKEN_EMPTY,
     FUCO_TOKEN_INTEGER,
     FUCO_TOKEN_IDENTIFIER,
+    
     FUCO_TOKEN_DEF,
+
+    FUCO_TOKEN_BRACKET_OPEN,
+    FUCO_TOKEN_BRACKET_CLOSE,
+    FUCO_TOKEN_BRACE_OPEN,
+    FUCO_TOKEN_BRACE_CLOSE,
+    FUCO_TOKEN_SQBRACKET_OPEN,
+    FUCO_TOKEN_SQBRACKET_CLOSE,
+    FUCO_TOKEN_DOT,
+    FUCO_TOKEN_COMMA,
+    
     FUCO_TOKEN_EOF
 } fuco_tokentype_t;
 
 typedef enum {
     FUCO_TOKENTYPE_IS_KEYWORD = 1,
-    FUCO_TOKENTYPE_HAS_LEXEME = 2
+    FUCO_TOKENTYPE_IS_SEPARATOR = 2,
+    FUCO_TOKENTYPE_HAS_LEXEME = 4
 } fuco_tokentype_attr_t;
 
 typedef struct {
@@ -101,6 +115,10 @@ char fuco_tokenizer_skip_nontokens(fuco_tokenizer_t *tokenizer, int c);
 
 void fuco_tokenizer_handle_curr(fuco_tokenizer_t *tokenizer);
 
+/* Token handler: discards current token */
 void fuco_tokenizer_discard(fuco_tokenizer_t *tokenizer);
+
+/* Token handler: moves current token to node */
+void fuco_tokenizer_move(fuco_tokenizer_t *tokenizer, fuco_node_t *node);
 
 #endif

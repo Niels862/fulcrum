@@ -64,6 +64,58 @@ void fuco_node_set_child(fuco_node_t *node, fuco_node_t *child,
     node->children[index] = child;
 }
 
+void fuco_node_write(fuco_node_t *node, FILE *stream) {
+    fprintf(stream, "[(");
+    fuco_token_write(&node->token, stream);
+    fprintf(stream, ")");
+
+    for (size_t i = 0; i < node->used; i++) {
+        fprintf(stream, " ");
+        fuco_node_write(node->children[i], stream);
+    }
+    
+    fprintf(stream, "]");
+}
+
+void fuco_node_pretty_write(fuco_node_t *node, FILE *stream) {
+    static bool is_last[256];
+    static size_t depth = 0;
+
+    assert(depth < 256);
+
+    for (size_t i = 1; i < depth; i++) {
+        if (is_last[i - 1]) {
+            fprintf(stream, "    ");
+        } else {
+            fprintf(stream, "│    ");
+        }
+    }
+
+    if (depth > 0) {
+        if (is_last[depth - 1]) {
+            fprintf(stream, "└───");
+        } else {
+            fprintf(stream, "├───");
+        }
+    }
+
+    if (node == NULL) {
+        fprintf(stderr, "(null)\n");
+    } else {
+        fuco_token_write(&node->token, stream);
+        fprintf(stream, "\n");
+
+        depth++;
+
+        for (size_t i = 0; i < node->used; i++) {
+            is_last[depth - 1] = i == node->used - 1;
+            fuco_node_pretty_write(node->children[i], stream);
+        }
+
+        depth--;
+    }
+}
+
 void fuco_node_validate(fuco_node_t *node) {
     assert(node->token.type != FUCO_TOKEN_EMPTY);
     assert(node->used <= node->allocated);

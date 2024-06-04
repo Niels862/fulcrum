@@ -1,35 +1,24 @@
 #include <stdio.h>
-#include "tokenizer.h"
+#include "parser.h"
 #include "utils.h"
 
 int main(int argc, char *argv[]) {
     FUCO_UNUSED(argc), FUCO_UNUSED(argv);
 
-    fuco_tokenizer_t tokenizer;
-    fuco_tokenizer_init(&tokenizer);
+    fuco_parser_t parser;
+    fuco_parser_init(&parser);
 
-    char *filename = fuco_strdup("tests/main.fc");
-    fuco_tokenizer_add_source_filename(&tokenizer, filename);
-    
-    int res;
-    while (true) {
-        if (tokenizer.last == FUCO_TOKEN_EOF) {
-            res = fuco_tokenizer_open_next_source(&tokenizer);
-            if (res < 0) {
-                printf("done.\n");
-                break;
-            }
-        }
+    fuco_node_t *node = fuco_parser_parse_filebody(&parser);
+    if (node == NULL) {
+        fprintf(stderr, "parsing error occurred");
+    } else {
+        fuco_node_pretty_write(node, stderr);
+        fprintf(stderr, "\n");
 
-        fuco_tokenizer_next_token(&tokenizer);
-        
-        fuco_token_write(&tokenizer.curr, stdout);
-        printf("\n");
-    
-        fuco_tokenizer_discard(&tokenizer);
+        fuco_node_free(node);
     }
 
-    fuco_tokenizer_destruct(&tokenizer);
+    fuco_parser_destruct(&parser);
 
     return 0;
 }

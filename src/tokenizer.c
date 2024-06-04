@@ -1,14 +1,23 @@
 #include "tokenizer.h"
-#include "assert.h"
+#include "tree.h"
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
 
 fuco_tokentype_descriptor_t const descriptors[] = {
     { FUCO_TOKEN_EMPTY, 0, "empty" },
     { FUCO_TOKEN_INTEGER, FUCO_TOKENTYPE_HAS_LEXEME, "integer" },
     { FUCO_TOKEN_IDENTIFIER, FUCO_TOKENTYPE_HAS_LEXEME, "identifier" },
     { FUCO_TOKEN_DEF, FUCO_TOKENTYPE_IS_KEYWORD, "def" },
+    { FUCO_TOKEN_BRACKET_OPEN, FUCO_TOKENTYPE_IS_SEPARATOR, "(" },
+    { FUCO_TOKEN_BRACKET_CLOSE, FUCO_TOKENTYPE_IS_SEPARATOR, ")" },
+    { FUCO_TOKEN_BRACE_OPEN, FUCO_TOKENTYPE_IS_SEPARATOR, "{" },
+    { FUCO_TOKEN_BRACE_CLOSE, FUCO_TOKENTYPE_IS_SEPARATOR, "}" },
+    { FUCO_TOKEN_SQBRACKET_OPEN, FUCO_TOKENTYPE_IS_SEPARATOR, "[" },
+    { FUCO_TOKEN_SQBRACKET_CLOSE, FUCO_TOKENTYPE_IS_SEPARATOR, "]" },
+    { FUCO_TOKEN_DOT, FUCO_TOKENTYPE_IS_SEPARATOR, "." },
+    { FUCO_TOKEN_COMMA, FUCO_TOKENTYPE_IS_SEPARATOR, "," },
     { FUCO_TOKEN_EOF, 0, "eof" }
 };
 
@@ -50,6 +59,8 @@ void fuco_token_destruct(fuco_token_t *token) {
     if (token->lexeme != NULL) {
         free(token->lexeme);
     }
+    token->type = FUCO_TOKEN_EMPTY;
+    token->lexeme = NULL;
 }
 
 void fuco_token_write(fuco_token_t *token, FILE *stream) {
@@ -76,6 +87,8 @@ void fuco_tokenizer_init(fuco_tokenizer_t *tokenizer) {
     fuco_queue_init(&tokenizer->sources);
     fuco_token_init(&tokenizer->curr);
     fuco_strbuf_init(&tokenizer->temp);
+
+    tokenizer->curr.type = FUCO_TOKEN_EOF;
 
     for (size_t i = 0; i < FUCO_N_TOKENTYPES; i++) {
         assert(i == descriptors[i].type);
@@ -174,7 +187,18 @@ void fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
             }
         }
     } else {
-        fprintf(stderr, "Error: unrecognized char: %d\n", c);
+        for (size_t i = 0; i < FUCO_N_TOKENTYPES; i++) {
+            if (descriptors[i].attr & FUCO_TOKENTYPE_IS_SEPARATOR 
+                && descriptors[i].string[0] == c) {
+                c = fuco_tokenizer_next_char(tokenizer, c);
+                tokenizer->curr.type = descriptors[i].type;
+                break;
+            }
+        }
+    }
+
+    if (tokenizer->curr.type == FUCO_TOKEN_EMPTY) {
+        fprintf(stderr, "Error: unrecognized token: %d\n", c);
     }
 
     if (descriptors[tokenizer->curr.type].attr & FUCO_TOKENTYPE_HAS_LEXEME) {
@@ -237,9 +261,15 @@ void fuco_tokenizer_discard(fuco_tokenizer_t *tokenizer) {
     fuco_token_t *token = &tokenizer->curr;
     fuco_tokenizer_handle_curr(tokenizer);
 
-    token->type = FUCO_TOKEN_EMPTY;
-    if (token->lexeme != NULL) {
-        free(token->lexeme);
-        token->lexeme = NULL;
-    }
+    fuco_token_destruct(token);
+}
+
+void fuco_tokenizer_move(fuco_tokenizer_t *tokenizer, fuco_node_t *node) {
+    fuco_token_t *token = &tokenizer->curr;
+    fuco_tokenizer_handle_curr(tokenizer);
+
+    node->token = *token;
+
+    token->lexeme = NULL;
+    fuco_token_destruct(token);
 }
