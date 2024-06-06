@@ -1,5 +1,6 @@
 #include "tokenizer.h"
 #include "tree.h"
+#include "utils.h"
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -110,35 +111,7 @@ void fuco_tokenizer_add_source_filename(fuco_tokenizer_t *tokenizer,
     fuco_queue_enqueue(&tokenizer->sources, filename);
 }
 
-int fuco_tokenizer_open_next_source(fuco_tokenizer_t *tokenizer) {
-    assert(tokenizer->last == FUCO_TOKEN_EOF);
-    assert(tokenizer->curr.type == FUCO_TOKEN_EMPTY);
-
-    if (fuco_queue_is_empty(&tokenizer->sources)) {
-        return -1;
-    }
-
-    if (tokenizer->file != NULL) {
-        fclose(tokenizer->file);
-        tokenizer->file = NULL;
-    }
-
-    tokenizer->filename = fuco_queue_dequeue(&tokenizer->sources);
-    if (tokenizer->filename == NULL) {
-        return 1;
-    }
-
-    tokenizer->file = fopen(tokenizer->filename, "r");
-    if (tokenizer->file == NULL) {
-        fprintf(stderr, "Error: could not open file: %s\n", 
-                tokenizer->filename);
-        return 1;
-    }
-    
-    return 0;
-}
-
-void fuco_tokenizer_update_filebuf(fuco_tokenizer_t *tokenizer) {
+void fuco_tokenizer_update_filebuf(fuco_tokenizer_t *tokenizer) {    
     if (tokenizer->file != tokenizer->buf.file) {
         tokenizer->buf.file = tokenizer->file;
         tokenizer->buf.p = tokenizer->buf.size = 0;
@@ -198,7 +171,7 @@ void fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
     }
 
     if (tokenizer->curr.type == FUCO_TOKEN_EMPTY) {
-        fprintf(stderr, "Error: unrecognized token: %d\n", c);
+        fprintf(stderr, "Error: unrecognized token: '%s'\n", fuco_repr_char(c));
     }
 
     if (descriptors[tokenizer->curr.type].attr & FUCO_TOKENTYPE_HAS_LEXEME) {
@@ -251,6 +224,16 @@ char fuco_tokenizer_skip_nontokens(fuco_tokenizer_t *tokenizer, int c) {
     return c;
 }
 
+bool fuco_tokenizer_expect(fuco_tokenizer_t *tokenizer, fuco_tokentype_t type) {
+    if (tokenizer->curr.type != type) {
+        fprintf(stderr, "Error: expected %s, but got %s\n", 
+                fuco_tokentype_string(type), 
+                fuco_tokentype_string(tokenizer->curr.type));
+        return false;
+    }
+    return true;
+}
+
 void fuco_tokenizer_handle_curr(fuco_tokenizer_t *tokenizer) {
     assert(tokenizer->curr.type != FUCO_TOKEN_EMPTY);
 
@@ -258,10 +241,11 @@ void fuco_tokenizer_handle_curr(fuco_tokenizer_t *tokenizer) {
 }
 
 void fuco_tokenizer_discard(fuco_tokenizer_t *tokenizer) {
-    fuco_token_t *token = &tokenizer->curr;
     fuco_tokenizer_handle_curr(tokenizer);
 
-    fuco_token_destruct(token);
+    fuco_token_destruct(&tokenizer->curr);
+
+    fuco_tokenizer_next_token(tokenizer);
 }
 
 void fuco_tokenizer_move(fuco_tokenizer_t *tokenizer, fuco_node_t *node) {
@@ -272,4 +256,39 @@ void fuco_tokenizer_move(fuco_tokenizer_t *tokenizer, fuco_node_t *node) {
 
     token->lexeme = NULL;
     fuco_token_destruct(token);
+
+    fuco_tokenizer_next_token(tokenizer);
+}
+
+int fuco_tokenizer_open_next_source(fuco_tokenizer_t *tokenizer) {
+    assert(tokenizer->curr.type == FUCO_TOKEN_EOF);
+
+    fuco_tokenizer_handle_curr(tokenizer);
+
+    if (fuco_queue_is_empty(&tokenizer->sources)) {
+        return -1;
+    }
+
+    if (tokenizer->file != NULL) {
+        fclose(tokenizer->file);
+        tokenizer->file = NULL;
+    }
+
+    tokenizer->filename = fuco_queue_dequeue(&tokenizer->sources);
+    if (tokenizer->filename == NULL) {
+        return 1;
+    }
+
+    tokenizer->file = fopen(tokenizer->filename, "r");
+    if (tokenizer->file == NULL) {
+        fprintf(stderr, "Error: could not open file: %s\n", 
+                tokenizer->filename);
+        return 1;
+    }
+
+    fuco_token_destruct(&tokenizer->curr);
+    
+    fuco_tokenizer_next_token(tokenizer);
+
+    return 0;
 }

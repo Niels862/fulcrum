@@ -5,12 +5,14 @@
 int main(int argc, char *argv[]) {
     FUCO_UNUSED(argc), FUCO_UNUSED(argv);
 
-    fuco_parser_t parser;
-    fuco_parser_init(&parser);
+    fuco_tokenizer_t tokenizer;
+    fuco_tokenizer_init(&tokenizer);
 
-    fuco_node_t *node = fuco_parser_parse_filebody(&parser);
+    fuco_tokenizer_add_source_filename(&tokenizer, fuco_strdup("tests/main.fc"));
+
+    fuco_node_t *node = fuco_parse_filebody(&tokenizer);
     if (node == NULL) {
-        fprintf(stderr, "parsing error occurred");
+        fprintf(stderr, "parsing error occurred\n");
     } else {
         fuco_node_pretty_write(node, stderr);
         fprintf(stderr, "\n");
@@ -18,7 +20,7 @@ int main(int argc, char *argv[]) {
         fuco_node_free(node);
     }
 
-    fuco_parser_destruct(&parser);
+    fuco_tokenizer_destruct(&tokenizer);
 
     return 0;
 }

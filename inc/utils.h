@@ -6,4 +6,8 @@
 
 void fuco_not_implemented(char const *file, int line);
 
+char fuco_base_char(int i);
+
+char *fuco_repr_char(int c);
+
 #endif

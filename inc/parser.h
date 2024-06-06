@@ -4,16 +4,8 @@
 #include "tokenizer.h"
 #include "tree.h"
 
-typedef struct {
-    fuco_tokenizer_t tokenizer;
-} fuco_parser_t;
+fuco_node_t *fuco_parse_filebody(fuco_tokenizer_t *tokenizer);
 
-void fuco_parser_init(fuco_parser_t *parser);
-
-void fuco_parser_destruct(fuco_parser_t *parser);
-
-fuco_node_t *fuco_parser_parse_filebody(fuco_parser_t *parser);
-
-fuco_node_t *fuco_parser_parse_function_declaration(fuco_parser_t *parser);
+fuco_node_t *fuco_parse_function_declaration(fuco_tokenizer_t *tokenizer);
 
 #endif

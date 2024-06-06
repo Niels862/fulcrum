@@ -113,6 +113,8 @@ int fuco_tokenizer_next_char(fuco_tokenizer_t *tokenizer, int c);
 
 char fuco_tokenizer_skip_nontokens(fuco_tokenizer_t *tokenizer, int c);
 
+bool fuco_tokenizer_expect(fuco_tokenizer_t *tokenizer, fuco_tokentype_t type);
+
 void fuco_tokenizer_handle_curr(fuco_tokenizer_t *tokenizer);
 
 /* Token handler: discards current token */
