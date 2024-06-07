@@ -6,7 +6,7 @@
 #include <ctype.h>
 #include <assert.h>
 
-fuco_tokentype_descriptor_t const descriptors[] = {
+fuco_token_descriptor_t const token_descriptors[] = {
     { FUCO_TOKEN_EMPTY, 0, "empty" },
     { FUCO_TOKEN_INTEGER, FUCO_TOKENTYPE_HAS_LEXEME, "integer" },
     { FUCO_TOKEN_IDENTIFIER, FUCO_TOKENTYPE_HAS_LEXEME, "identifier" },
@@ -22,7 +22,7 @@ fuco_tokentype_descriptor_t const descriptors[] = {
     { FUCO_TOKEN_EOF, 0, "eof" }
 };
 
-#define FUCO_N_TOKENTYPES sizeof(descriptors) / sizeof(*descriptors)
+#define FUCO_N_TOKENTYPES sizeof(token_descriptors) / sizeof(*token_descriptors)
 
 bool fuco_is_nontoken(int c) {
     return c == ' ' || c == '\n' || c == '\r' || c == '\t';
@@ -37,7 +37,7 @@ bool fuco_is_identifier_continue(int c) {
 }
 
 char *fuco_tokentype_string(fuco_tokentype_t type) {
-    return descriptors[type].string;
+    return token_descriptors[type].string;
 }
 
 void fuco_textsource_init(fuco_textsource_t *source, char *filename) {
@@ -92,7 +92,7 @@ void fuco_tokenizer_init(fuco_tokenizer_t *tokenizer) {
     tokenizer->curr.type = FUCO_TOKEN_EOF;
 
     for (size_t i = 0; i < FUCO_N_TOKENTYPES; i++) {
-        assert(i == descriptors[i].type);
+        assert(i == token_descriptors[i].type);
     }
 }
 
@@ -153,18 +153,18 @@ void fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
         } while (fuco_is_identifier_continue(c));
 
         for (size_t i = 0; i < FUCO_N_TOKENTYPES; i++) {
-            if (descriptors[i].attr & FUCO_TOKENTYPE_IS_KEYWORD
-                && strcmp(descriptors[i].string, tokenizer->temp.data) == 0) {
-                tokenizer->curr.type = descriptors[i].type;
+            if (token_descriptors[i].attr & FUCO_TOKENTYPE_IS_KEYWORD
+                && strcmp(token_descriptors[i].string, tokenizer->temp.data) == 0) {
+                tokenizer->curr.type = token_descriptors[i].type;
                 break;
             }
         }
     } else {
         for (size_t i = 0; i < FUCO_N_TOKENTYPES; i++) {
-            if (descriptors[i].attr & FUCO_TOKENTYPE_IS_SEPARATOR 
-                && descriptors[i].string[0] == c) {
+            if (token_descriptors[i].attr & FUCO_TOKENTYPE_IS_SEPARATOR 
+                && token_descriptors[i].string[0] == c) {
                 c = fuco_tokenizer_next_char(tokenizer, c);
-                tokenizer->curr.type = descriptors[i].type;
+                tokenizer->curr.type = token_descriptors[i].type;
                 break;
             }
         }
@@ -174,7 +174,7 @@ void fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
         fprintf(stderr, "Error: unrecognized token: '%s'\n", fuco_repr_char(c));
     }
 
-    if (descriptors[tokenizer->curr.type].attr & FUCO_TOKENTYPE_HAS_LEXEME) {
+    if (token_descriptors[tokenizer->curr.type].attr & FUCO_TOKENTYPE_HAS_LEXEME) {
         tokenizer->curr.lexeme = fuco_strbuf_dup(&tokenizer->temp);
     } else {
         tokenizer->curr.lexeme = NULL;

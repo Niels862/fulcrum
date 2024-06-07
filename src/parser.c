@@ -3,7 +3,8 @@
 #include <stdlib.h>
 
 fuco_node_t *fuco_parse_filebody(fuco_tokenizer_t *tokenizer) {
-    fuco_node_t *node = fuco_node_new(FUCO_NODE_LIST, FUCO_LAYOUT_VARIADIC);
+    size_t allocated;
+    fuco_node_t *node = fuco_node_variadic_new(FUCO_NODE_LIST, &allocated);
 
     while (true) {
         while (tokenizer->curr.type == FUCO_TOKEN_EOF) {
@@ -20,7 +21,7 @@ fuco_node_t *fuco_parse_filebody(fuco_tokenizer_t *tokenizer) {
             return NULL;
         }
 
-        node = fuco_node_add_child(node, sub);
+        node = fuco_node_add_child(node, sub, &allocated);
     }
 }
 
@@ -30,8 +31,7 @@ fuco_node_t *fuco_parse_function_declaration(fuco_tokenizer_t *tokenizer) {
     }
     fuco_tokenizer_discard(tokenizer);
 
-    fuco_node_t *node = fuco_node_new(FUCO_NODE_FUNCTION, 
-                                      FUCO_LAYOUT_FUNCTION_N);
+    fuco_node_t *node = fuco_node_new(FUCO_NODE_FUNCTION);
     
     if (!fuco_tokenizer_expect(tokenizer, FUCO_TOKEN_IDENTIFIER)) {
         free(node);

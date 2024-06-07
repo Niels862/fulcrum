@@ -31,13 +31,13 @@ typedef enum {
     FUCO_TOKENTYPE_IS_KEYWORD = 1,
     FUCO_TOKENTYPE_IS_SEPARATOR = 2,
     FUCO_TOKENTYPE_HAS_LEXEME = 4
-} fuco_tokentype_attr_t;
+} fuco_token_attr_t;
 
 typedef struct {
     fuco_tokentype_t type;
-    fuco_tokentype_attr_t attr;
+    fuco_token_attr_t attr;
     char *string;
-} fuco_tokentype_descriptor_t;
+} fuco_token_descriptor_t;
 
 typedef struct {
     char *filename;
@@ -73,7 +73,7 @@ typedef struct {
     fuco_filebuf_t buf;
 } fuco_tokenizer_t;
 
-extern fuco_tokentype_descriptor_t const descriptors[];
+extern fuco_token_descriptor_t const token_descriptors[];
 
 bool fuco_is_nontoken(int c);
 
