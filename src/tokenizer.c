@@ -50,16 +50,6 @@ bool fuco_tokentype_has_attr(fuco_tokentype_t type, fuco_token_attr_t attr) {
     return token_descriptors[type].attr & attr;
 }
 
-void fuco_textsource_init(fuco_textsource_t *source, char *filename) {
-    source->filename = filename;
-    source->row = 1;
-    source->col = 0;
-}
-
-void fuco_textsource_write(fuco_textsource_t *source, FILE *stream) {
-    fprintf(stream, "%s:%ld:%ld", source->filename, source->row, source->col);
-}
-
 void fuco_token_init(fuco_token_t *token) {
     token->lexeme = NULL;
     fuco_textsource_init(&token->source, NULL);
@@ -182,7 +172,9 @@ int fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
     }
 
     if (curr->type == FUCO_TOKEN_EMPTY) {
-        fprintf(stderr, "Error: unrecognized token: '%s'\n", fuco_repr_char(c));
+        fuco_syntax_error(&curr->source, "unrecognized token: '%s'", 
+                          fuco_repr_char(c));
+        
         return 1;
     }
 
@@ -223,7 +215,7 @@ int fuco_tokenizer_next_char(fuco_tokenizer_t *tokenizer, int c) {
     return (unsigned char)c;
 }
 
-char fuco_tokenizer_skip_nontokens(fuco_tokenizer_t *tokenizer, int c) {
+int fuco_tokenizer_skip_nontokens(fuco_tokenizer_t *tokenizer, int c) {
     bool comment = false;
     do {
         if (c == '#') {
@@ -241,12 +233,10 @@ char fuco_tokenizer_skip_nontokens(fuco_tokenizer_t *tokenizer, int c) {
 
 bool fuco_tokenizer_expect(fuco_tokenizer_t *tokenizer, fuco_tokentype_t type) {
     if (tokenizer->curr.type != type) {
-        fprintf(stderr, "Error: ");
-        fuco_textsource_write(&tokenizer->curr.source, stderr);
-        fprintf(stderr, ": expected %s, but got %s\n", 
-                fuco_tokentype_string(type), 
-                fuco_tokentype_string(tokenizer->curr.type));
-        
+        fuco_syntax_error(&tokenizer->curr.source, "expected %s, but got %s", 
+                          fuco_tokentype_string(type),
+                          fuco_tokentype_string(tokenizer->curr.type));
+
         return false;
     }
     return true;

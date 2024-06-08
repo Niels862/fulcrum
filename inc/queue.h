@@ -1,9 +1,9 @@
 #ifndef FUCO_QUEUE_H
 #define FUCO_QUEUE_H
 
+#include "defs.h"
 #include <stddef.h>
 #include <stdbool.h>
-#include "defs.h"
 
 #define FUCO_QUEUE_INIT_SIZE 16
 

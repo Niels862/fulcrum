@@ -1,10 +1,11 @@
 #ifndef FUCO_TOKENIZER_H
 #define FUCO_TOKENIZER_H
 
+#include "strutils.h"
+#include "textsource.h"
 #include "queue.h"
 #include <stddef.h>
 #include <stdio.h>
-#include "strutils.h"
 
 typedef struct fuco_node_t fuco_node_t;
 
@@ -40,12 +41,6 @@ typedef struct {
     fuco_token_attr_t attr;
     char *string;
 } fuco_token_descriptor_t;
-
-typedef struct {
-    char *filename;
-    size_t row;
-    size_t col;
-} fuco_textsource_t;
 
 typedef struct {
     char *lexeme;
@@ -113,7 +108,7 @@ int fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer);
 
 int fuco_tokenizer_next_char(fuco_tokenizer_t *tokenizer, int c);
 
-char fuco_tokenizer_skip_nontokens(fuco_tokenizer_t *tokenizer, int c);
+int fuco_tokenizer_skip_nontokens(fuco_tokenizer_t *tokenizer, int c);
 
 bool fuco_tokenizer_expect(fuco_tokenizer_t *tokenizer, fuco_tokentype_t type);
 
