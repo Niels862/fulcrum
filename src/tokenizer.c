@@ -19,6 +19,7 @@ fuco_token_descriptor_t const token_descriptors[] = {
     { FUCO_TOKEN_SQBRACKET_CLOSE, FUCO_TOKENTYPE_IS_SEPARATOR, "]" },
     { FUCO_TOKEN_DOT, FUCO_TOKENTYPE_IS_SEPARATOR, "." },
     { FUCO_TOKEN_COMMA, FUCO_TOKENTYPE_IS_SEPARATOR, "," },
+    { FUCO_TOKEN_SEMICOLON, FUCO_TOKENTYPE_IS_SEPARATOR, ";" },
     { FUCO_TOKEN_EOF, 0, "eof" }
 };
 
@@ -226,9 +227,12 @@ char fuco_tokenizer_skip_nontokens(fuco_tokenizer_t *tokenizer, int c) {
 
 bool fuco_tokenizer_expect(fuco_tokenizer_t *tokenizer, fuco_tokentype_t type) {
     if (tokenizer->curr.type != type) {
-        fprintf(stderr, "Error: expected %s, but got %s\n", 
+        fprintf(stderr, "Error: ");
+        fuco_textsource_write(&tokenizer->curr.source, stderr);
+        fprintf(stderr, ": expected %s, but got %s\n", 
                 fuco_tokentype_string(type), 
                 fuco_tokentype_string(tokenizer->curr.type));
+        
         return false;
     }
     return true;
@@ -291,4 +295,24 @@ int fuco_tokenizer_open_next_source(fuco_tokenizer_t *tokenizer) {
     fuco_tokenizer_next_token(tokenizer);
 
     return 0;
+}
+
+bool fuco_tokenizer_discard_if(fuco_tokenizer_t *tokenizer, 
+                                       fuco_tokentype_t type) {
+    if (fuco_tokenizer_expect(tokenizer, type)) {
+        fuco_tokenizer_discard(tokenizer);
+
+        return true;
+    }
+    return false;
+}
+
+bool fuco_tokenizer_move_if(fuco_tokenizer_t *tokenizer, 
+                                    fuco_tokentype_t type, fuco_node_t *node) {
+    if (fuco_tokenizer_expect(tokenizer, type)) {
+        fuco_tokenizer_move(tokenizer, node);
+
+        return true;
+    }
+    return false;
 }

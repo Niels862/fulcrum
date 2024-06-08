@@ -26,8 +26,7 @@ typedef enum {
     FUCO_LAYOUT_FUNCTION_BODY,
     FUCO_LAYOUT_FUNCTION_N,
 
-    FUCO_LAYOUT_VARIABLE_ID = 0,
-    FUCO_LAYOUT_VARIABLE_N
+    FUCO_LAYOUT_VARIABLE_N = 0
 } fuco_node_layout_t;
 
 #define FUCO_VARIADIC_NODE_INIT_SIZE 4
@@ -36,6 +35,7 @@ typedef struct {
     fuco_nodetype_t type;
     fuco_node_attr_t attr;
     fuco_node_layout_t layout;
+    char *label;
 } fuco_node_descriptor_t;
 
 struct fuco_node_t {

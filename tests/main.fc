@@ -1,1 +1,3 @@
-def a def b
+def a() {a; b; c;}
+
+def b() {}

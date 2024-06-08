@@ -23,6 +23,7 @@ typedef enum {
     FUCO_TOKEN_SQBRACKET_CLOSE,
     FUCO_TOKEN_DOT,
     FUCO_TOKEN_COMMA,
+    FUCO_TOKEN_SEMICOLON,
     
     FUCO_TOKEN_EOF
 } fuco_tokentype_t;
@@ -103,8 +104,6 @@ void fuco_tokenizer_destruct(fuco_tokenizer_t *tokenizer);
 void fuco_tokenizer_add_source_filename(fuco_tokenizer_t *tokenizer, 
                                         char *filename);
 
-int fuco_tokenizer_open_next_source(fuco_tokenizer_t *tokenizer);
-
 void fuco_tokenizer_update_filebuf(fuco_tokenizer_t *tokenizer);
 
 void fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer);
@@ -117,10 +116,26 @@ bool fuco_tokenizer_expect(fuco_tokenizer_t *tokenizer, fuco_tokentype_t type);
 
 void fuco_tokenizer_handle_curr(fuco_tokenizer_t *tokenizer);
 
+/* 
+ * Each token handler can only be used once per token and loads the next 
+ * token afterwards 
+ */
+
 /* Token handler: discards current token */
 void fuco_tokenizer_discard(fuco_tokenizer_t *tokenizer);
 
 /* Token handler: moves current token to node */
 void fuco_tokenizer_move(fuco_tokenizer_t *tokenizer, fuco_node_t *node);
+
+/* Token handler: discards and loads next source. Token must be EOF. */
+int fuco_tokenizer_open_next_source(fuco_tokenizer_t *tokenizer);
+
+/* Helper functions */
+
+bool fuco_tokenizer_discard_if(fuco_tokenizer_t *tokenizer, 
+                               fuco_tokentype_t type);
+
+bool fuco_tokenizer_move_if(fuco_tokenizer_t *tokenizer, 
+                            fuco_tokentype_t type, fuco_node_t *node);
 
 #endif

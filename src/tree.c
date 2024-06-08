@@ -4,10 +4,10 @@
 #include <assert.h>
 
 fuco_node_descriptor_t node_descriptors[] = {
-    { FUCO_NODE_EMPTY, 0, FUCO_LAYOUT_EMPTY_N },
-    { FUCO_NODE_LIST, 0, FUCO_LAYOUT_VARIADIC },
-    { FUCO_NODE_FUNCTION, 0, FUCO_LAYOUT_FUNCTION_N },
-    { FUCO_NODE_VARIABLE, 0, FUCO_LAYOUT_VARIABLE_N }
+    { FUCO_NODE_EMPTY, 0, FUCO_LAYOUT_EMPTY_N, "empty" },
+    { FUCO_NODE_LIST, 0, FUCO_LAYOUT_VARIADIC, "list" },
+    { FUCO_NODE_FUNCTION, 0, FUCO_LAYOUT_FUNCTION_N, "function" },
+    { FUCO_NODE_VARIABLE, 0, FUCO_LAYOUT_VARIABLE_N, "variable" }
 };
 
 fuco_node_t *fuco_node_base_new(fuco_nodetype_t type, size_t allocated, 
@@ -75,6 +75,7 @@ void fuco_node_set_child(fuco_node_t *node, fuco_node_t *child,
                          fuco_node_layout_t index) {
     assert((size_t)index < node->count);
     assert(node_descriptors[node->type].layout != FUCO_LAYOUT_VARIADIC);
+    assert(node->children[index] == NULL);
     fuco_node_validate(child);
 
     node->children[index] = child;
@@ -118,7 +119,16 @@ void fuco_node_pretty_write(fuco_node_t *node, FILE *stream) {
     if (node == NULL) {
         fprintf(stderr, "(null)\n");
     } else {
-        fuco_token_write(&node->token, stream);
+        char *label = node_descriptors[node->type].label;
+        if (*label != '\0') {
+            fprintf(stream, "%s", label);
+        }
+
+        if (node->token.type != FUCO_TOKEN_EMPTY) {
+            fprintf(stream, ": ");
+            fuco_token_write(&node->token, stream);
+        }
+
         fprintf(stream, "\n");
 
         depth++;
@@ -134,7 +144,6 @@ void fuco_node_pretty_write(fuco_node_t *node, FILE *stream) {
 
 void fuco_node_validate(fuco_node_t *node) {
     assert(node != NULL);
-    assert(node->token.type != FUCO_TOKEN_EMPTY);
     assert(node_descriptors[node->type].layout == FUCO_LAYOUT_VARIADIC 
            || (size_t)node_descriptors[node->type].layout == node->count);
     
