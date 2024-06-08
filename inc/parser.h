@@ -10,4 +10,12 @@ fuco_node_t *fuco_parse_function_declaration(fuco_tokenizer_t *tokenizer);
 
 fuco_node_t *fuco_parse_braced_block(fuco_tokenizer_t *tokenizer);
 
+fuco_node_t *fuco_parse_body_statement(fuco_tokenizer_t *tokenizer);
+
+fuco_node_t *fuco_parse_return(fuco_tokenizer_t *tokenizer);
+
+fuco_node_t *fuco_parse_expression(fuco_tokenizer_t *tokenizer);
+
+fuco_node_t *fuco_parse_value(fuco_tokenizer_t *tokenizer);
+
 #endif

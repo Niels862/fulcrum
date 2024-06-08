@@ -14,6 +14,7 @@ typedef enum {
     FUCO_TOKEN_IDENTIFIER,
     
     FUCO_TOKEN_DEF,
+    FUCO_TOKEN_RETURN,
 
     FUCO_TOKEN_BRACKET_OPEN,
     FUCO_TOKEN_BRACKET_CLOSE,
@@ -84,6 +85,8 @@ bool fuco_is_identifier_continue(int c);
 
 char *fuco_tokentype_string(fuco_tokentype_t type);
 
+bool fuco_tokentype_has_attr(fuco_tokentype_t type, fuco_token_attr_t attr);
+
 void fuco_textsource_init(fuco_textsource_t *source, char *filename);
 
 void fuco_textsource_write(fuco_textsource_t *source, FILE *stream);
@@ -106,7 +109,7 @@ void fuco_tokenizer_add_source_filename(fuco_tokenizer_t *tokenizer,
 
 void fuco_tokenizer_update_filebuf(fuco_tokenizer_t *tokenizer);
 
-void fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer);
+int fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer);
 
 int fuco_tokenizer_next_char(fuco_tokenizer_t *tokenizer, int c);
 
@@ -122,10 +125,10 @@ void fuco_tokenizer_handle_curr(fuco_tokenizer_t *tokenizer);
  */
 
 /* Token handler: discards current token */
-void fuco_tokenizer_discard(fuco_tokenizer_t *tokenizer);
+int fuco_tokenizer_discard(fuco_tokenizer_t *tokenizer);
 
 /* Token handler: moves current token to node */
-void fuco_tokenizer_move(fuco_tokenizer_t *tokenizer, fuco_node_t *node);
+int fuco_tokenizer_move(fuco_tokenizer_t *tokenizer, fuco_node_t *node);
 
 /* Token handler: discards and loads next source. Token must be EOF. */
 int fuco_tokenizer_open_next_source(fuco_tokenizer_t *tokenizer);

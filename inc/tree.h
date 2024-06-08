@@ -7,7 +7,9 @@ typedef enum {
     FUCO_NODE_EMPTY,
     FUCO_NODE_LIST,
     FUCO_NODE_FUNCTION,
-    FUCO_NODE_VARIABLE
+    FUCO_NODE_VARIABLE,
+    FUCO_NODE_INTEGER,
+    FUCO_NODE_RETURN,
 } fuco_nodetype_t;
 
 typedef enum {
@@ -26,7 +28,12 @@ typedef enum {
     FUCO_LAYOUT_FUNCTION_BODY,
     FUCO_LAYOUT_FUNCTION_N,
 
-    FUCO_LAYOUT_VARIABLE_N = 0
+    FUCO_LAYOUT_VARIABLE_N = 0,
+
+    FUCO_LAYOUT_INTEGER_N = 0,
+
+    FUCO_LAYOUT_RETURN_VALUE = 0,
+    FUCO_LAYOUT_RETURN_N
 } fuco_node_layout_t;
 
 #define FUCO_VARIADIC_NODE_INIT_SIZE 4

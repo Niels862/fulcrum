@@ -8,9 +8,13 @@
 
 fuco_token_descriptor_t const token_descriptors[] = {
     { FUCO_TOKEN_EMPTY, 0, "empty" },
+
     { FUCO_TOKEN_INTEGER, FUCO_TOKENTYPE_HAS_LEXEME, "integer" },
     { FUCO_TOKEN_IDENTIFIER, FUCO_TOKENTYPE_HAS_LEXEME, "identifier" },
+    
     { FUCO_TOKEN_DEF, FUCO_TOKENTYPE_IS_KEYWORD, "def" },
+    { FUCO_TOKEN_RETURN, FUCO_TOKENTYPE_IS_KEYWORD, "return" },
+
     { FUCO_TOKEN_BRACKET_OPEN, FUCO_TOKENTYPE_IS_SEPARATOR, "(" },
     { FUCO_TOKEN_BRACKET_CLOSE, FUCO_TOKENTYPE_IS_SEPARATOR, ")" },
     { FUCO_TOKEN_BRACE_OPEN, FUCO_TOKENTYPE_IS_SEPARATOR, "{" },
@@ -20,6 +24,7 @@ fuco_token_descriptor_t const token_descriptors[] = {
     { FUCO_TOKEN_DOT, FUCO_TOKENTYPE_IS_SEPARATOR, "." },
     { FUCO_TOKEN_COMMA, FUCO_TOKENTYPE_IS_SEPARATOR, "," },
     { FUCO_TOKEN_SEMICOLON, FUCO_TOKENTYPE_IS_SEPARATOR, ";" },
+    
     { FUCO_TOKEN_EOF, 0, "eof" }
 };
 
@@ -39,6 +44,10 @@ bool fuco_is_identifier_continue(int c) {
 
 char *fuco_tokentype_string(fuco_tokentype_t type) {
     return token_descriptors[type].string;
+}
+
+bool fuco_tokentype_has_attr(fuco_tokentype_t type, fuco_token_attr_t attr) {
+    return token_descriptors[type].attr & attr;
 }
 
 void fuco_textsource_init(fuco_textsource_t *source, char *filename) {
@@ -124,64 +133,69 @@ void fuco_tokenizer_update_filebuf(fuco_tokenizer_t *tokenizer) {
     }
 }
 
-void fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
+int fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
     assert(tokenizer->curr.type == FUCO_TOKEN_EMPTY);
 
-    tokenizer->curr.source = tokenizer->buf.source;
+    fuco_token_t *curr = &tokenizer->curr;
     fuco_strbuf_clear(&tokenizer->temp);
 
     fuco_tokenizer_update_filebuf(tokenizer);
 
     int c = tokenizer->buf.last;
     c = fuco_tokenizer_skip_nontokens(tokenizer, c);
-    tokenizer->curr.source = tokenizer->buf.source;
+    curr->source = tokenizer->buf.source;
 
     if (c < 0) {
-        tokenizer->curr.type = FUCO_TOKEN_EOF;
+        curr->type = FUCO_TOKEN_EOF;
     } else if (isdigit(c)) {
-        tokenizer->curr.type = FUCO_TOKEN_INTEGER;
+        curr->type = FUCO_TOKEN_INTEGER;
 
         do {
             fuco_strbuf_append_char(&tokenizer->temp, c);
             c = fuco_tokenizer_next_char(tokenizer, c);
         } while (isdigit(c));
     } else if (fuco_is_identifier_start(c)) {
-        tokenizer->curr.type = FUCO_TOKEN_IDENTIFIER;
+        curr->type = FUCO_TOKEN_IDENTIFIER;
 
         do {
             fuco_strbuf_append_char(&tokenizer->temp, c);
             c = fuco_tokenizer_next_char(tokenizer, c);
         } while (fuco_is_identifier_continue(c));
 
-        for (size_t i = 0; i < FUCO_N_TOKENTYPES; i++) {
-            if (token_descriptors[i].attr & FUCO_TOKENTYPE_IS_KEYWORD
-                && strcmp(token_descriptors[i].string, tokenizer->temp.data) == 0) {
-                tokenizer->curr.type = token_descriptors[i].type;
+        for (fuco_tokentype_t type = 0; type < FUCO_N_TOKENTYPES; type++) {
+            if (fuco_tokentype_has_attr(type, FUCO_TOKENTYPE_IS_KEYWORD)
+                && strcmp(fuco_tokentype_string(type), 
+                          tokenizer->temp.data) == 0) {
+                tokenizer->curr.type = type;
                 break;
             }
         }
     } else {
-        for (size_t i = 0; i < FUCO_N_TOKENTYPES; i++) {
-            if (token_descriptors[i].attr & FUCO_TOKENTYPE_IS_SEPARATOR 
-                && token_descriptors[i].string[0] == c) {
+        for (fuco_tokentype_t type = 0; type < FUCO_N_TOKENTYPES; type++) {
+            if (fuco_tokentype_has_attr(type, FUCO_TOKENTYPE_IS_SEPARATOR) 
+                && fuco_tokentype_string(type)[0] == c) {
                 c = fuco_tokenizer_next_char(tokenizer, c);
-                tokenizer->curr.type = token_descriptors[i].type;
+                curr->type = type;
                 break;
             }
         }
     }
 
-    if (tokenizer->curr.type == FUCO_TOKEN_EMPTY) {
+    if (curr->type == FUCO_TOKEN_EMPTY) {
         fprintf(stderr, "Error: unrecognized token: '%s'\n", fuco_repr_char(c));
+        return 1;
     }
 
-    if (token_descriptors[tokenizer->curr.type].attr & FUCO_TOKENTYPE_HAS_LEXEME) {
-        tokenizer->curr.lexeme = fuco_strbuf_dup(&tokenizer->temp);
+    if (fuco_tokentype_has_attr(tokenizer->curr.type, 
+                                FUCO_TOKENTYPE_HAS_LEXEME)) {
+        curr->lexeme = fuco_strbuf_dup(&tokenizer->temp);
     } else {
-        tokenizer->curr.lexeme = NULL;
+        curr->lexeme = NULL;
     }
 
     tokenizer->buf.last = c;
+
+    return 0;
 }
 
 int fuco_tokenizer_next_char(fuco_tokenizer_t *tokenizer, int c) {
@@ -244,15 +258,19 @@ void fuco_tokenizer_handle_curr(fuco_tokenizer_t *tokenizer) {
     tokenizer->last = tokenizer->curr.type;
 }
 
-void fuco_tokenizer_discard(fuco_tokenizer_t *tokenizer) {
+int fuco_tokenizer_discard(fuco_tokenizer_t *tokenizer) {
     fuco_tokenizer_handle_curr(tokenizer);
 
     fuco_token_destruct(&tokenizer->curr);
 
-    fuco_tokenizer_next_token(tokenizer);
+    if (fuco_tokenizer_next_token(tokenizer)) {
+        return 1;
+    }
+
+    return 0;
 }
 
-void fuco_tokenizer_move(fuco_tokenizer_t *tokenizer, fuco_node_t *node) {
+int fuco_tokenizer_move(fuco_tokenizer_t *tokenizer, fuco_node_t *node) {
     fuco_token_t *token = &tokenizer->curr;
     fuco_tokenizer_handle_curr(tokenizer);
 
@@ -261,7 +279,11 @@ void fuco_tokenizer_move(fuco_tokenizer_t *tokenizer, fuco_node_t *node) {
     token->lexeme = NULL;
     fuco_token_destruct(token);
 
-    fuco_tokenizer_next_token(tokenizer);
+    if (fuco_tokenizer_next_token(tokenizer)) {
+        return 1;
+    }
+
+    return 0;
 }
 
 int fuco_tokenizer_open_next_source(fuco_tokenizer_t *tokenizer) {
@@ -270,7 +292,7 @@ int fuco_tokenizer_open_next_source(fuco_tokenizer_t *tokenizer) {
     fuco_tokenizer_handle_curr(tokenizer);
 
     if (fuco_queue_is_empty(&tokenizer->sources)) {
-        return -1;
+        return 1;
     }
 
     if (tokenizer->file != NULL) {
@@ -292,27 +314,35 @@ int fuco_tokenizer_open_next_source(fuco_tokenizer_t *tokenizer) {
 
     fuco_token_destruct(&tokenizer->curr);
     
-    fuco_tokenizer_next_token(tokenizer);
+    if (fuco_tokenizer_next_token(tokenizer)) {
+        return 1;
+    }
 
     return 0;
 }
 
 bool fuco_tokenizer_discard_if(fuco_tokenizer_t *tokenizer, 
-                                       fuco_tokentype_t type) {
-    if (fuco_tokenizer_expect(tokenizer, type)) {
-        fuco_tokenizer_discard(tokenizer);
-
-        return true;
+                               fuco_tokentype_t type) {
+    if (!fuco_tokenizer_expect(tokenizer, type)) {
+        return false;
     }
-    return false;
+
+    if (fuco_tokenizer_discard(tokenizer)) {
+        return false;
+    }
+
+    return true;
 }
 
 bool fuco_tokenizer_move_if(fuco_tokenizer_t *tokenizer, 
-                                    fuco_tokentype_t type, fuco_node_t *node) {
-    if (fuco_tokenizer_expect(tokenizer, type)) {
-        fuco_tokenizer_move(tokenizer, node);
-
-        return true;
+                            fuco_tokentype_t type, fuco_node_t *node) {
+    if (!fuco_tokenizer_expect(tokenizer, type)) {
+        return false;
     }
-    return false;
+
+    if (fuco_tokenizer_move(tokenizer, node)) {
+        return false;
+    }
+
+    return true;
 }

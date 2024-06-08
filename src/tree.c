@@ -7,7 +7,9 @@ fuco_node_descriptor_t node_descriptors[] = {
     { FUCO_NODE_EMPTY, 0, FUCO_LAYOUT_EMPTY_N, "empty" },
     { FUCO_NODE_LIST, 0, FUCO_LAYOUT_VARIADIC, "list" },
     { FUCO_NODE_FUNCTION, 0, FUCO_LAYOUT_FUNCTION_N, "function" },
-    { FUCO_NODE_VARIABLE, 0, FUCO_LAYOUT_VARIABLE_N, "variable" }
+    { FUCO_NODE_VARIABLE, 0, FUCO_LAYOUT_VARIABLE_N, "variable" },
+    { FUCO_NODE_INTEGER, 0, FUCO_LAYOUT_INTEGER_N, "integer" },
+    { FUCO_NODE_RETURN, 0, FUCO_LAYOUT_RETURN_N, "return" },
 };
 
 fuco_node_t *fuco_node_base_new(fuco_nodetype_t type, size_t allocated, 
@@ -44,7 +46,7 @@ fuco_node_t *fuco_node_variadic_new(fuco_nodetype_t type, size_t *allocated) {
 
 void fuco_node_free(fuco_node_t *node) {
     for (size_t i = 0; i < node->count; i++) {
-        if (node->children[1] != NULL) {
+        if (node->children[i] != NULL) {
             fuco_node_free(node->children[i]);
         }
     }
