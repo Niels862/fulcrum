@@ -1,6 +1,8 @@
 #include "map.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <assert.h>
 
 fuco_hashvalue_t fuco_hash_string(void *data) {
     (void)data; 
@@ -28,6 +30,17 @@ fuco_map_entry_t *fuco_map_entry_new(void *key, void *value,
     return entry;
 }
 
+void fuco_map_entry_destruct(fuco_map_entry_t *entry, fuco_map_t *map) {
+    if (map->key_free_func != NULL) {
+        map->key_free_func(entry->key);
+    }
+    if (map->value_free_func != NULL) {
+        map->value_free_func(entry->value);
+    }
+
+    free(entry);
+}
+
 void fuco_map_init(fuco_map_t *map, 
                    fuco_map_hash_t hash_func, fuco_map_equal_t equal_func, 
                    fuco_free_t key_free_func, fuco_free_t value_free_func) {
@@ -47,10 +60,8 @@ void fuco_map_destruct(fuco_map_t *map) {
         while (entry != NULL) {
             next = entry->next;
         
-            map->key_free_func(entry->key);
-            map->value_free_func(entry->value);
-        
-            free(entry);
+            fuco_map_entry_destruct(entry, map);
+
             entry = next;
         }
     }
@@ -58,6 +69,8 @@ void fuco_map_destruct(fuco_map_t *map) {
 }
 
 void *fuco_map_lookup(fuco_map_t *map, void *key) {
+    assert(key != NULL);
+    
     fuco_hashvalue_t hash = map->hash_func(key);
     size_t idx = hash % map->cap;
 
@@ -71,11 +84,12 @@ void *fuco_map_lookup(fuco_map_t *map, void *key) {
             entry = entry->next;
         }
     }
-
     return value;
 }
 
 void fuco_map_insert(fuco_map_t *map, void *key, void *value) {
+    assert(key != NULL);
+    
     fuco_hashvalue_t hash = map->hash_func(key);
     size_t idx = hash % map->cap;
 

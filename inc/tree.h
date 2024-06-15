@@ -2,6 +2,7 @@
 #define FUCO_TREE_H
 
 #include "tokenizer.h"
+#include "symbol.h"
 
 typedef enum {
     FUCO_NODE_EMPTY,
@@ -75,5 +76,9 @@ void fuco_node_write(fuco_node_t *node, FILE *stream);
 void fuco_node_pretty_write(fuco_node_t *node, FILE *stream);
 
 void fuco_node_validate(fuco_node_t *node);
+
+int fuco_node_resolve_symbols_global(fuco_node_t *node, 
+                                     fuco_symboltable_t *table, 
+                                     fuco_scope_t *scope);
 
 #endif

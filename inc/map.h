@@ -40,6 +40,8 @@ fuco_map_entry_t *fuco_map_entry_new(void *key, void *value,
                                      fuco_hashvalue_t hash, 
                                      fuco_map_entry_t *next);
 
+void fuco_map_entry_destruct(fuco_map_entry_t *entry, fuco_map_t *map);
+
 void fuco_map_init(fuco_map_t *map, 
                    fuco_map_hash_t hash_func, fuco_map_equal_t equal_func, 
                    fuco_free_t key_free_func, fuco_free_t value_free_func);
