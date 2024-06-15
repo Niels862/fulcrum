@@ -13,8 +13,11 @@ void fuco_not_implemented(char const *file, int line) {
 
 void fuco_syntax_error(fuco_textsource_t *source, char const *format, ...) {
     fprintf(stderr, FUCO_ANSI_RED "Error: ");
-    fuco_textsource_write(source, stderr);
-    fprintf(stderr, ": ");
+
+    if (source != NULL) {
+        fuco_textsource_write(source, stderr);
+        fprintf(stderr, ": ");
+    }
 
     va_list args;
     va_start(args, format);
@@ -80,4 +83,15 @@ char *fuco_repr_char(char c) {
     }
 
     return buf;
+}
+
+int fuco_ceil_log(unsigned int i, unsigned int base) {
+    int log = 0;
+    
+    while (i > 0) {
+        log++;
+        i /= base;
+    }
+
+    return log;
 }

@@ -1,11 +1,11 @@
-def a() {
+def main() {
     return 0; 
 }
 
-def b() {
+def f() {
     return 42;
 }
 
-def c() {
+def g() {
     return 69;
 }

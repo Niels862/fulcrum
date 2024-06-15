@@ -21,10 +21,14 @@ int main(int argc, char *argv[]) {
 
     if (node != NULL) {
         if (fuco_node_resolve_symbols_global(node, &table, &global) == 0) {
-            fuco_node_pretty_write(node, stderr);
-            fprintf(stderr, "\n");
-
-            fuco_symboltable_write(&table, stderr);
+            fuco_symbol_t *entry = fuco_scope_lookup(&global, "main");
+            if (entry == NULL) {
+                fuco_syntax_error(NULL, "entry point '%s' was not defined", 
+                                  "main");
+            } else {
+                fuco_node_pretty_write(node, stderr);
+                fuco_symboltable_write(&table, stderr);
+            }
         }
 
         fuco_node_free(node);

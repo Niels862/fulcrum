@@ -5,7 +5,8 @@
 
 fuco_node_descriptor_t node_descriptors[] = {
     { FUCO_NODE_EMPTY, 0, FUCO_LAYOUT_EMPTY_N, "empty" },
-    { FUCO_NODE_LIST, 0, FUCO_LAYOUT_VARIADIC, "list" },
+    { FUCO_NODE_FILEBODY, 0, FUCO_LAYOUT_VARIADIC, "filebody" },
+    { FUCO_NODE_BODY, 0, FUCO_LAYOUT_VARIADIC, "body" },
     { FUCO_NODE_FUNCTION, 0, FUCO_LAYOUT_FUNCTION_N, "function" },
     { FUCO_NODE_VARIABLE, 0, FUCO_LAYOUT_VARIABLE_N, "variable" },
     { FUCO_NODE_INTEGER, 0, FUCO_LAYOUT_INTEGER_N, "integer" },
@@ -148,9 +149,7 @@ void fuco_node_validate(fuco_node_t *node) {
     assert(node != NULL);
     assert(node_descriptors[node->type].layout == FUCO_LAYOUT_VARIADIC 
            || (size_t)node_descriptors[node->type].layout == node->count);
-    
-    return; /* TEMP */
-    
+        
     for (size_t i = 0; i < node->count; i++) {
         assert(node->children[i] != NULL);
     }
@@ -161,12 +160,13 @@ int fuco_node_resolve_symbols_global(fuco_node_t *node,
                                       fuco_scope_t *scope) {
     switch (node->type) {
         case FUCO_NODE_FUNCTION:
-            if (fuco_symboltable_insert(table, scope, &node->token) == NULL) {
+            if (fuco_symboltable_insert(table, scope, &node->token, 
+                                        node) == NULL) {
                 return 1;
             }
             break;
 
-        case FUCO_NODE_LIST:
+        case FUCO_NODE_FILEBODY:
             for (size_t i = 0; i < node->count; i++) {
                 fuco_node_t *child = node->children[i];
                 if (fuco_node_resolve_symbols_global(child, table, scope)) {

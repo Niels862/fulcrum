@@ -13,6 +13,7 @@ typedef uint32_t fuco_symbolid_t;
 typedef struct {
     fuco_token_t *token;
     fuco_symbolid_t id;
+    fuco_node_t *def;
 } fuco_symbol_t;
 
 typedef struct fuco_scope_t {
@@ -45,6 +46,7 @@ void fuco_symboltable_write(fuco_symboltable_t *table, FILE *stream);
 
 fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table, 
                                        fuco_scope_t *scope,
-                                       fuco_token_t *token);
+                                       fuco_token_t *token,
+                                       fuco_node_t *def);
 
 #endif

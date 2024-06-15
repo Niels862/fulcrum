@@ -15,9 +15,14 @@ void fuco_scope_destruct(fuco_scope_t *scope) {
 }
 
 fuco_symbol_t *fuco_scope_lookup(fuco_scope_t *scope, char *ident) {
-    FUCO_UNUSED(scope), FUCO_UNUSED(ident);
+    fuco_symbol_t *symbol = NULL;
 
-    return NULL;
+    while (scope != NULL && symbol == NULL) {
+        symbol = fuco_map_lookup(&scope->map, ident);
+        scope = scope->prev;
+    }
+
+    return symbol;
 }
 
 fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope, 
@@ -53,6 +58,7 @@ void fuco_symboltable_init(fuco_symboltable_t *table) {
     table->size++;
     table->list[0].token = &null_token;
     table->list[0].id = 0;
+    table->list[0].def = NULL;
 }
 
 void fuco_symboltable_destruct(fuco_symboltable_t *table) {
@@ -70,14 +76,16 @@ void fuco_symboltable_write(fuco_symboltable_t *table, FILE *stream) {
 
     for (size_t i = 0; i < table->size; i++) {
         fuco_symbol_t *symbol = &table->list[i];
-        fprintf(stream, "%*s: %d\n", (int)max + 2, 
-                symbol->token->lexeme, symbol->id);
+        fprintf(stream, " %*s: %*d (%d)\n", (int)max, 
+                symbol->token->lexeme, fuco_ceil_log(table->size, 10),
+                symbol->id, symbol->def != NULL);
     }
 }
 
 fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table,
                                        fuco_scope_t *scope,
-                                       fuco_token_t *token) {
+                                       fuco_token_t *token,
+                                       fuco_node_t *def) {
     if (table->size >= table->cap) {
         table->list = realloc(table->list, 
                               2 * table->size * sizeof(fuco_symbol_t));
@@ -88,6 +96,7 @@ fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table,
 
     symbol->token = token;
     symbol->id = table->size;
+    symbol->def = def;
 
     table->size++;
 

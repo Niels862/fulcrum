@@ -4,7 +4,7 @@
 
 fuco_node_t *fuco_parse_filebody(fuco_tokenizer_t *tokenizer) {
     size_t allocated;
-    fuco_node_t *node = fuco_node_variadic_new(FUCO_NODE_LIST, &allocated);
+    fuco_node_t *node = fuco_node_variadic_new(FUCO_NODE_FILEBODY, &allocated);
 
     while (true) {
         while (tokenizer->curr.type == FUCO_TOKEN_EOF) {
@@ -60,7 +60,7 @@ fuco_node_t *fuco_parse_braced_block(fuco_tokenizer_t *tokenizer) {
     }
 
     size_t allocated;
-    fuco_node_t *node = fuco_node_variadic_new(FUCO_NODE_LIST, &allocated);
+    fuco_node_t *node = fuco_node_variadic_new(FUCO_NODE_BODY, &allocated);
 
     while (tokenizer->curr.type != FUCO_TOKEN_BRACE_CLOSE 
            && tokenizer->curr.type != FUCO_TOKEN_EOF) {

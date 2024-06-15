@@ -17,4 +17,6 @@ char fuco_base_char(int i);
 
 char *fuco_repr_char(char c);
 
+int fuco_ceil_log(unsigned int i, unsigned int base);
+
 #endif
