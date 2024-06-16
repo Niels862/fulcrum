@@ -51,7 +51,7 @@ typedef struct {
 struct fuco_node_t {
     fuco_nodetype_t type;
     fuco_token_t token;
-    fuco_symbolid_t id;
+    fuco_symbol_t *symbol;
     size_t count;
     struct fuco_node_t *children[];
 };
@@ -74,6 +74,9 @@ fuco_node_t *fuco_node_add_child(fuco_node_t *node, fuco_node_t *child,
 void fuco_node_set_child(fuco_node_t *node, fuco_node_t *child, 
                          fuco_node_layout_t index);
 
+fuco_node_t *fuco_node_get_child(fuco_node_t *node, fuco_node_layout_t index, 
+                                 fuco_nodetype_t type);
+
 void fuco_node_write(fuco_node_t *node, FILE *stream);
 
 void fuco_node_pretty_write(fuco_node_t *node, FILE *stream);
@@ -84,8 +87,9 @@ int fuco_node_resolve_symbols_global(fuco_node_t *node,
                                      fuco_symboltable_t *table, 
                                      fuco_scope_t *scope);
 
-fuco_ir_node_t *fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir, 
-                                      fuco_symboltable_t *table,
-                                      fuco_ir_node_t *entry);
+
+
+void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir, 
+                           fuco_ir_object_t *object);
 
 #endif

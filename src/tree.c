@@ -1,5 +1,6 @@
 #include "tree.h"
 #include "utils.h"
+#include "instruction.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -21,7 +22,7 @@ fuco_node_t *fuco_node_base_new(fuco_nodetype_t type, size_t allocated,
     
     node->type = type;
     fuco_token_init(&node->token);
-    node->id = FUCO_SYMBOLID_INVALID;
+    node->symbol = NULL;
     node->count = count;
 
     if (allocated > 0) {
@@ -86,6 +87,13 @@ void fuco_node_set_child(fuco_node_t *node, fuco_node_t *child,
     node->children[index] = child;
 }
 
+fuco_node_t *fuco_node_get_child(fuco_node_t *node, fuco_node_layout_t index, 
+                                 fuco_nodetype_t type) {
+    assert(node->type == type);
+
+    return node->children[index];
+}
+
 void fuco_node_write(fuco_node_t *node, FILE *stream) {
     fprintf(stream, "[(");
     fuco_token_write(&node->token, stream);
@@ -134,8 +142,8 @@ void fuco_node_pretty_write(fuco_node_t *node, FILE *stream) {
             fuco_token_write(&node->token, stream);
         }
 
-        if (node->id != FUCO_SYMBOLID_INVALID) {
-            fprintf(stream, " (id=%d)", node->id);
+        if (node->symbol != NULL) {
+            fprintf(stream, " (id=%d)", node->symbol->id);
         }
         
         fprintf(stream, "\n");
@@ -163,9 +171,7 @@ void fuco_node_validate(fuco_node_t *node) {
 
 int fuco_node_resolve_symbols_global(fuco_node_t *node, 
                                       fuco_symboltable_t *table, 
-                                      fuco_scope_t *scope) {
-    fuco_symbol_t *symbol = NULL;
-    
+                                      fuco_scope_t *scope) {    
     switch (node->type) {
         case FUCO_NODE_FILEBODY:
             for (size_t i = 0; i < node->count; i++) {
@@ -177,8 +183,9 @@ int fuco_node_resolve_symbols_global(fuco_node_t *node,
             break;
 
         case FUCO_NODE_FUNCTION:
-            symbol = fuco_symboltable_insert(table, scope, &node->token, node);
-            if (symbol == NULL) {
+            node->symbol = fuco_symboltable_insert(table, scope, 
+                                                   &node->token, node);
+            if (node->symbol == NULL) {
                 return 1;
             }
             break;
@@ -187,32 +194,34 @@ int fuco_node_resolve_symbols_global(fuco_node_t *node,
             break;
     }
 
-    if (symbol != NULL) {
-        node->id = symbol->id;
-    }
-
     return 0;
 }
 
+void fuco_node_generate_ir_propagate(fuco_node_t *node, fuco_ir_t *ir, 
+                                     fuco_ir_object_t *object) {
+    for (size_t i = 0; i < node->count; i++) {
+        fuco_node_generate_ir(node->children[i], ir, object);
+    }
+}
+
 fuco_ir_node_t *fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir, 
-                                      fuco_symboltable_t *table,
-                                      fuco_ir_node_t *entry) {
-    FUCO_UNUSED(ir), FUCO_UNUSED(table), FUCO_UNUSED(entry);
-    
+                                      fuco_ir_object_t *object) {
+    fuco_node_t *node_next = NULL;
+
     switch (node->type) {
         case FUCO_NODE_EMPTY:
             break;
 
         case FUCO_NODE_FILEBODY:
-            /* TODO */
-            break;
-
         case FUCO_NODE_BODY:
-            /* TODO */
+            fuco_node_generate_ir_propagate(node, ir, object);
             break;
 
         case FUCO_NODE_FUNCTION:
-            /* TODO */
+            node->symbol->object = fuco_ir_add_object(ir, node->symbol->id);
+            node_next = fuco_node_get_child(node, FUCO_LAYOUT_FUNCTION_BODY, 
+                                            FUCO_NODE_FUNCTION);
+            fuco_node_generate_ir(node_next, ir, node->symbol->object);
             break;
 
         case FUCO_NODE_VARIABLE:
@@ -224,7 +233,8 @@ fuco_ir_node_t *fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir,
             break;
 
         case FUCO_NODE_RETURN:
-            /* TODO */
+            fuco_node_generate_ir_propagate(node, ir, object);
+            fuco_ir_add_instr(object, FUCO_OPCODE_RET);
             break;
     }
 

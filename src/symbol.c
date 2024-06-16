@@ -91,8 +91,8 @@ fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table,
                                        fuco_node_t *def) {
     if (table->size >= table->cap) {
         table->list = realloc(table->list, 
-                              2 * table->size * sizeof(fuco_symbol_t));
-        table->size *= 2;
+                              2 * table->cap * sizeof(fuco_symbol_t));
+        table->cap *= 2;
     }
 
     fuco_symbol_t *symbol = &table->list[table->size];
