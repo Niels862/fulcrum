@@ -3,6 +3,7 @@
 
 #include "tokenizer.h"
 #include "symbol.h"
+#include "ir.h"
 
 typedef enum {
     FUCO_NODE_EMPTY,
@@ -50,6 +51,7 @@ typedef struct {
 struct fuco_node_t {
     fuco_nodetype_t type;
     fuco_token_t token;
+    fuco_symbolid_t id;
     size_t count;
     struct fuco_node_t *children[];
 };
@@ -81,5 +83,9 @@ void fuco_node_validate(fuco_node_t *node);
 int fuco_node_resolve_symbols_global(fuco_node_t *node, 
                                      fuco_symboltable_t *table, 
                                      fuco_scope_t *scope);
+
+fuco_ir_node_t *fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir, 
+                                      fuco_symboltable_t *table,
+                                      fuco_ir_node_t *entry);
 
 #endif

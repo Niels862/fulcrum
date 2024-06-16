@@ -51,14 +51,16 @@ void fuco_symboltable_init(fuco_symboltable_t *table) {
     };
 
     table->list = malloc(FUCO_SYMBOLTABLE_INIT_SIZE * sizeof(fuco_symbol_t));
-    table->size = FUCO_INVALID_SYMBOLID;
+    table->size = FUCO_SYMBOLID_INVALID;
     table->cap = FUCO_SYMBOLTABLE_INIT_SIZE;
 
+    fuco_symbol_t *symbol = &table->list[0];
     /* Insert null-symbol */
     table->size++;
-    table->list[0].token = &null_token;
-    table->list[0].id = 0;
-    table->list[0].def = NULL;
+    symbol->token = &null_token;
+    symbol->id = 0;
+    symbol->def = symbol->value = NULL;
+    symbol->object = NULL;
 }
 
 void fuco_symboltable_destruct(fuco_symboltable_t *table) {
@@ -76,9 +78,10 @@ void fuco_symboltable_write(fuco_symboltable_t *table, FILE *stream) {
 
     for (size_t i = 0; i < table->size; i++) {
         fuco_symbol_t *symbol = &table->list[i];
-        fprintf(stream, " %*s: %*d (%d)\n", (int)max, 
+        fprintf(stream, " %*s: %*d (def=%d,val=%d,obj=%d)\n", (int)max, 
                 symbol->token->lexeme, fuco_ceil_log(table->size, 10),
-                symbol->id, symbol->def != NULL);
+                symbol->id, symbol->def != NULL,
+                symbol->value != NULL, symbol->object != NULL);
     }
 }
 
@@ -97,6 +100,8 @@ fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table,
     symbol->token = token;
     symbol->id = table->size;
     symbol->def = def;
+    symbol->value = NULL;
+    symbol->object = NULL;
 
     table->size++;
 

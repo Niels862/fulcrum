@@ -3,17 +3,22 @@
 
 #include "map.h"
 #include "tokenizer.h"
+#include "ir.h"
 #include <stdint.h>
 #include <stdio.h>
 
 typedef uint32_t fuco_symbolid_t;
 
-#define FUCO_INVALID_SYMBOLID (fuco_symbolid_t)0
+#define FUCO_SYMBOLID_INVALID (fuco_symbolid_t)0
 
 typedef struct {
     fuco_token_t *token;
     fuco_symbolid_t id;
     fuco_node_t *def;
+    /* In inline function generation: actual parameter value */
+    fuco_node_t *value;
+    /* IR generated object */
+    fuco_ir_node_t *object;
 } fuco_symbol_t;
 
 typedef struct fuco_scope_t {

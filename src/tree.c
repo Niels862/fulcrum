@@ -1,4 +1,5 @@
 #include "tree.h"
+#include "utils.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -20,6 +21,7 @@ fuco_node_t *fuco_node_base_new(fuco_nodetype_t type, size_t allocated,
     
     node->type = type;
     fuco_token_init(&node->token);
+    node->id = FUCO_SYMBOLID_INVALID;
     node->count = count;
 
     if (allocated > 0) {
@@ -132,6 +134,10 @@ void fuco_node_pretty_write(fuco_node_t *node, FILE *stream) {
             fuco_token_write(&node->token, stream);
         }
 
+        if (node->id != FUCO_SYMBOLID_INVALID) {
+            fprintf(stream, " (id=%d)", node->id);
+        }
+        
         fprintf(stream, "\n");
 
         depth++;
@@ -158,14 +164,9 @@ void fuco_node_validate(fuco_node_t *node) {
 int fuco_node_resolve_symbols_global(fuco_node_t *node, 
                                       fuco_symboltable_t *table, 
                                       fuco_scope_t *scope) {
+    fuco_symbol_t *symbol = NULL;
+    
     switch (node->type) {
-        case FUCO_NODE_FUNCTION:
-            if (fuco_symboltable_insert(table, scope, &node->token, 
-                                        node) == NULL) {
-                return 1;
-            }
-            break;
-
         case FUCO_NODE_FILEBODY:
             for (size_t i = 0; i < node->count; i++) {
                 fuco_node_t *child = node->children[i];
@@ -175,9 +176,57 @@ int fuco_node_resolve_symbols_global(fuco_node_t *node,
             }
             break;
 
+        case FUCO_NODE_FUNCTION:
+            symbol = fuco_symboltable_insert(table, scope, &node->token, node);
+            if (symbol == NULL) {
+                return 1;
+            }
+            break;
+
         default:
             break;
     }
 
+    if (symbol != NULL) {
+        node->id = symbol->id;
+    }
+
     return 0;
+}
+
+fuco_ir_node_t *fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir, 
+                                      fuco_symboltable_t *table,
+                                      fuco_ir_node_t *entry) {
+    FUCO_UNUSED(ir), FUCO_UNUSED(table), FUCO_UNUSED(entry);
+    
+    switch (node->type) {
+        case FUCO_NODE_EMPTY:
+            break;
+
+        case FUCO_NODE_FILEBODY:
+            /* TODO */
+            break;
+
+        case FUCO_NODE_BODY:
+            /* TODO */
+            break;
+
+        case FUCO_NODE_FUNCTION:
+            /* TODO */
+            break;
+
+        case FUCO_NODE_VARIABLE:
+            /* TODO */
+            break;
+
+        case FUCO_NODE_INTEGER:
+            /* TODO */
+            break;
+
+        case FUCO_NODE_RETURN:
+            /* TODO */
+            break;
+    }
+
+    return NULL;
 }
