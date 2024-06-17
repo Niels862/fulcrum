@@ -76,6 +76,12 @@ void fuco_ir_destruct(fuco_ir_t *ir) {
     free(ir->objects);
 }
 
+void fuco_ir_write(fuco_ir_t *ir, FILE *stream) {
+    for (size_t i = 0; i < ir->size; i++) {
+        fuco_ir_object_write(&ir->objects[i], stream);
+    }
+}
+
 fuco_ir_object_t *fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label) {
     if (ir->size >= ir->cap) {
         ir->objects = realloc(ir->objects, 
@@ -108,7 +114,7 @@ void fuco_ir_add_instr(fuco_ir_object_t *object, fuco_opcode_t opcode) {
 }
 
 void fuco_ir_add_instr_imm48(fuco_ir_object_t *object, fuco_opcode_t opcode, 
-                            uint64_t data) {
+                             uint64_t data) {
     assert(instr_descriptors[opcode].layout == FUCO_INSTR_LAYOUT_IMM48);
 
     fuco_ir_node_t *node = fuco_ir_node_instr_new(opcode);
@@ -117,4 +123,53 @@ void fuco_ir_add_instr_imm48(fuco_ir_object_t *object, fuco_opcode_t opcode,
     node->imm.data = data;
 
     fuco_ir_add_node(object, node);
+}
+
+void fuco_ir_assemble(fuco_ir_t *ir, fuco_bytecode_t *bytecode) {
+    uint64_t *defs = malloc(ir->label * sizeof(uint64_t));
+    for (size_t i = 0; i < ir->label; i++) {
+        defs[i] = FUCO_LABEL_DEF_INVALID;
+    }
+
+    for (size_t i = 0; i < ir->size; i++) {
+        fuco_ir_object_t *object = &ir->objects[i];
+        fuco_ir_node_t *node = object->begin;
+
+        while (node != NULL) {
+            fuco_instr_t instr = 0;
+            FUCO_SET_OPCODE(instr, node->opcode);
+
+            uint64_t imm;
+            if (node->attrs & FUCO_IR_REFERENCES_LABEL) {
+                imm = defs[node->imm.label];
+
+                assert(defs[node->imm.label] != FUCO_LABEL_DEF_INVALID);
+                assert((imm >> 48) == 0);
+            } else {
+                imm = node->imm.data;
+            }
+
+            switch (instr_descriptors[node->opcode].layout) {
+                case FUCO_INSTR_LAYOUT_NO_IMM:
+                    break;
+
+                case FUCO_INSTR_LAYOUT_IMM48:
+                    FUCO_SET_IMM48(instr, imm);
+                    break;
+            }
+
+            if (bytecode->size >= bytecode->cap) {
+                bytecode->instrs = realloc(bytecode->instrs, 
+                                           2 * bytecode->size);
+                bytecode->cap *= 2;
+            }
+
+            bytecode->instrs[bytecode->size] = instr;
+            bytecode->size++;
+
+            node = node->next;
+        }
+    }
+
+    free(defs);
 }

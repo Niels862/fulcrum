@@ -6,6 +6,8 @@
 
 typedef uint64_t fuco_ir_label_t;
 
+#define FUCO_LABEL_DEF_INVALID (uint64_t)(-1)
+
 typedef enum {
     FUCO_IR_INSTR = 0x1,
     FUCO_IR_REFERENCES_LABEL = 0x2,
@@ -56,6 +58,8 @@ void fuco_ir_init(fuco_ir_t *ir);
 
 void fuco_ir_destruct(fuco_ir_t *ir);
 
+void fuco_ir_write(fuco_ir_t *ir, FILE *stream);
+
 fuco_ir_object_t *fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label);
 
 void fuco_ir_add_node(fuco_ir_object_t *object, fuco_ir_node_t *node);
@@ -63,6 +67,8 @@ void fuco_ir_add_node(fuco_ir_object_t *object, fuco_ir_node_t *node);
 void fuco_ir_add_instr(fuco_ir_object_t *object, fuco_opcode_t opcode);
 
 void fuco_ir_add_instr_imm48(fuco_ir_object_t *object, fuco_opcode_t opcode, 
-                            uint64_t data);
+                             uint64_t data);
+
+void fuco_ir_assemble(fuco_ir_t *ir, fuco_bytecode_t *bytecode);
 
 #endif

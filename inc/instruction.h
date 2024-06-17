@@ -18,7 +18,11 @@ typedef enum {
 
 #define FUCO_GET_OPCODE(instr) ((instr) & 0xFFFF)
 
+#define FUCO_SET_OPCODE(instr, opcode) ((instr) |= (opcode))
+
 #define FUCO_GET_IMM48(instr) ((instr) >> 16)
+
+#define FUCO_SET_IMM48(instr, imm48) ((instr) |= ((imm48) << 16))
 
 #define FUCO_INSTR_FORMAT "%016lx"
 
@@ -33,8 +37,22 @@ typedef struct {
     fuco_instr_layout_t layout;
 } fuco_instr_descriptor_t;
 
+#define FUCO_BYTECODE_INIT_SIZE 1024
+
+typedef struct {
+    fuco_instr_t *instrs;
+    size_t size;
+    size_t cap;
+} fuco_bytecode_t;
+
 extern fuco_instr_descriptor_t instr_descriptors[];
 
-void fuco_disassemble(fuco_instr_t instr, FILE *stream);
+void fuco_instr_write(fuco_instr_t instr, FILE *stream);
+
+void fuco_bytecode_init(fuco_bytecode_t *bytecode);
+
+void fuco_bytecode_destruct(fuco_bytecode_t *bytecode);
+
+void fuco_bytecode_write(fuco_bytecode_t *bytecode, FILE *stream);
 
 #endif

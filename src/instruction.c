@@ -1,4 +1,5 @@
 #include "instruction.h"
+#include <stdlib.h>
 
 fuco_instr_descriptor_t instr_descriptors[] = {
     { FUCO_OPCODE_NOP, "nop", FUCO_INSTR_LAYOUT_NO_IMM }, 
@@ -11,7 +12,7 @@ fuco_instr_descriptor_t instr_descriptors[] = {
 #define FUCO_N_INSTRUCTIONS \
         sizeof(instr_descriptors) / sizeof(*instr_descriptors)
 
-void fuco_disassemble(fuco_instr_t instr, FILE *stream) {
+void fuco_instr_write(fuco_instr_t instr, FILE *stream) {
     fuco_opcode_t opcode = FUCO_GET_OPCODE(instr);
     uint64_t imm48 = FUCO_GET_IMM48(instr);
 
@@ -32,5 +33,21 @@ void fuco_disassemble(fuco_instr_t instr, FILE *stream) {
         }
     } else {
         fprintf(stream, "? (" FUCO_INSTR_FORMAT ")\n", instr);
+    }
+}
+
+void fuco_bytecode_init(fuco_bytecode_t *bytecode) {
+    bytecode->instrs = malloc(FUCO_BYTECODE_INIT_SIZE * sizeof(fuco_instr_t));
+    bytecode->size = 0;
+    bytecode->cap = FUCO_BYTECODE_INIT_SIZE;
+}
+
+void fuco_bytecode_destruct(fuco_bytecode_t *bytecode) {
+    free(bytecode->instrs);
+}
+
+void fuco_bytecode_write(fuco_bytecode_t *bytecode, FILE *stream) {
+    for (size_t i = 0; i < bytecode->size; i++) {
+        fuco_instr_write(bytecode->instrs[i], stream);
     }
 }

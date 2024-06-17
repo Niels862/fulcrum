@@ -18,6 +18,9 @@ int main(int argc, char *argv[]) {
     fuco_ir_t ir;
     fuco_ir_init(&ir);
 
+    fuco_bytecode_t bytecode;
+    fuco_bytecode_init(&bytecode);
+
     fuco_tokenizer_add_source_filename(&tokenizer, fuco_strdup("tests/main.fc"));
 
     fuco_node_t *node = fuco_parse_filebody(&tokenizer);
@@ -32,12 +35,12 @@ int main(int argc, char *argv[]) {
                 /* Labels start where symbol IDs finished */
                 ir.label = table.size;
                 fuco_node_generate_ir(node, &ir, NULL);
-                
+                fuco_ir_assemble(&ir, &bytecode);
+
                 fuco_node_pretty_write(node, stderr);
                 fuco_symboltable_write(&table, stderr);
-                for (size_t i = 0; i < ir.size; i++) {
-                    fuco_ir_object_write(&ir.objects[i], stderr);
-                }
+                fuco_ir_write(&ir, stderr);
+                fuco_bytecode_write(&bytecode, stderr);
             }
         }
 
@@ -48,6 +51,7 @@ int main(int argc, char *argv[]) {
     fuco_symboltable_destruct(&table);
     fuco_scope_destruct(&global);
     fuco_ir_destruct(&ir);
+    fuco_bytecode_destruct(&bytecode);
 
     return 0;
 }
