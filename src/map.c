@@ -52,7 +52,6 @@ void fuco_map_init(fuco_map_t *map,
     map->data = calloc(FUCO_MAP_INIT_SIZE, sizeof(fuco_map_entry_t *));
 }
 
-
 void fuco_map_destruct(fuco_map_t *map) {
     for (size_t i = 0; i < map->cap; i++) {
         fuco_map_entry_t *next, *entry = map->data[i];

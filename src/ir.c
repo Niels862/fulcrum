@@ -1,10 +1,11 @@
 #include "ir.h"
 #include <stdlib.h>
+#include <assert.h>
 
 fuco_ir_node_t *fuco_ir_node_instr_new(fuco_opcode_t opcode) {
     fuco_ir_node_t *node = malloc(sizeof(fuco_ir_node_t));
 
-    node->attrs = 0;
+    node->attrs = FUCO_IR_INSTR;
     node->opcode = opcode;
     node->next = NULL;
 
@@ -20,11 +21,18 @@ void fuco_ir_node_free(fuco_ir_node_t *node) {
 }
 
 void fuco_ir_node_write(fuco_ir_node_t *node, FILE *stream) {
-    if (node->attrs & FUCO_IR_LABEL) {
-        fprintf(stream, ".L%ld:\n", node->imm.label);
+    if (node->attrs & FUCO_IR_INSTR) {
+        fprintf(stream, "  %s", instr_descriptors[node->opcode].mnemonic);
+        if (node->attrs & FUCO_IR_INCLUDES_DATA) {
+            if (node->attrs & FUCO_IR_REFERENCES_LABEL) {
+                fprintf(stream, " .L%ld", node->imm.label);
+            } else {
+                fprintf(stream, " %ld", node->imm.data);
+            }
+        }
+        fprintf(stream, "\n");
     } else {
-        fprintf(stream, "  %s (...)\n", 
-                instr_descriptors[node->opcode].mnemonic);
+        fprintf(stream, ".L%ld:\n", node->imm.label);
     }
 }
 
@@ -83,12 +91,30 @@ fuco_ir_object_t *fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label) {
     return object;
 }
 
-void fuco_ir_add_instr(fuco_ir_object_t *object, fuco_opcode_t opcode) {
-    fuco_ir_node_t *node = fuco_ir_node_instr_new(opcode);
+void fuco_ir_add_node(fuco_ir_object_t *object, fuco_ir_node_t *node) {
     if (object->begin == NULL) {
         object->begin = object->end = node;
     } else {
         object->end->next = node;
         object->end = node;
     }
+}
+
+void fuco_ir_add_instr(fuco_ir_object_t *object, fuco_opcode_t opcode) {
+    assert(instr_descriptors[opcode].layout == FUCO_INSTR_LAYOUT_NO_IMM);
+    
+    fuco_ir_node_t *node = fuco_ir_node_instr_new(opcode);
+    fuco_ir_add_node(object, node);
+}
+
+void fuco_ir_add_instr_imm48(fuco_ir_object_t *object, fuco_opcode_t opcode, 
+                            uint64_t data) {
+    assert(instr_descriptors[opcode].layout == FUCO_INSTR_LAYOUT_IMM48);
+
+    fuco_ir_node_t *node = fuco_ir_node_instr_new(opcode);
+
+    node->attrs |= FUCO_IR_INCLUDES_DATA;
+    node->imm.data = data;
+
+    fuco_ir_add_node(object, node);
 }

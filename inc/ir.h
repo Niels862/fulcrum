@@ -7,13 +7,13 @@
 typedef uint64_t fuco_ir_label_t;
 
 typedef enum {
-    FUCO_IR_INSTR = 0x1, /* INSTR and LABEL are exclusive */
-    FUCO_IR_LABEL = 0x2,
-    FUCO_IR_REFERENCING_LABEL = 0x4
-} fuco_ir_nodetype_t;
+    FUCO_IR_INSTR = 0x1,
+    FUCO_IR_REFERENCES_LABEL = 0x2,
+    FUCO_IR_INCLUDES_DATA = 0x4
+} fuco_ir_attr_t;
 
 typedef struct fuco_ir_node_t {
-    fuco_ir_nodetype_t attrs;
+    fuco_ir_attr_t attrs;
     
     fuco_opcode_t opcode;
     union {
@@ -58,6 +58,11 @@ void fuco_ir_destruct(fuco_ir_t *ir);
 
 fuco_ir_object_t *fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label);
 
+void fuco_ir_add_node(fuco_ir_object_t *object, fuco_ir_node_t *node);
+
 void fuco_ir_add_instr(fuco_ir_object_t *object, fuco_opcode_t opcode);
+
+void fuco_ir_add_instr_imm48(fuco_ir_object_t *object, fuco_opcode_t opcode, 
+                            uint64_t data);
 
 #endif

@@ -204,7 +204,7 @@ void fuco_node_generate_ir_propagate(fuco_node_t *node, fuco_ir_t *ir,
     }
 }
 
-fuco_ir_node_t *fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir, 
+void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir, 
                                       fuco_ir_object_t *object) {
     fuco_node_t *node_next = NULL;
 
@@ -229,14 +229,13 @@ fuco_ir_node_t *fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir,
             break;
 
         case FUCO_NODE_INTEGER:
-            /* TODO */
+            fuco_ir_add_instr_imm48(object, FUCO_OPCODE_PUSHD, 
+                                   *(uint64_t *)node->token.data);
             break;
 
         case FUCO_NODE_RETURN:
             fuco_node_generate_ir_propagate(node, ir, object);
-            fuco_ir_add_instr(object, FUCO_OPCODE_RET);
+            fuco_ir_add_instr(object, FUCO_OPCODE_RETD);
             break;
     }
-
-    return NULL;
 }

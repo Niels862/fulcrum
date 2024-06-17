@@ -28,11 +28,11 @@ void fuco_interpret(fuco_instr_t *program) {
                 /* ... */
                 break;
 
-            case FUCO_OPCODE_RET:
+            case FUCO_OPCODE_RETD:
                 /* ... */
                 break;
 
-            case FUCO_OPCODE_PUSH4:
+            case FUCO_OPCODE_PUSHD:
                 /* ... */
                 break;
 

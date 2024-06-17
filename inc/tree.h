@@ -87,7 +87,8 @@ int fuco_node_resolve_symbols_global(fuco_node_t *node,
                                      fuco_symboltable_t *table, 
                                      fuco_scope_t *scope);
 
-
+void fuco_node_generate_ir_propagate(fuco_node_t *node, fuco_ir_t *ir, 
+                                     fuco_ir_object_t *object);
 
 void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir, 
                            fuco_ir_object_t *object);

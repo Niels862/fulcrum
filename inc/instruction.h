@@ -11,8 +11,8 @@ typedef uint64_t fuco_pointer_t;
 typedef enum {
     FUCO_OPCODE_NOP = 0,
     FUCO_OPCODE_CALL,
-    FUCO_OPCODE_RET,
-    FUCO_OPCODE_PUSH4,
+    FUCO_OPCODE_RETD,
+    FUCO_OPCODE_PUSHD,
     FUCO_OPCODE_EXIT
 } fuco_opcode_t;
 

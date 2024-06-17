@@ -2,7 +2,7 @@ TARGET = fuco
 CC = gcc
 INC_DIR = inc
 SRC_DIR = src
-CFLAGS = -Wall -Wextra -Wpedantic -Wfatal-errors -std=c99 -O3 -g
+CFLAGS = -Wall -Wextra -Wpedantic -Werror -Wfatal-errors -std=c99 -O3 -g
 
 INCFLAGS = $(addprefix -I, $(INC_DIR))
 SOURCES = $(sort $(shell find $(SRC_DIR) -name '*.c'))

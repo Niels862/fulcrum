@@ -6,30 +6,6 @@
 #include <ctype.h>
 #include <assert.h>
 
-fuco_token_descriptor_t const token_descriptors[] = {
-    { FUCO_TOKEN_EMPTY, 0, "empty" },
-
-    { FUCO_TOKEN_INTEGER, FUCO_TOKENTYPE_HAS_LEXEME, "integer" },
-    { FUCO_TOKEN_IDENTIFIER, FUCO_TOKENTYPE_HAS_LEXEME, "identifier" },
-    
-    { FUCO_TOKEN_DEF, FUCO_TOKENTYPE_IS_KEYWORD, "def" },
-    { FUCO_TOKEN_RETURN, FUCO_TOKENTYPE_IS_KEYWORD, "return" },
-
-    { FUCO_TOKEN_BRACKET_OPEN, FUCO_TOKENTYPE_IS_SEPARATOR, "(" },
-    { FUCO_TOKEN_BRACKET_CLOSE, FUCO_TOKENTYPE_IS_SEPARATOR, ")" },
-    { FUCO_TOKEN_BRACE_OPEN, FUCO_TOKENTYPE_IS_SEPARATOR, "{" },
-    { FUCO_TOKEN_BRACE_CLOSE, FUCO_TOKENTYPE_IS_SEPARATOR, "}" },
-    { FUCO_TOKEN_SQBRACKET_OPEN, FUCO_TOKENTYPE_IS_SEPARATOR, "[" },
-    { FUCO_TOKEN_SQBRACKET_CLOSE, FUCO_TOKENTYPE_IS_SEPARATOR, "]" },
-    { FUCO_TOKEN_DOT, FUCO_TOKENTYPE_IS_SEPARATOR, "." },
-    { FUCO_TOKEN_COMMA, FUCO_TOKENTYPE_IS_SEPARATOR, "," },
-    { FUCO_TOKEN_SEMICOLON, FUCO_TOKENTYPE_IS_SEPARATOR, ";" },
-    
-    { FUCO_TOKEN_EOF, 0, "eof" }
-};
-
-#define FUCO_N_TOKENTYPES sizeof(token_descriptors) / sizeof(*token_descriptors)
-
 bool fuco_is_nontoken(int c) {
     return c == ' ' || c == '\n' || c == '\r' || c == '\t';
 }
@@ -42,34 +18,21 @@ bool fuco_is_identifier_continue(int c) {
     return isalpha(c) || isdigit(c) || c == '_';
 }
 
-char *fuco_tokentype_string(fuco_tokentype_t type) {
-    return token_descriptors[type].string;
-}
+uint64_t *fuco_parse_integer(char *lexeme) {
+    uint64_t data = 0;
 
-bool fuco_tokentype_has_attr(fuco_tokentype_t type, fuco_token_attr_t attr) {
-    return token_descriptors[type].attr & attr;
-}
+    while (*lexeme != '\0') {
+        assert(isdigit(*lexeme));
 
-void fuco_token_init(fuco_token_t *token) {
-    token->lexeme = NULL;
-    fuco_textsource_init(&token->source, NULL);
-    token->type = FUCO_TOKEN_EMPTY;
-}
+        data = 10 * data + *lexeme - '0';
 
-void fuco_token_destruct(fuco_token_t *token) {
-    if (token->lexeme != NULL) {
-        free(token->lexeme);
+        lexeme++;
     }
-    token->type = FUCO_TOKEN_EMPTY;
-    token->lexeme = NULL;
-}
 
-void fuco_token_write(fuco_token_t *token, FILE *stream) {
-    fuco_textsource_write(&token->source, stream);
-    fprintf(stream, ": %s", fuco_tokentype_string(token->type));
-    if (token->lexeme != NULL) {
-        fprintf(stream, ": '%s'", token->lexeme);
-    }
+    uint64_t *p = malloc(sizeof(uint64_t));
+    *p = data;
+
+    return p;
 }
 
 void fuco_filebuf_init(fuco_filebuf_t *buf) {
@@ -91,7 +54,7 @@ void fuco_tokenizer_init(fuco_tokenizer_t *tokenizer) {
 
     tokenizer->curr.type = FUCO_TOKEN_EOF;
 
-    for (size_t i = 0; i < FUCO_N_TOKENTYPES; i++) {
+    for (size_t i = 0; i < fuco_n_tokentypes(); i++) {
         assert(i == token_descriptors[i].type);
     }
 }
@@ -152,7 +115,7 @@ int fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
             c = fuco_tokenizer_next_char(tokenizer, c);
         } while (fuco_is_identifier_continue(c));
 
-        for (fuco_tokentype_t type = 0; type < FUCO_N_TOKENTYPES; type++) {
+        for (fuco_tokentype_t type = 0; type < fuco_n_tokentypes(); type++) {
             if (fuco_tokentype_has_attr(type, FUCO_TOKENTYPE_IS_KEYWORD)
                 && strcmp(fuco_tokentype_string(type), 
                           tokenizer->temp.data) == 0) {
@@ -161,7 +124,7 @@ int fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
             }
         }
     } else {
-        for (fuco_tokentype_t type = 0; type < FUCO_N_TOKENTYPES; type++) {
+        for (fuco_tokentype_t type = 0; type < fuco_n_tokentypes(); type++) {
             if (fuco_tokentype_has_attr(type, FUCO_TOKENTYPE_IS_SEPARATOR) 
                 && fuco_tokentype_string(type)[0] == c) {
                 c = fuco_tokenizer_next_char(tokenizer, c);
@@ -178,9 +141,18 @@ int fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
         return 1;
     }
 
-    if (fuco_tokentype_has_attr(tokenizer->curr.type, 
+    if (fuco_tokentype_has_attr(curr->type, 
                                 FUCO_TOKENTYPE_HAS_LEXEME)) {
         curr->lexeme = fuco_strbuf_dup(&tokenizer->temp);
+
+        switch (curr->type) {
+            case FUCO_TOKEN_INTEGER:
+                curr->data = fuco_parse_integer(curr->lexeme);
+                break;
+
+            default:
+                break;
+        }
     } else {
         curr->lexeme = NULL;
     }
@@ -267,6 +239,7 @@ int fuco_tokenizer_move(fuco_tokenizer_t *tokenizer, fuco_node_t *node) {
     node->token = *token;
 
     token->lexeme = NULL;
+    token->data = NULL;
     fuco_token_destruct(token);
 
     if (fuco_tokenizer_next_token(tokenizer)) {
