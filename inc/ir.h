@@ -6,7 +6,7 @@
 
 typedef uint64_t fuco_ir_label_t;
 
-#define FUCO_LABEL_DEF_INVALID (uint64_t)0
+#define FUCO_LABEL_DEF_INVALID (uint64_t)-1
 
 /* Can be equal as startup may not be used as label */
 #define FUCO_LABEL_STARTUP (fuco_ir_label_t)0

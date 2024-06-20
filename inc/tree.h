@@ -10,6 +10,7 @@ typedef enum {
     FUCO_NODE_FILEBODY,
     FUCO_NODE_BODY,
     FUCO_NODE_FUNCTION,
+    FUCO_NODE_CALL,
     FUCO_NODE_VARIABLE,
     FUCO_NODE_INTEGER,
     FUCO_NODE_RETURN,
@@ -41,6 +42,9 @@ typedef enum {
 
 #define FUCO_VARIADIC_NODE_INIT_SIZE 4
 
+#define FUCO_NODE_SIZE(n) \
+        sizeof(fuco_node_t) + (n) * sizeof(fuco_node_t *)
+
 typedef struct {
     fuco_nodetype_t type;
     fuco_node_attr_t attr;
@@ -64,6 +68,11 @@ fuco_node_t *fuco_node_base_new(fuco_nodetype_t type, size_t allocated,
 fuco_node_t *fuco_node_new(fuco_nodetype_t type);
 
 fuco_node_t *fuco_node_variadic_new(fuco_nodetype_t type, size_t *allocated);
+
+/* Transforms non-variadic node to variadic node */
+fuco_node_t *fuco_node_variadic_transform(fuco_node_t *node, 
+                                          fuco_nodetype_t type, 
+                                          size_t *allocated);
 
 void fuco_node_free(fuco_node_t *node);
 

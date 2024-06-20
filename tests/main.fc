@@ -1,11 +1,15 @@
 def main() {
-    return 60; 
+    return 69; 
 }
+
+# def operator[ + ](a: u32, b: u32) -> u32 {
+#     return asm("addd", 5, 12);
+# }
 
 def f() {
     return 42;
 }
 
 def g() {
-    return 0;
+    return f();
 }

@@ -18,4 +18,7 @@ fuco_node_t *fuco_parse_expression(fuco_tokenizer_t *tokenizer);
 
 fuco_node_t *fuco_parse_value(fuco_tokenizer_t *tokenizer);
 
+fuco_node_t *fuco_parse_call(fuco_tokenizer_t *tokenizer, fuco_node_t *node, 
+                             size_t *allocated);
+
 #endif

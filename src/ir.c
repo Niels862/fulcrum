@@ -147,6 +147,8 @@ void fuco_add_instr_imm48_label(fuco_ir_object_t *object, fuco_opcode_t opcode,
 }
 
 void fuco_ir_create_startup_object(fuco_ir_t *ir, fuco_ir_label_t entry) {
+    assert(ir->size == 0);
+
     fuco_ir_object_t *object = fuco_ir_add_object(ir, FUCO_LABEL_STARTUP);
 
     fuco_add_instr_imm48_label(object, FUCO_OPCODE_CALL, entry);
@@ -196,11 +198,11 @@ void fuco_ir_assemble(fuco_ir_t *ir, fuco_bytecode_t *bytecode) {
                 if (node->attrs & FUCO_IR_REFERENCES_LABEL) {
                     imm = defs[node->imm.label];
 
-                    assert(defs[node->imm.label] != FUCO_LABEL_DEF_INVALID);
-                    assert((imm >> 48) == 0);
+                    assert(imm != FUCO_LABEL_DEF_INVALID);
                 } else {
                     imm = node->imm.data;
                 }
+                assert((imm >> 48) == 0);
 
                 switch (instr_descriptors[node->opcode].layout) {
                     case FUCO_INSTR_LAYOUT_NO_IMM:

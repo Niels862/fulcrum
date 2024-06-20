@@ -10,6 +10,7 @@ fuco_node_descriptor_t node_descriptors[] = {
     { FUCO_NODE_FILEBODY, 0, FUCO_LAYOUT_VARIADIC, "filebody" },
     { FUCO_NODE_BODY, 0, FUCO_LAYOUT_VARIADIC, "body" },
     { FUCO_NODE_FUNCTION, 0, FUCO_LAYOUT_FUNCTION_N, "function" },
+    { FUCO_NODE_CALL, 0, FUCO_LAYOUT_VARIADIC, "call" },
     { FUCO_NODE_VARIABLE, 0, FUCO_LAYOUT_VARIABLE_N, "variable" },
     { FUCO_NODE_INTEGER, 0, FUCO_LAYOUT_INTEGER_N, "integer" },
     { FUCO_NODE_RETURN, 0, FUCO_LAYOUT_RETURN_N, "return" },
@@ -17,8 +18,7 @@ fuco_node_descriptor_t node_descriptors[] = {
 
 fuco_node_t *fuco_node_base_new(fuco_nodetype_t type, size_t allocated, 
                                 size_t count) {
-    size_t size = sizeof(fuco_node_t) + allocated * sizeof(fuco_node_t *);
-    fuco_node_t *node = malloc(size);
+    fuco_node_t *node = malloc(FUCO_NODE_SIZE(allocated));
     
     node->type = type;
     fuco_token_init(&node->token);
@@ -48,6 +48,23 @@ fuco_node_t *fuco_node_variadic_new(fuco_nodetype_t type, size_t *allocated) {
     return fuco_node_base_new(type, *allocated, 0);
 }
 
+fuco_node_t *fuco_node_variadic_transform(fuco_node_t *node, 
+                                          fuco_nodetype_t type, 
+                                          size_t *allocated) {
+    assert(node_descriptors[type].layout == FUCO_LAYOUT_VARIADIC);
+    
+    if (node->count > FUCO_VARIADIC_NODE_INIT_SIZE) {
+        *allocated = node->count;
+    } else {
+        *allocated = FUCO_VARIADIC_NODE_INIT_SIZE;
+        node = realloc(node, FUCO_NODE_SIZE(*allocated));
+    }
+
+    node->type = type;
+
+    return node;
+}
+
 void fuco_node_free(fuco_node_t *node) {
     for (size_t i = 0; i < node->count; i++) {
         if (node->children[i] != NULL) {
@@ -67,8 +84,7 @@ fuco_node_t *fuco_node_add_child(fuco_node_t *node, fuco_node_t *child,
     if (node->count >= *allocated) {
         *allocated *= 2;
 
-        size_t size = sizeof(fuco_node_t) + *allocated * sizeof(fuco_node_t *);
-        node = realloc(node, size);
+        node = realloc(node, FUCO_NODE_SIZE(*allocated));
     }
 
     node->children[node->count] = child;
@@ -173,6 +189,14 @@ int fuco_node_resolve_symbols_global(fuco_node_t *node,
                                       fuco_symboltable_t *table, 
                                       fuco_scope_t *scope) {    
     switch (node->type) {
+        case FUCO_NODE_EMPTY:
+        case FUCO_NODE_BODY:
+        case FUCO_NODE_CALL:
+        case FUCO_NODE_VARIABLE:
+        case FUCO_NODE_INTEGER:
+        case FUCO_NODE_RETURN:
+            break;
+
         case FUCO_NODE_FILEBODY:
             for (size_t i = 0; i < node->count; i++) {
                 fuco_node_t *child = node->children[i];
@@ -188,9 +212,6 @@ int fuco_node_resolve_symbols_global(fuco_node_t *node,
             if (node->symbol == NULL) {
                 return 1;
             }
-            break;
-
-        default:
             break;
     }
 
@@ -222,6 +243,10 @@ void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir,
             node_next = fuco_node_get_child(node, FUCO_LAYOUT_FUNCTION_BODY, 
                                             FUCO_NODE_FUNCTION);
             fuco_node_generate_ir(node_next, ir, node->symbol->object);
+            break;
+
+        case FUCO_NODE_CALL:
+            /* TODO */
             break;
 
         case FUCO_NODE_VARIABLE:

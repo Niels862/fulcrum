@@ -124,12 +124,48 @@ fuco_node_t *fuco_parse_expression(fuco_tokenizer_t *tokenizer) {
 }
 
 fuco_node_t *fuco_parse_value(fuco_tokenizer_t *tokenizer) {
-    fuco_node_t *node = fuco_node_new(FUCO_NODE_INTEGER);
+    fuco_node_t *node = NULL;
+    size_t allocated;
 
-    if (!fuco_tokenizer_move_if(tokenizer, FUCO_TOKEN_INTEGER, node)) {
-        fuco_node_free(node);
-        return NULL;
+    switch (tokenizer->curr.type) {
+        case FUCO_TOKEN_INTEGER:
+            node = fuco_node_new(FUCO_NODE_INTEGER);
+            fuco_tokenizer_move(tokenizer, node);
+            break;
+
+        case FUCO_TOKEN_IDENTIFIER:
+            node = fuco_node_new(FUCO_NODE_VARIABLE);
+            fuco_tokenizer_move(tokenizer, node);
+
+            if (tokenizer->curr.type == FUCO_TOKEN_BRACKET_OPEN) {
+                node = fuco_node_variadic_transform(node, FUCO_NODE_CALL, 
+                                                    &allocated);
+                node = fuco_parse_call(tokenizer, node, &allocated);
+            } else {
+                FUCO_NOT_IMPLEMENTED();
+            }
+
+            break;
+
+        default:
+            fuco_syntax_error(&tokenizer->curr.source, 
+                              "expected value, but got %s", 
+                              fuco_tokentype_string(tokenizer->curr.type));
+            break;
     }
+
+    return node;
+}
+
+fuco_node_t *fuco_parse_call(fuco_tokenizer_t *tokenizer, fuco_node_t *node, 
+                             size_t *allocated) {
+    FUCO_UNUSED(node), FUCO_UNUSED(allocated);
+    
+    fuco_tokenizer_discard_if(tokenizer, FUCO_TOKEN_BRACKET_OPEN);
+
+    /* TODO */
+
+    fuco_tokenizer_discard_if(tokenizer, FUCO_TOKEN_BRACKET_CLOSE);
 
     return node;
 }
