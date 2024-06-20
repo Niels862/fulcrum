@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <assert.h>
 
-fuco_ir_node_t *fuco_ir_node_instr_new(fuco_opcode_t opcode) {
+fuco_ir_node_t *fuco_ir_node_new(fuco_opcode_t opcode, fuco_ir_attr_t attrs) {
     fuco_ir_node_t *node = malloc(sizeof(fuco_ir_node_t));
 
-    node->attrs = FUCO_IR_INSTR;
+    node->attrs = attrs;
     node->opcode = opcode;
     node->next = NULL;
 
@@ -91,6 +91,7 @@ fuco_ir_object_t *fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label) {
     
     fuco_ir_object_t *object = &ir->objects[ir->size];
     fuco_ir_object_init(object, label);
+    fuco_ir_add_label(object, label);
 
     ir->size++;
 
@@ -109,15 +110,23 @@ void fuco_ir_add_node(fuco_ir_object_t *object, fuco_ir_node_t *node) {
 void fuco_ir_add_instr(fuco_ir_object_t *object, fuco_opcode_t opcode) {
     assert(instr_descriptors[opcode].layout == FUCO_INSTR_LAYOUT_NO_IMM);
     
-    fuco_ir_node_t *node = fuco_ir_node_instr_new(opcode);
+    fuco_ir_node_t *node = fuco_ir_node_new(opcode, FUCO_IR_INSTR);
     fuco_ir_add_node(object, node);
+}
+
+void fuco_ir_add_label(fuco_ir_object_t *object, fuco_ir_label_t label) {
+    fuco_ir_node_t *node = fuco_ir_node_new(FUCO_OPCODE_NOP, FUCO_IR_LABEL);
+    
+    node->imm.label = label;
+
+    fuco_ir_add_node(object, node); 
 }
 
 void fuco_ir_add_instr_imm48(fuco_ir_object_t *object, fuco_opcode_t opcode, 
                              uint64_t data) {
     assert(instr_descriptors[opcode].layout == FUCO_INSTR_LAYOUT_IMM48);
 
-    fuco_ir_node_t *node = fuco_ir_node_instr_new(opcode);
+    fuco_ir_node_t *node = fuco_ir_node_new(opcode, FUCO_IR_INSTR);
 
     node->attrs |= FUCO_IR_INCLUDES_DATA;
     node->imm.data = data;
@@ -125,47 +134,85 @@ void fuco_ir_add_instr_imm48(fuco_ir_object_t *object, fuco_opcode_t opcode,
     fuco_ir_add_node(object, node);
 }
 
+void fuco_add_instr_imm48_label(fuco_ir_object_t *object, fuco_opcode_t opcode, 
+                                fuco_ir_label_t label) {
+    assert(instr_descriptors[opcode].layout == FUCO_INSTR_LAYOUT_IMM48);
+
+    fuco_ir_node_t *node = fuco_ir_node_new(opcode, FUCO_IR_INSTR);
+
+    node->attrs |= FUCO_IR_INCLUDES_DATA | FUCO_IR_REFERENCES_LABEL;
+    node->imm.label = label;
+
+    fuco_ir_add_node(object, node);
+}
+
+void fuco_ir_create_startup_object(fuco_ir_t *ir, fuco_ir_label_t entry) {
+    fuco_ir_object_t *object = fuco_ir_add_object(ir, FUCO_LABEL_STARTUP);
+
+    fuco_add_instr_imm48_label(object, FUCO_OPCODE_CALL, entry);
+    fuco_ir_add_instr(object, FUCO_OPCODE_EXIT);
+}
+
 void fuco_ir_assemble(fuco_ir_t *ir, fuco_bytecode_t *bytecode) {
+    assert(ir->size > 0);
+    assert(ir->objects[0].label == FUCO_LABEL_STARTUP);
+
     uint64_t *defs = malloc(ir->label * sizeof(uint64_t));
     for (size_t i = 0; i < ir->label; i++) {
         defs[i] = FUCO_LABEL_DEF_INVALID;
     }
 
+    /* First pass: define labels */
+    size_t p = 0;
     for (size_t i = 0; i < ir->size; i++) {
         fuco_ir_object_t *object = &ir->objects[i];
         fuco_ir_node_t *node = object->begin;
 
         while (node != NULL) {
-            fuco_instr_t instr = 0;
-            FUCO_SET_OPCODE(instr, node->opcode);
-
-            uint64_t imm;
-            if (node->attrs & FUCO_IR_REFERENCES_LABEL) {
-                imm = defs[node->imm.label];
-
-                assert(defs[node->imm.label] != FUCO_LABEL_DEF_INVALID);
-                assert((imm >> 48) == 0);
+            if (node->attrs & FUCO_IR_INSTR) {
+                p++;
             } else {
-                imm = node->imm.data;
+                assert(node->imm.label < ir->label);
+                assert(defs[node->imm.label] == FUCO_LABEL_DEF_INVALID);
+
+                defs[node->imm.label] = p;
             }
 
-            switch (instr_descriptors[node->opcode].layout) {
-                case FUCO_INSTR_LAYOUT_NO_IMM:
-                    break;
+            node = node->next;
+        }
+    }
 
-                case FUCO_INSTR_LAYOUT_IMM48:
-                    FUCO_SET_IMM48(instr, imm);
-                    break;
+    /* Second pass: write bytecode */
+    for (size_t i = 0; i < ir->size; i++) {
+        fuco_ir_object_t *object = &ir->objects[i];
+        fuco_ir_node_t *node = object->begin;
+
+        while (node != NULL) {
+            if (node->attrs & FUCO_IR_INSTR) {
+                fuco_instr_t instr = 0;
+                FUCO_SET_OPCODE(instr, node->opcode);
+
+                uint64_t imm;
+                if (node->attrs & FUCO_IR_REFERENCES_LABEL) {
+                    imm = defs[node->imm.label];
+
+                    assert(defs[node->imm.label] != FUCO_LABEL_DEF_INVALID);
+                    assert((imm >> 48) == 0);
+                } else {
+                    imm = node->imm.data;
+                }
+
+                switch (instr_descriptors[node->opcode].layout) {
+                    case FUCO_INSTR_LAYOUT_NO_IMM:
+                        break;
+
+                    case FUCO_INSTR_LAYOUT_IMM48:
+                        FUCO_SET_IMM48(instr, imm);
+                        break;
+                }
+
+                fuco_bytecode_add_instr(bytecode, instr);
             }
-
-            if (bytecode->size >= bytecode->cap) {
-                bytecode->instrs = realloc(bytecode->instrs, 
-                                           2 * bytecode->size);
-                bytecode->cap *= 2;
-            }
-
-            bytecode->instrs[bytecode->size] = instr;
-            bytecode->size++;
 
             node = node->next;
         }

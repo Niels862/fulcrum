@@ -47,6 +47,8 @@ typedef struct {
 
 #define a sizeof(fuco_token_t)
 
+extern fuco_token_descriptor_t const token_descriptors[];
+
 char *fuco_tokentype_string(fuco_tokentype_t type);
 
 bool fuco_tokentype_has_attr(fuco_tokentype_t type, fuco_token_attr_t attr);

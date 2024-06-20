@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "parser.h"
 #include "symbol.h"
+#include "interpreter.h"
 #include "utils.h"
 
 int main(int argc, char *argv[]) {
@@ -34,13 +35,17 @@ int main(int argc, char *argv[]) {
             } else {
                 /* Labels start where symbol IDs finished */
                 ir.label = table.size;
+                fuco_ir_create_startup_object(&ir, entry->id);
                 fuco_node_generate_ir(node, &ir, NULL);
+                
                 fuco_ir_assemble(&ir, &bytecode);
 
                 fuco_node_pretty_write(node, stderr);
                 fuco_symboltable_write(&table, stderr);
                 fuco_ir_write(&ir, stderr);
                 fuco_bytecode_write(&bytecode, stderr);
+
+                fuco_interpret(bytecode.instrs);
             }
         }
 

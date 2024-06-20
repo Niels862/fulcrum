@@ -16,7 +16,7 @@ typedef struct fuco_node_t fuco_node_t;
 /* file is an unowned reference to determine data validity */
 typedef struct {
     fuco_textsource_t source;
-    FILE *file;
+    FILE *file; /* TODO fix; FILE pointer is not suited for this */
     size_t p;
     size_t size;
     int last;
@@ -32,8 +32,6 @@ typedef struct {
     fuco_strbuf_t temp;
     fuco_filebuf_t buf;
 } fuco_tokenizer_t;
-
-extern fuco_token_descriptor_t const token_descriptors[];
 
 bool fuco_is_nontoken(int c);
 

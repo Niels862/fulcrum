@@ -54,6 +54,7 @@ void fuco_token_destruct(fuco_token_t *token) {
     }
     token->type = FUCO_TOKEN_EMPTY;
     token->lexeme = NULL;
+    token->data = NULL;
 }
 
 void fuco_token_write(fuco_token_t *token, FILE *stream) {

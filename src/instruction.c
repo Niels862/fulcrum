@@ -51,3 +51,13 @@ void fuco_bytecode_write(fuco_bytecode_t *bytecode, FILE *stream) {
         fuco_instr_write(bytecode->instrs[i], stream);
     }
 }
+
+void fuco_bytecode_add_instr(fuco_bytecode_t *bytecode, fuco_instr_t instr) {
+    if (bytecode->size >= bytecode->cap) {
+        bytecode->instrs = realloc(bytecode->instrs, 2 * bytecode->cap);
+        bytecode->cap *= 2;
+    }
+
+    bytecode->instrs[bytecode->size] = instr;
+    bytecode->size++;
+}

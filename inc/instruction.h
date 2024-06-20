@@ -6,7 +6,7 @@
 
 typedef uint64_t fuco_instr_t;
 
-typedef uint64_t fuco_pointer_t;
+typedef uint32_t fuco_pointer_t;
 
 typedef enum {
     FUCO_OPCODE_NOP = 0,
@@ -54,5 +54,7 @@ void fuco_bytecode_init(fuco_bytecode_t *bytecode);
 void fuco_bytecode_destruct(fuco_bytecode_t *bytecode);
 
 void fuco_bytecode_write(fuco_bytecode_t *bytecode, FILE *stream);
+
+void fuco_bytecode_add_instr(fuco_bytecode_t *bytecode, fuco_instr_t instr);
 
 #endif
