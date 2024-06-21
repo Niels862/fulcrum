@@ -92,9 +92,16 @@ void fuco_node_pretty_write(fuco_node_t *node, FILE *stream);
 
 void fuco_node_validate(fuco_node_t *node);
 
-int fuco_node_resolve_symbols_global(fuco_node_t *node, 
-                                     fuco_symboltable_t *table, 
-                                     fuco_scope_t *scope);
+int fuco_node_resolve_global(fuco_node_t *node, 
+                             fuco_symboltable_t *table, 
+                             fuco_scope_t *scope);
+
+int fuco_node_resolve_local_propagate(fuco_node_t *node, 
+                                      fuco_symboltable_t *table, 
+                                      fuco_scope_t *scope);
+                                      
+int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table, 
+                            fuco_scope_t *scope);
 
 void fuco_node_generate_ir_propagate(fuco_node_t *node, fuco_ir_t *ir, 
                                      fuco_ir_object_t *object);

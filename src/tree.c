@@ -185,7 +185,7 @@ void fuco_node_validate(fuco_node_t *node) {
     }
 }
 
-int fuco_node_resolve_symbols_global(fuco_node_t *node, 
+int fuco_node_resolve_global(fuco_node_t *node, 
                                       fuco_symboltable_t *table, 
                                       fuco_scope_t *scope) {    
     switch (node->type) {
@@ -200,7 +200,7 @@ int fuco_node_resolve_symbols_global(fuco_node_t *node,
         case FUCO_NODE_FILEBODY:
             for (size_t i = 0; i < node->count; i++) {
                 fuco_node_t *child = node->children[i];
-                if (fuco_node_resolve_symbols_global(child, table, scope)) {
+                if (fuco_node_resolve_global(child, table, scope)) {
                     return 1;
                 }
             }
@@ -218,6 +218,56 @@ int fuco_node_resolve_symbols_global(fuco_node_t *node,
     return 0;
 }
 
+int fuco_node_resolve_local_propagate(fuco_node_t *node, 
+                                      fuco_symboltable_t *table, 
+                                      fuco_scope_t *scope) {
+    for (size_t i = 0; i < node->count; i++) {
+        if (fuco_node_resolve_local(node->children[i], table, scope)) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table, 
+                            fuco_scope_t *scope) {
+    fuco_node_t *next;
+    
+    switch (node->type) {
+        case FUCO_NODE_EMPTY:
+        case FUCO_NODE_INTEGER:
+            break;
+
+        case FUCO_NODE_FILEBODY:
+        case FUCO_NODE_BODY:
+        case FUCO_NODE_RETURN:
+            if (fuco_node_resolve_local_propagate(node, table, scope)) {
+                return 1;
+            }
+            break;
+
+        case FUCO_NODE_FUNCTION:
+            /* TODO: setup function frame and context */
+            next = fuco_node_get_child(node, FUCO_LAYOUT_FUNCTION_BODY, 
+                                       FUCO_NODE_FUNCTION);
+            if (fuco_node_resolve_local(next, table, scope)) {
+                return 1;
+            }
+            break;
+
+        case FUCO_NODE_CALL:
+        case FUCO_NODE_VARIABLE:
+            node->symbol = fuco_scope_lookup_token(scope, &node->token);
+            if (node->symbol == NULL) {
+                return 1;
+            }
+            break;
+    }
+    
+    return 0;
+}
+
 void fuco_node_generate_ir_propagate(fuco_node_t *node, fuco_ir_t *ir, 
                                      fuco_ir_object_t *object) {
     for (size_t i = 0; i < node->count; i++) {
@@ -227,7 +277,7 @@ void fuco_node_generate_ir_propagate(fuco_node_t *node, fuco_ir_t *ir,
 
 void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir, 
                                       fuco_ir_object_t *object) {
-    fuco_node_t *node_next = NULL;
+    fuco_node_t *next = NULL;
 
     switch (node->type) {
         case FUCO_NODE_EMPTY:
@@ -240,9 +290,9 @@ void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir,
 
         case FUCO_NODE_FUNCTION:
             node->symbol->object = fuco_ir_add_object(ir, node->symbol->id);
-            node_next = fuco_node_get_child(node, FUCO_LAYOUT_FUNCTION_BODY, 
-                                            FUCO_NODE_FUNCTION);
-            fuco_node_generate_ir(node_next, ir, node->symbol->object);
+            next = fuco_node_get_child(node, FUCO_LAYOUT_FUNCTION_BODY, 
+                                       FUCO_NODE_FUNCTION);
+            fuco_node_generate_ir(next, ir, node->symbol->object);
             break;
 
         case FUCO_NODE_CALL:

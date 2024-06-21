@@ -11,5 +11,5 @@ def f() {
 }
 
 def g() {
-    return f();
+    return x();
 }

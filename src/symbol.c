@@ -14,7 +14,8 @@ void fuco_scope_destruct(fuco_scope_t *scope) {
     fuco_map_destruct(&scope->map);
 }
 
-fuco_symbol_t *fuco_scope_lookup(fuco_scope_t *scope, char *ident) {
+fuco_symbol_t *fuco_scope_lookup(fuco_scope_t *scope, char *ident, 
+                                 fuco_textsource_t *source, bool error) {
     fuco_symbol_t *symbol = NULL;
 
     while (scope != NULL && symbol == NULL) {
@@ -22,7 +23,16 @@ fuco_symbol_t *fuco_scope_lookup(fuco_scope_t *scope, char *ident) {
         scope = scope->prev;
     }
 
+    if (symbol == NULL && error) {
+        fuco_syntax_error(source, "'%s' was not declared in this scope", ident);
+    }
+
     return symbol;
+}
+
+fuco_symbol_t *fuco_scope_lookup_token(fuco_scope_t *scope, 
+                                       fuco_token_t *token) {
+    return fuco_scope_lookup(scope, token->lexeme, &token->source, true);
 }
 
 fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope, 

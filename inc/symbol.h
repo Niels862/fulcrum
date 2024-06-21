@@ -38,7 +38,11 @@ void fuco_scope_init(fuco_scope_t *scope, fuco_scope_t *prev);
 
 void fuco_scope_destruct(fuco_scope_t *scope);
 
-fuco_symbol_t *fuco_scope_lookup(fuco_scope_t *scope, char *ident);
+fuco_symbol_t *fuco_scope_lookup(fuco_scope_t *scope, char *ident, 
+                                 fuco_textsource_t *source, bool error);
+
+fuco_symbol_t *fuco_scope_lookup_token(fuco_scope_t *scope, 
+                                       fuco_token_t *token);
 
 fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope, 
                                  fuco_token_t *token, fuco_symbol_t *symbol);

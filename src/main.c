@@ -27,25 +27,28 @@ int main(int argc, char *argv[]) {
     fuco_node_t *node = fuco_parse_filebody(&tokenizer);
     
     if (node != NULL) {
-        if (fuco_node_resolve_symbols_global(node, &table, &global) == 0) {
-            fuco_symbol_t *entry = fuco_scope_lookup(&global, "main");
+        if (fuco_node_resolve_global(node, &table, &global) == 0) {
+            fuco_symbol_t *entry = fuco_scope_lookup(&global, "main", 
+                                                     NULL, false);
             if (entry == NULL) {
                 fuco_syntax_error(NULL, "entry point '%s' was not defined", 
                                   "main");
             } else {
-                /* Labels start where symbol IDs finished */
-                ir.label = table.size;
-                fuco_ir_create_startup_object(&ir, entry->id);
-                fuco_node_generate_ir(node, &ir, NULL);
-                
-                fuco_ir_assemble(&ir, &bytecode);
+                if (fuco_node_resolve_local(node, &table, &global) == 0) {
+                    /* Labels start where symbol IDs finished */
+                    ir.label = table.size;
+                    fuco_ir_create_startup_object(&ir, entry->id);
+                    fuco_node_generate_ir(node, &ir, NULL);
+                    
+                    fuco_ir_assemble(&ir, &bytecode);
 
-                fuco_node_pretty_write(node, stderr);
-                fuco_symboltable_write(&table, stderr);
-                fuco_ir_write(&ir, stderr);
-                fuco_bytecode_write(&bytecode, stderr);
+                    fuco_node_pretty_write(node, stderr);
+                    fuco_symboltable_write(&table, stderr);
+                    fuco_ir_write(&ir, stderr);
+                    fuco_bytecode_write(&bytecode, stderr);
 
-                fuco_interpret(bytecode.instrs);
+                    fuco_interpret(bytecode.instrs);
+                }
             }
         }
 
