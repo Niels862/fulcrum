@@ -73,7 +73,9 @@ void fuco_ir_destruct(fuco_ir_t *ir) {
     for (size_t i = 0; i < ir->size; i++) {
         fuco_ir_object_destruct(&ir->objects[i]);
     }
-    free(ir->objects);
+    if (ir->objects != NULL) {
+        free(ir->objects);
+    }
 }
 
 void fuco_ir_write(fuco_ir_t *ir, FILE *stream) {
@@ -134,8 +136,9 @@ void fuco_ir_add_instr_imm48(fuco_ir_object_t *object, fuco_opcode_t opcode,
     fuco_ir_add_node(object, node);
 }
 
-void fuco_add_instr_imm48_label(fuco_ir_object_t *object, fuco_opcode_t opcode, 
-                                fuco_ir_label_t label) {
+void fuco_ir_add_instr_imm48_label(fuco_ir_object_t *object, 
+                                   fuco_opcode_t opcode, 
+                                   fuco_ir_label_t label) {
     assert(instr_descriptors[opcode].layout == FUCO_INSTR_LAYOUT_IMM48);
 
     fuco_ir_node_t *node = fuco_ir_node_new(opcode, FUCO_IR_INSTR);
@@ -151,7 +154,7 @@ void fuco_ir_create_startup_object(fuco_ir_t *ir, fuco_ir_label_t entry) {
 
     fuco_ir_object_t *object = fuco_ir_add_object(ir, FUCO_LABEL_STARTUP);
 
-    fuco_add_instr_imm48_label(object, FUCO_OPCODE_CALL, entry);
+    fuco_ir_add_instr_imm48_label(object, FUCO_OPCODE_CALL, entry);
     fuco_ir_add_instr(object, FUCO_OPCODE_EXIT);
 }
 
@@ -195,14 +198,19 @@ void fuco_ir_assemble(fuco_ir_t *ir, fuco_bytecode_t *bytecode) {
                 FUCO_SET_OPCODE(instr, node->opcode);
 
                 uint64_t imm;
-                if (node->attrs & FUCO_IR_REFERENCES_LABEL) {
-                    imm = defs[node->imm.label];
+                if (node->attrs & FUCO_IR_INCLUDES_DATA) {
+                    if (node->attrs & FUCO_IR_REFERENCES_LABEL) {
+                        imm = defs[node->imm.label];
 
-                    assert(imm != FUCO_LABEL_DEF_INVALID);
+                        assert(imm != FUCO_LABEL_DEF_INVALID);
+                    } else {
+                        imm = node->imm.data;
+                    }
+                    
+                    assert((imm >> 48) == 0);
                 } else {
-                    imm = node->imm.data;
+                    imm = 0;
                 }
-                assert((imm >> 48) == 0);
 
                 switch (instr_descriptors[node->opcode].layout) {
                     case FUCO_INSTR_LAYOUT_NO_IMM:

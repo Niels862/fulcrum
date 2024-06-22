@@ -64,7 +64,9 @@ void fuco_map_destruct(fuco_map_t *map) {
             entry = next;
         }
     }
-    free(map->data);
+    if (map->data != NULL) {
+        free(map->data);
+    }
 }
 
 void *fuco_map_lookup(fuco_map_t *map, void *key) {

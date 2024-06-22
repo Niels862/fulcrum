@@ -11,13 +11,11 @@ int main(int argc, char *argv[]) {
     fuco_compiler_t compiler;
     fuco_compiler_init(&compiler, "tests/main.fc");
 
-    fuco_instr_t *instrs = fuco_compiler_run(&compiler);
+    if (fuco_compiler_run(&compiler) == 0) {
+        fuco_interpret(compiler.bytecode.instrs);
+    }
 
     fuco_compiler_destruct(&compiler);
-
-    if (instrs != NULL) {
-        fuco_interpret(instrs);
-    }
 
     return 0;
 }

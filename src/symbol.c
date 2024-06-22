@@ -74,7 +74,9 @@ void fuco_symboltable_init(fuco_symboltable_t *table) {
 }
 
 void fuco_symboltable_destruct(fuco_symboltable_t *table) {
-    free(table->list);
+    if (table->list != NULL) {
+        free(table->list);
+    }
 }
 
 void fuco_symboltable_write(fuco_symboltable_t *table, FILE *stream) {

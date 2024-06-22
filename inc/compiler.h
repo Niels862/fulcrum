@@ -20,6 +20,6 @@ void fuco_compiler_init(fuco_compiler_t *compiler, char *file);
 
 void fuco_compiler_destruct(fuco_compiler_t *compiler);
 
-fuco_instr_t *fuco_compiler_run(fuco_compiler_t *compiler);
+int fuco_compiler_run(fuco_compiler_t *compiler);
 
 #endif

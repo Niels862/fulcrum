@@ -24,30 +24,30 @@ void fuco_compiler_destruct(fuco_compiler_t *compiler) {
     }
 }
 
-fuco_instr_t *fuco_compiler_run(fuco_compiler_t *compiler) {
+int fuco_compiler_run(fuco_compiler_t *compiler) {
     fuco_tokenizer_add_source_filename(&compiler->tokenizer, 
                                        fuco_strdup(compiler->file));
 
     compiler->root = fuco_parse_filebody(&compiler->tokenizer);
     if (compiler->root == NULL) {
-        return NULL;
+        return 1;
     }
 
     if (fuco_node_resolve_global(compiler->root, &compiler->table, 
                                  &compiler->global)) {
-        return NULL;
+        return 1;
     }
 
     fuco_symbol_t *entry;
     if ((entry = fuco_scope_lookup(&compiler->global, "main",  
                                    NULL, false)) == NULL) {
         fuco_syntax_error(NULL, "entry point '%s' was not defined", "main");
-        return NULL;
+        return 1;
     }
 
     if (fuco_node_resolve_local(compiler->root, &compiler->table, 
                                 &compiler->global)) {
-        return NULL;
+        return 1;
     }
 
     compiler->ir.label = compiler->table.size;
@@ -56,6 +56,10 @@ fuco_instr_t *fuco_compiler_run(fuco_compiler_t *compiler) {
     
     fuco_ir_assemble(&compiler->ir, &compiler->bytecode);
 
+    if (compiler->bytecode.instrs == NULL) {
+        return 1;
+    }
+    
     fuco_node_pretty_write(compiler->root, stderr);
 
     fuco_symboltable_write(&compiler->table, stderr);
@@ -64,5 +68,5 @@ fuco_instr_t *fuco_compiler_run(fuco_compiler_t *compiler) {
 
     fuco_bytecode_write(&compiler->bytecode, stderr);
 
-    return compiler->bytecode.instrs;
+    return 0;
 }

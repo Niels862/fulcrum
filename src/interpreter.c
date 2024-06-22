@@ -87,8 +87,8 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
                 break;
 
             default:
-                fprintf(stderr, "Unhandled instruction: " 
-                        FUCO_INSTR_FORMAT "\n", instr);
+                fprintf(stderr, "Unhandled instruction at %d: " 
+                        FUCO_INSTR_FORMAT "\n", program.ip, instr);
                 return exit_code;
         }
 

@@ -1,13 +1,9 @@
-def main() {
-    return 69; 
+def f() {
+    return 69;
 }
 
-# def operator[ + ](a: u32, b: u32) -> u32 {
-#     return asm("addd", 5, 12);
-# }
-
-def f() {
-    return 42;
+def main() {
+    return g(); 
 }
 
 def g() {

@@ -296,11 +296,12 @@ void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir,
             break;
 
         case FUCO_NODE_CALL:
-            /* TODO */
+            fuco_ir_add_instr_imm48_label(object, FUCO_OPCODE_CALL, 
+                                          node->symbol->id);
             break;
 
         case FUCO_NODE_VARIABLE:
-            /* TODO */
+            FUCO_NOT_IMPLEMENTED();
             break;
 
         case FUCO_NODE_INTEGER:

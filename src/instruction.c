@@ -37,25 +37,32 @@ void fuco_instr_write(fuco_instr_t instr, FILE *stream) {
 }
 
 void fuco_bytecode_init(fuco_bytecode_t *bytecode) {
-    bytecode->instrs = malloc(FUCO_BYTECODE_INIT_SIZE * sizeof(fuco_instr_t));
+    bytecode->instrs = NULL;
     bytecode->size = 0;
-    bytecode->cap = FUCO_BYTECODE_INIT_SIZE;
+    bytecode->cap = 0;
 }
 
 void fuco_bytecode_destruct(fuco_bytecode_t *bytecode) {
-    free(bytecode->instrs);
+    if (bytecode->instrs != NULL) {
+        free(bytecode->instrs);
+    }
 }
 
 void fuco_bytecode_write(fuco_bytecode_t *bytecode, FILE *stream) {
     for (size_t i = 0; i < bytecode->size; i++) {
+        fprintf(stream, FUCO_INSTR_FORMAT ": ", bytecode->instrs[i]);
         fuco_instr_write(bytecode->instrs[i], stream);
     }
 }
 
 void fuco_bytecode_add_instr(fuco_bytecode_t *bytecode, fuco_instr_t instr) {
     if (bytecode->size >= bytecode->cap) {
-        bytecode->instrs = realloc(bytecode->instrs, 2 * bytecode->cap);
-        bytecode->cap *= 2;
+        if (bytecode->cap == 0) {
+            bytecode->cap = FUCO_BYTECODE_INIT_SIZE;
+        } else {
+            bytecode->cap *= 2;
+        }
+        bytecode->instrs = realloc(bytecode->instrs, bytecode->cap);
     }
 
     bytecode->instrs[bytecode->size] = instr;
