@@ -1,4 +1,4 @@
-def f() {
+def f(a, b) {
     return 69;
 }
 

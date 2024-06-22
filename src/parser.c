@@ -34,22 +34,79 @@ fuco_node_t *fuco_parse_function_declaration(fuco_tokenizer_t *tokenizer) {
     }
 
     fuco_node_t *node = fuco_node_new(FUCO_NODE_FUNCTION);
-    fuco_node_t *body;
+    fuco_node_t *params = NULL;
+    fuco_node_t *body = NULL;
 
     if (!fuco_tokenizer_move_if(tokenizer, FUCO_TOKEN_IDENTIFIER, node)
-        || !fuco_tokenizer_discard_if(tokenizer, FUCO_TOKEN_BRACKET_OPEN)
-        || !fuco_tokenizer_discard_if(tokenizer, FUCO_TOKEN_BRACKET_CLOSE)
+        || (params = fuco_parse_param_list(tokenizer)) == NULL
         || (body = fuco_parse_braced_block(tokenizer)) == NULL) {
-
         fuco_node_free(node);
+
+        if (params != NULL) {
+            fuco_node_free(params);
+        }
+
+        if (body != NULL) {
+            fuco_node_free(body);
+        }
+
         return NULL;
     }
 
     fuco_node_set_child(node, fuco_node_new(FUCO_NODE_EMPTY), 
                         FUCO_LAYOUT_FUNCTION_TYPE);
-    fuco_node_set_child(node, fuco_node_new(FUCO_NODE_EMPTY), 
-                        FUCO_LAYOUT_FUNCTION_PARAMS);
+    fuco_node_set_child(node, params, FUCO_LAYOUT_FUNCTION_PARAMS);
     fuco_node_set_child(node, body, FUCO_LAYOUT_FUNCTION_BODY);
+
+    return node;
+}
+
+fuco_node_t *fuco_parse_param_list(fuco_tokenizer_t *tokenizer) {
+    size_t allocated;
+    fuco_node_t *node = fuco_node_variadic_new(FUCO_NODE_PARAM_LIST, 
+                                               &allocated);
+    fuco_node_t *param = NULL;
+    
+    if (!fuco_tokenizer_discard_if(tokenizer, FUCO_TOKEN_BRACKET_OPEN)) {
+        fuco_node_free(node);
+        return NULL;
+    }
+
+    if (tokenizer->curr.type != FUCO_TOKEN_BRACKET_CLOSE) {
+        do {
+            if ((param = fuco_parse_param(tokenizer)) == NULL) {
+                fuco_node_free(node);
+                return NULL;
+            }
+
+            node = fuco_node_add_child(node, param, &allocated);
+
+            if (tokenizer->curr.type == FUCO_TOKEN_COMMA) {
+                fuco_tokenizer_discard(tokenizer);
+            } else {
+                break;
+            }
+        } while (true);
+    }
+
+    if (!fuco_tokenizer_discard_if(tokenizer, FUCO_TOKEN_BRACKET_CLOSE)) {
+        fuco_node_free(node);
+        return NULL;
+    }
+
+    return node;
+}
+
+fuco_node_t *fuco_parse_param(fuco_tokenizer_t *tokenizer) {
+    fuco_node_t *node = fuco_node_new(FUCO_NODE_PARAM);
+
+    if (!fuco_tokenizer_move_if(tokenizer, FUCO_TOKEN_IDENTIFIER, node)) {
+        fuco_node_free(node);
+        return NULL;
+    }
+
+    fuco_node_set_child(node, fuco_node_new(FUCO_NODE_EMPTY), 
+                        FUCO_LAYOUT_PARAM_TYPE);
 
     return node;
 }

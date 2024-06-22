@@ -10,6 +10,8 @@ fuco_node_descriptor_t node_descriptors[] = {
     { FUCO_NODE_FILEBODY, 0, FUCO_LAYOUT_VARIADIC, "filebody" },
     { FUCO_NODE_BODY, 0, FUCO_LAYOUT_VARIADIC, "body" },
     { FUCO_NODE_FUNCTION, 0, FUCO_LAYOUT_FUNCTION_N, "function" },
+    { FUCO_NODE_PARAM_LIST, 0, FUCO_LAYOUT_VARIADIC, "param-list" },
+    { FUCO_NODE_PARAM, 0, FUCO_LAYOUT_PARAM_N, "param" },
     { FUCO_NODE_CALL, 0, FUCO_LAYOUT_VARIADIC, "call" },
     { FUCO_NODE_VARIABLE, 0, FUCO_LAYOUT_VARIABLE_N, "variable" },
     { FUCO_NODE_INTEGER, 0, FUCO_LAYOUT_INTEGER_N, "integer" },
@@ -191,6 +193,8 @@ int fuco_node_resolve_global(fuco_node_t *node,
     switch (node->type) {
         case FUCO_NODE_EMPTY:
         case FUCO_NODE_BODY:
+        case FUCO_NODE_PARAM_LIST:
+        case FUCO_NODE_PARAM:
         case FUCO_NODE_CALL:
         case FUCO_NODE_VARIABLE:
         case FUCO_NODE_INTEGER:
@@ -256,6 +260,14 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
             }
             break;
 
+        case FUCO_NODE_PARAM_LIST:
+            /* TODO */
+            break;
+
+        case FUCO_NODE_PARAM:
+            /* TODO */
+            break;
+
         case FUCO_NODE_CALL:
         case FUCO_NODE_VARIABLE:
             node->symbol = fuco_scope_lookup_token(scope, &node->token);
@@ -281,6 +293,8 @@ void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir,
 
     switch (node->type) {
         case FUCO_NODE_EMPTY:
+        case FUCO_NODE_PARAM_LIST:
+        case FUCO_NODE_PARAM:
             break;
 
         case FUCO_NODE_FILEBODY:
