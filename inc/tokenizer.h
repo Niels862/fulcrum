@@ -5,11 +5,10 @@
 #include "textsource.h"
 #include "queue.h"
 #include "token.h"
+#include "defs.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdint.h>
-
-typedef struct fuco_node_t fuco_node_t;
 
 #define FUCO_FILEBUF_SIZE 1024
 

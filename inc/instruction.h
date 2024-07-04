@@ -11,8 +11,10 @@ typedef uint32_t fuco_pointer_t;
 typedef enum {
     FUCO_OPCODE_NOP = 0,
     FUCO_OPCODE_CALL,
-    FUCO_OPCODE_RETD,
-    FUCO_OPCODE_PUSHD,
+    FUCO_OPCODE_RETQ,
+    FUCO_OPCODE_PUSHQ,
+    FUCO_OPCODE_LOADQ,
+    FUCO_OPCODE_RLOADQ,
     FUCO_OPCODE_EXIT
 } fuco_opcode_t;
 
@@ -23,6 +25,8 @@ typedef enum {
 #define FUCO_GET_IMM48(instr) ((instr) >> 16)
 
 #define FUCO_SET_IMM48(instr, imm48) ((instr) |= ((imm48) << 16))
+
+#define FUCO_SEX_IMM48(imm48) (((int64_t)imm48) << 16) >> 16
 
 #define FUCO_INSTR_FORMAT "%016lx"
 

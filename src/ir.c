@@ -1,4 +1,6 @@
 #include "ir.h"
+#include "utils.h"
+#include "tree.h"
 #include <stdlib.h>
 #include <assert.h>
 
@@ -36,9 +38,11 @@ void fuco_ir_node_write(fuco_ir_node_t *node, FILE *stream) {
     }
 }
 
-void fuco_ir_object_init(fuco_ir_object_t *object, fuco_ir_label_t label) {
+void fuco_ir_object_init(fuco_ir_object_t *object, fuco_ir_label_t label, 
+                         fuco_node_t *def) {
     object->label = label;
     object->begin = object->end = NULL;
+    object->def = def;
 }
 
 void fuco_ir_object_destruct(fuco_ir_object_t *object) {
@@ -84,7 +88,8 @@ void fuco_ir_write(fuco_ir_t *ir, FILE *stream) {
     }
 }
 
-fuco_ir_object_t *fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label) {
+fuco_ir_object_t *fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label, 
+                                     fuco_node_t *def) {
     if (ir->size >= ir->cap) {
         ir->objects = realloc(ir->objects, 
                               2 * ir->cap * sizeof(fuco_ir_object_t));
@@ -92,7 +97,7 @@ fuco_ir_object_t *fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label) {
     }
     
     fuco_ir_object_t *object = &ir->objects[ir->size];
-    fuco_ir_object_init(object, label);
+    fuco_ir_object_init(object, label, def);
     fuco_ir_add_label(object, label);
 
     ir->size++;
@@ -152,7 +157,7 @@ void fuco_ir_add_instr_imm48_label(fuco_ir_object_t *object,
 void fuco_ir_create_startup_object(fuco_ir_t *ir, fuco_ir_label_t entry) {
     assert(ir->size == 0);
 
-    fuco_ir_object_t *object = fuco_ir_add_object(ir, FUCO_LABEL_STARTUP);
+    fuco_ir_object_t *object = fuco_ir_add_object(ir, FUCO_LABEL_STARTUP, NULL);
 
     fuco_ir_add_instr_imm48_label(object, FUCO_OPCODE_CALL, entry);
     fuco_ir_add_instr(object, FUCO_OPCODE_EXIT);
@@ -165,6 +170,13 @@ void fuco_ir_assemble(fuco_ir_t *ir, fuco_bytecode_t *bytecode) {
     uint64_t *defs = malloc(ir->label * sizeof(uint64_t));
     for (size_t i = 0; i < ir->label; i++) {
         defs[i] = FUCO_LABEL_DEF_INVALID;
+    }
+
+    for (size_t i = 0; i < ir->size; i++) {
+        fuco_node_t *def = ir->objects[i].def;
+        if (def != NULL) {
+            fuco_node_setup_offsets(def, defs);
+        }
     }
 
     /* First pass: define labels */
@@ -187,6 +199,10 @@ void fuco_ir_assemble(fuco_ir_t *ir, fuco_bytecode_t *bytecode) {
         }
     }
 
+    for (size_t i = 0; i < ir->label; i++) {
+        fprintf(stderr, "%ld -> %ld\n", i, defs[i]);
+    }
+
     /* Second pass: write bytecode */
     for (size_t i = 0; i < ir->size; i++) {
         fuco_ir_object_t *object = &ir->objects[i];
@@ -206,8 +222,6 @@ void fuco_ir_assemble(fuco_ir_t *ir, fuco_bytecode_t *bytecode) {
                     } else {
                         imm = node->imm.data;
                     }
-                    
-                    assert((imm >> 48) == 0);
                 } else {
                     imm = 0;
                 }

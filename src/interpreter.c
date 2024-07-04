@@ -10,7 +10,7 @@ void fuco_program_pop(fuco_program_t *program, void *data, size_t size) {
     memcpy(data, program->stack + program->sp, size);
 }
 
-void fuco_program_push(fuco_program_t *program, void *data, size_t size) {
+void fuco_program_push(fuco_program_t *program, void *data, size_t size) {    
     memcpy(program->stack + program->sp, data, size);
     program->sp += size;
 }
@@ -27,7 +27,7 @@ void fuco_program_destruct(fuco_program_t *program) {
 }
 
 void fuco_program_write_stack(fuco_program_t *program, FILE *stream) {
-    fprintf(stream, "SP: %d\n", program->sp);
+    fprintf(stream, "SP: %ld\n", program->sp);
     for (size_t i = 0; i < program->sp; i += 16) {
         fprintf(stream, "%04ld ", i);
         for (size_t j = 0; j < 16 && i + j < program->sp; j++) {
@@ -41,22 +41,23 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
     fuco_program_t program;
     fuco_program_init(&program, instrs, 4096);
 
-    uint32_t retaddr, retbp;
-    uint32_t vald1, vald2, retd;
-    int32_t exit_code = -1;
+    uint64_t retaddr, retbp;
+    uint64_t retq;
+    int64_t exit_code = -1; /* TODO should be i32 when conversions work */
 
     bool running = true;
 
     FUCO_UNUSED(retaddr), FUCO_UNUSED(retbp);
-    FUCO_UNUSED(vald1), FUCO_UNUSED(vald2);
 
     fprintf(stderr, "Start of execution...\n");
 
     while (running) {
         fuco_instr_t instr = program.instrs[program.ip];
         fuco_opcode_t opcode = instr & 0xFFFF;
+
         uint64_t imm48 = instr >> 16;
-        uint32_t immd = imm48;
+        int64_t simm48 = FUCO_SEX_IMM48(imm48);
+        uint64_t immq = imm48;
 
         switch (opcode) {
             case FUCO_OPCODE_NOP:
@@ -69,16 +70,28 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
                 program.ip = imm48 - 1;
                 break;
 
-            case FUCO_OPCODE_RETD:
-                fuco_program_pop(&program, &retd, sizeof(retd));
+            case FUCO_OPCODE_RETQ:
+                fuco_program_pop(&program, &retq, sizeof(retq));
                 program.sp = program.bp;
                 fuco_program_pop(&program, &program.bp, sizeof(program.bp));
                 fuco_program_pop(&program, &program.ip, sizeof(program.ip));
-                fuco_program_push(&program, &retd, sizeof(retd));
+                fuco_program_push(&program, &retq, sizeof(retq));
                 break;
 
-            case FUCO_OPCODE_PUSHD:
-                fuco_program_push(&program, &immd, sizeof(uint32_t));
+            case FUCO_OPCODE_PUSHQ:
+                fuco_program_push(&program, &immq, sizeof(uint64_t));
+                break;
+
+            case FUCO_OPCODE_LOADQ:
+                memcpy(&immq, (void *)(program.stack + simm48), 
+                       sizeof(uint64_t));
+                fuco_program_push(&program, &immq, sizeof(uint64_t));
+                break;
+
+            case FUCO_OPCODE_RLOADQ:
+                memcpy(&immq, (void *)(program.stack + program.bp + simm48), 
+                       sizeof(uint64_t));
+                fuco_program_push(&program, &immq, sizeof(uint64_t));
                 break;
 
             case FUCO_OPCODE_EXIT:
@@ -87,15 +100,15 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
                 break;
 
             default:
-                fprintf(stderr, "Unhandled instruction at %d: " 
+                fprintf(stderr, "Unhandled instruction at %ld: " 
                         FUCO_INSTR_FORMAT "\n", program.ip, instr);
-                return exit_code;
+                return exit_code; /* TODO fix */
         }
 
         program.ip++;
     }
 
-    fprintf(stderr, "Program finished with exit code %d\n", exit_code);
+    fprintf(stderr, "Program finished with exit code %ld\n", exit_code);
 
     fuco_program_destruct(&program);
 

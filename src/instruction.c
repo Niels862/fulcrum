@@ -4,8 +4,10 @@
 fuco_instr_descriptor_t instr_descriptors[] = {
     { FUCO_OPCODE_NOP, "nop", FUCO_INSTR_LAYOUT_NO_IMM }, 
     { FUCO_OPCODE_CALL, "call", FUCO_INSTR_LAYOUT_IMM48 }, 
-    { FUCO_OPCODE_RETD, "retd", FUCO_INSTR_LAYOUT_NO_IMM }, 
-    { FUCO_OPCODE_PUSHD, "pushd", FUCO_INSTR_LAYOUT_IMM48 }, 
+    { FUCO_OPCODE_RETQ, "retq", FUCO_INSTR_LAYOUT_NO_IMM }, 
+    { FUCO_OPCODE_PUSHQ, "pushq", FUCO_INSTR_LAYOUT_IMM48 }, 
+    { FUCO_OPCODE_LOADQ, "loadq", FUCO_INSTR_LAYOUT_IMM48 },
+    { FUCO_OPCODE_RLOADQ, "rloadq", FUCO_INSTR_LAYOUT_IMM48 },
     { FUCO_OPCODE_EXIT, "exit", FUCO_INSTR_LAYOUT_NO_IMM }
 };
 
@@ -25,7 +27,8 @@ void fuco_instr_write(fuco_instr_t instr, FILE *stream) {
                 break;
 
             case FUCO_INSTR_LAYOUT_IMM48:
-                fprintf(stream, "%s %ld\n", descriptor.mnemonic, imm48);
+                fprintf(stream, "%s %ld\n", descriptor.mnemonic, 
+                        FUCO_SEX_IMM48(imm48));
                 break;
 
             default:

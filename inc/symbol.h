@@ -12,11 +12,21 @@ typedef uint32_t fuco_symbolid_t;
 #define FUCO_SYMBOLID_INVALID (fuco_symbolid_t)0
 
 typedef struct {
+    fuco_symbolid_t *data;
+    size_t size;
+    size_t cap;
+} fuco_symbol_context_t;
+
+typedef struct {
+    fuco_symbol_context_t ctx;
+} fuco_function_def_t;
+
+typedef struct {
     fuco_token_t *token;
     fuco_symbolid_t id;
     fuco_node_t *def;
     /* In inline function generation: actual parameter value */
-    fuco_node_t *value;
+    void *value;
     /* IR generated object */
     fuco_ir_object_t *object;
 } fuco_symbol_t;
@@ -28,11 +38,11 @@ typedef struct fuco_scope_t {
 
 #define FUCO_SYMBOLTABLE_INIT_SIZE 64
 
-typedef struct {
+struct fuco_symboltable_t {
     fuco_symbol_t *list;
     size_t size;
     size_t cap;
-} fuco_symboltable_t;
+};
 
 void fuco_scope_init(fuco_scope_t *scope, fuco_scope_t *prev);
 

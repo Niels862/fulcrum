@@ -8,9 +8,9 @@
 typedef struct {
     char *stack;
     fuco_instr_t *instrs;
-    uint32_t ip;
-    uint32_t sp;
-    uint32_t bp;
+    uint64_t ip;
+    uint64_t sp;
+    uint64_t bp;
 } fuco_program_t;
 
 void fuco_program_pop(fuco_program_t *program, void *data, size_t size);

@@ -1,4 +1,5 @@
 #include "symbol.h"
+#include "tree.h"
 #include "utils.h"
 #include <stdlib.h>
 #include <string.h>
@@ -74,6 +75,12 @@ void fuco_symboltable_init(fuco_symboltable_t *table) {
 }
 
 void fuco_symboltable_destruct(fuco_symboltable_t *table) {
+    for (size_t i = 0; i < table->size; i++) {
+        fuco_symbol_t *symbol = &table->list[i];
+
+        FUCO_UNUSED(symbol);
+    }
+    
     if (table->list != NULL) {
         free(table->list);
     }

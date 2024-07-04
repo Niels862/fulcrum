@@ -13,6 +13,7 @@ typedef enum {
     FUCO_NODE_PARAM_LIST,
     FUCO_NODE_PARAM,
     FUCO_NODE_CALL,
+    FUCO_NODE_ARG_LIST,
     FUCO_NODE_VARIABLE,
     FUCO_NODE_INTEGER,
     FUCO_NODE_RETURN,
@@ -36,6 +37,9 @@ typedef enum {
 
     FUCO_LAYOUT_PARAM_TYPE = 0,
     FUCO_LAYOUT_PARAM_N,
+
+    FUCO_LAYOUT_CALL_ARGS = 0,
+    FUCO_LAYOUT_CALL_N,
 
     FUCO_LAYOUT_VARIABLE_N = 0,
 
@@ -74,10 +78,15 @@ fuco_node_t *fuco_node_new(fuco_nodetype_t type);
 
 fuco_node_t *fuco_node_variadic_new(fuco_nodetype_t type, size_t *allocated);
 
+/* Transforms non-variadic node to (other) non-variadic node */
+fuco_node_t *fuco_node_transform(fuco_node_t *node, fuco_nodetype_t type);
+
 /* Transforms non-variadic node to variadic node */
 fuco_node_t *fuco_node_variadic_transform(fuco_node_t *node, 
                                           fuco_nodetype_t type, 
                                           size_t *allocated);
+
+fuco_node_t *fuco_node_set_count(fuco_node_t *node, size_t count);
 
 void fuco_node_free(fuco_node_t *node);
 
@@ -87,9 +96,6 @@ fuco_node_t *fuco_node_add_child(fuco_node_t *node, fuco_node_t *child,
 
 void fuco_node_set_child(fuco_node_t *node, fuco_node_t *child, 
                          fuco_node_layout_t index);
-
-fuco_node_t *fuco_node_get_child(fuco_node_t *node, fuco_node_layout_t index, 
-                                 fuco_nodetype_t type);
 
 void fuco_node_write(fuco_node_t *node, FILE *stream);
 
@@ -104,7 +110,11 @@ int fuco_node_resolve_global(fuco_node_t *node,
 int fuco_node_resolve_local_propagate(fuco_node_t *node, 
                                       fuco_symboltable_t *table, 
                                       fuco_scope_t *scope);
-                                      
+
+int fuco_node_resolve_local_function(fuco_node_t *node, 
+                                     fuco_symboltable_t *table, 
+                                     fuco_scope_t *scope);
+
 int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table, 
                             fuco_scope_t *scope);
 
@@ -113,5 +123,7 @@ void fuco_node_generate_ir_propagate(fuco_node_t *node, fuco_ir_t *ir,
 
 void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir, 
                            fuco_ir_object_t *object);
+
+void fuco_node_setup_offsets(fuco_node_t *node, uint64_t *defs);
 
 #endif

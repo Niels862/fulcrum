@@ -2,6 +2,7 @@
 #define FUCO_IR_H
 
 #include "instruction.h"
+#include "defs.h"
 #include <stdint.h>
 
 typedef uint64_t fuco_ir_label_t;
@@ -37,6 +38,7 @@ typedef struct {
     fuco_ir_label_t label;
     fuco_ir_node_t *begin;
     fuco_ir_node_t *end;
+    fuco_node_t *def;
 } fuco_ir_object_t;
 
 #define FUCO_IR_OBJECTS_INIT_SIZE 16
@@ -54,7 +56,8 @@ void fuco_ir_node_free(fuco_ir_node_t *node);
 
 void fuco_ir_node_write(fuco_ir_node_t *node, FILE *stream);
 
-void fuco_ir_object_init(fuco_ir_object_t *object, fuco_ir_label_t label);
+void fuco_ir_object_init(fuco_ir_object_t *object, fuco_ir_label_t label, 
+                         fuco_node_t *def);
 
 void fuco_ir_object_destruct(fuco_ir_object_t *object);
 
@@ -66,7 +69,8 @@ void fuco_ir_destruct(fuco_ir_t *ir);
 
 void fuco_ir_write(fuco_ir_t *ir, FILE *stream);
 
-fuco_ir_object_t *fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label);
+fuco_ir_object_t *fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label, 
+                                     fuco_node_t *def);
 
 void fuco_ir_add_node(fuco_ir_object_t *object, fuco_ir_node_t *node);
 

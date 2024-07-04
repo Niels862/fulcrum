@@ -182,7 +182,6 @@ fuco_node_t *fuco_parse_expression(fuco_tokenizer_t *tokenizer) {
 
 fuco_node_t *fuco_parse_value(fuco_tokenizer_t *tokenizer) {
     fuco_node_t *node = NULL;
-    size_t allocated;
 
     switch (tokenizer->curr.type) {
         case FUCO_TOKEN_INTEGER:
@@ -195,11 +194,16 @@ fuco_node_t *fuco_parse_value(fuco_tokenizer_t *tokenizer) {
             fuco_tokenizer_move(tokenizer, node);
 
             if (tokenizer->curr.type == FUCO_TOKEN_BRACKET_OPEN) {
-                node = fuco_node_variadic_transform(node, FUCO_NODE_CALL, 
-                                                    &allocated);
-                node = fuco_parse_call(tokenizer, node, &allocated);
-            } else {
-                FUCO_NOT_IMPLEMENTED();
+                fuco_node_t *args = fuco_parse_call_args(tokenizer);
+
+                if (args == NULL) {
+                    fuco_node_free(node);
+                    return NULL;
+                }
+
+                node = fuco_node_transform(node, FUCO_NODE_CALL);
+
+                fuco_node_set_child(node, args, FUCO_LAYOUT_CALL_ARGS);
             }
 
             break;
@@ -214,15 +218,37 @@ fuco_node_t *fuco_parse_value(fuco_tokenizer_t *tokenizer) {
     return node;
 }
 
-fuco_node_t *fuco_parse_call(fuco_tokenizer_t *tokenizer, fuco_node_t *node, 
-                             size_t *allocated) {
-    FUCO_UNUSED(node), FUCO_UNUSED(allocated);
-    
-    fuco_tokenizer_discard_if(tokenizer, FUCO_TOKEN_BRACKET_OPEN);
+fuco_node_t *fuco_parse_call_args(fuco_tokenizer_t *tokenizer) {
+    size_t allocated;
+    fuco_node_t *node = fuco_node_variadic_new(FUCO_NODE_ARG_LIST, &allocated);
+    fuco_node_t *arg;
 
-    /* TODO */
+    if (!fuco_tokenizer_discard_if(tokenizer, FUCO_TOKEN_BRACKET_OPEN)) {
+        fuco_node_free(node);
+        return NULL;
+    }
 
-    fuco_tokenizer_discard_if(tokenizer, FUCO_TOKEN_BRACKET_CLOSE);
+    if (tokenizer->curr.type != FUCO_TOKEN_BRACKET_CLOSE) {
+        do {
+            if ((arg = fuco_parse_value(tokenizer)) == NULL) {
+                fuco_node_free(node);
+                return NULL;
+            }
+
+            node = fuco_node_add_child(node, arg, &allocated);
+
+            if (tokenizer->curr.type == FUCO_TOKEN_COMMA) {
+                fuco_tokenizer_discard(tokenizer);
+            } else {
+                break;
+            }
+        } while (true);
+    }
+
+    if (!fuco_tokenizer_discard_if(tokenizer, FUCO_TOKEN_BRACKET_CLOSE)) {
+        fuco_node_free(node);
+        return NULL;
+    }
 
     return node;
 }

@@ -1,5 +1,5 @@
-def f(a, b) {
-    return 69;
+def f(x, y) {
+    return x;
 }
 
 def main() {
@@ -7,5 +7,5 @@ def main() {
 }
 
 def g() {
-    return f();
+    return f(69, 420);
 }
