@@ -67,7 +67,7 @@ void fuco_ir_object_write(fuco_ir_object_t *object, FILE *stream) {
 }
 
 void fuco_ir_init(fuco_ir_t *ir) {
-    ir->objects = malloc(FUCO_IR_OBJECTS_INIT_SIZE * sizeof(fuco_ir_node_t *));
+    ir->objects = malloc(FUCO_IR_OBJECTS_INIT_SIZE * sizeof(fuco_ir_node_t));
     ir->size = 0;
     ir->cap = FUCO_IR_OBJECTS_INIT_SIZE;
     ir->label = 0;
@@ -91,9 +91,9 @@ void fuco_ir_write(fuco_ir_t *ir, FILE *stream) {
 fuco_ir_object_t *fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label, 
                                      fuco_node_t *def) {
     if (ir->size >= ir->cap) {
-        ir->objects = realloc(ir->objects, 
-                              2 * ir->cap * sizeof(fuco_ir_object_t));
         ir->cap *= 2;
+        ir->objects = realloc(ir->objects, 
+                              ir->cap * sizeof(fuco_ir_object_t));
     }
     
     fuco_ir_object_t *object = &ir->objects[ir->size];

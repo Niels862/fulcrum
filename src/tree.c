@@ -317,6 +317,8 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
 
         case FUCO_NODE_CALL:
         case FUCO_NODE_VARIABLE:
+            fuco_node_resolve_local_propagate(node, table, scope);
+
             node->symbol = fuco_scope_lookup_token(scope, &node->token);
             if (node->symbol == NULL) {
                 return 1;
