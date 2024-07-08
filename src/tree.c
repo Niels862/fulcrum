@@ -330,14 +330,14 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
 }
 
 void fuco_node_generate_ir_propagate(fuco_node_t *node, fuco_ir_t *ir, 
-                                     fuco_ir_object_t *object) {
+                                     size_t obj) {
     for (size_t i = 0; i < node->count; i++) {
-        fuco_node_generate_ir(node->children[i], ir, object);
+        fuco_node_generate_ir(node->children[i], ir, obj);
     }
 }
 
 void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir, 
-                           fuco_ir_object_t *object) {
+                           size_t obj) {
     fuco_node_t *next = NULL;
 
     switch (node->type) {
@@ -348,47 +348,47 @@ void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir,
 
         case FUCO_NODE_FILEBODY:
         case FUCO_NODE_BODY:
-            fuco_node_generate_ir_propagate(node, ir, object);
+            fuco_node_generate_ir_propagate(node, ir, obj);
             break;
 
         case FUCO_NODE_FUNCTION:
-            node->symbol->object = fuco_ir_add_object(ir, node->symbol->id, 
-                                                      node);
+            node->symbol->obj = fuco_ir_add_object(ir, node->symbol->id, 
+                                                   node);
 
             next = node->children[FUCO_LAYOUT_FUNCTION_BODY];
             
-            fuco_node_generate_ir(next, ir, node->symbol->object);
+            fuco_node_generate_ir(next, ir, node->symbol->obj);
             break;
 
         case FUCO_NODE_CALL:
             next = node->children[FUCO_LAYOUT_CALL_ARGS];
 
-            fuco_node_generate_ir(next, ir, object);
+            fuco_node_generate_ir(next, ir, obj);
 
-            fuco_ir_add_instr_imm48_label(object, FUCO_OPCODE_CALL, 
+            fuco_ir_add_instr_imm48_label(ir, obj, FUCO_OPCODE_CALL, 
                                           node->symbol->id);
             break;
 
         case FUCO_NODE_ARG_LIST:
             /* Arguments are pushed in reverse order */
             for (size_t i = node->count; i > 0; i--) {
-                fuco_node_generate_ir(node->children[i - 1], ir, object);
+                fuco_node_generate_ir(node->children[i - 1], ir, obj);
             }
             break;
 
         case FUCO_NODE_VARIABLE:
-            fuco_ir_add_instr_imm48_label(object, FUCO_OPCODE_RLOADQ, 
+            fuco_ir_add_instr_imm48_label(ir, obj, FUCO_OPCODE_RLOADQ, 
                                           node->symbol->id);
             break;
 
         case FUCO_NODE_INTEGER:
-            fuco_ir_add_instr_imm48(object, FUCO_OPCODE_PUSHQ, 
+            fuco_ir_add_instr_imm48(ir, obj, FUCO_OPCODE_PUSHQ, 
                                    *(uint64_t *)node->token.data);
             break;
 
         case FUCO_NODE_RETURN:
-            fuco_node_generate_ir_propagate(node, ir, object);
-            fuco_ir_add_instr(object, FUCO_OPCODE_RETQ);
+            fuco_node_generate_ir_propagate(node, ir, obj);
+            fuco_ir_add_instr(ir, obj, FUCO_OPCODE_RETQ);
             break;
     }
 }

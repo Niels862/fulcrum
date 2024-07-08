@@ -52,7 +52,7 @@ int fuco_compiler_run(fuco_compiler_t *compiler) {
 
     compiler->ir.label = compiler->table.size;
     fuco_ir_create_startup_object(&compiler->ir, entry->id);
-    fuco_node_generate_ir(compiler->root, &compiler->ir, NULL);
+    fuco_node_generate_ir(compiler->root, &compiler->ir, 0);
     
     fuco_ir_assemble(&compiler->ir, &compiler->bytecode);
 

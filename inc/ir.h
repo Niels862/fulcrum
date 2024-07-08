@@ -69,21 +69,20 @@ void fuco_ir_destruct(fuco_ir_t *ir);
 
 void fuco_ir_write(fuco_ir_t *ir, FILE *stream);
 
-fuco_ir_object_t *fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label, 
-                                     fuco_node_t *def);
+size_t fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label, 
+                          fuco_node_t *def);
 
-void fuco_ir_add_node(fuco_ir_object_t *object, fuco_ir_node_t *node);
+void fuco_ir_add_node(fuco_ir_t *ir, size_t obj, fuco_ir_node_t *node);
 
-void fuco_ir_add_instr(fuco_ir_object_t *object, fuco_opcode_t opcode);
+void fuco_ir_add_instr(fuco_ir_t *ir, size_t obj, fuco_opcode_t opcode);
 
-void fuco_ir_add_label(fuco_ir_object_t *object, fuco_ir_label_t label);
+void fuco_ir_add_label(fuco_ir_t *ir, size_t obj, fuco_ir_label_t label);
 
-void fuco_ir_add_instr_imm48(fuco_ir_object_t *object, fuco_opcode_t opcode, 
+void fuco_ir_add_instr_imm48(fuco_ir_t *ir, size_t obj, fuco_opcode_t opcode, 
                              uint64_t data);
 
-void fuco_ir_add_instr_imm48_label(fuco_ir_object_t *object, 
-                                   fuco_opcode_t opcode, 
-                                   fuco_ir_label_t label);
+void fuco_ir_add_instr_imm48_label(fuco_ir_t *ir, size_t obj, 
+                                   fuco_opcode_t opcode, fuco_ir_label_t label);
 
 void fuco_ir_create_startup_object(fuco_ir_t *ir, fuco_ir_label_t entry);
 

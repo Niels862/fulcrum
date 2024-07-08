@@ -7,5 +7,61 @@ def main() {
 }
 
 def g() {
-    return f(69, 420);
+    return f(a(), 420);
+}
+
+def a() {
+    return b();
+}
+
+def b() {
+    return c();
+}
+
+def c() {
+    return d();
+}
+
+def d() {
+    return e();
+}
+
+def e() {
+    return h();
+}
+
+def h() {
+    return i();
+}
+
+def i() {
+    return j();
+}
+
+def j() {
+    return k();
+}
+
+def k() {
+    return l();
+}
+
+def l() {
+    return m();
+}
+
+def m() {
+    return n();
+}
+
+def n() {
+    return o();
+}
+
+def o() {
+    return p();
+}
+
+def p() {
+    return 69;
 }

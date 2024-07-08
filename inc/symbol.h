@@ -28,7 +28,7 @@ typedef struct {
     /* In inline function generation: actual parameter value */
     void *value;
     /* IR generated object */
-    fuco_ir_object_t *object;
+    size_t obj;
 } fuco_symbol_t;
 
 typedef struct fuco_scope_t {

@@ -119,10 +119,10 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
                             fuco_scope_t *scope);
 
 void fuco_node_generate_ir_propagate(fuco_node_t *node, fuco_ir_t *ir, 
-                                     fuco_ir_object_t *object);
+                                     size_t obj);
 
 void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir, 
-                           fuco_ir_object_t *object);
+                           size_t obj);
 
 void fuco_node_setup_offsets(fuco_node_t *node, uint64_t *defs);
 
