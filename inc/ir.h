@@ -21,23 +21,22 @@ typedef enum {
     FUCO_IR_INCLUDES_DATA = 0x4
 } fuco_ir_attr_t;
 
-typedef struct fuco_ir_node_t {
-    fuco_ir_attr_t attrs;
-    
+typedef struct fuco_ir_unit_t {    
     fuco_opcode_t opcode;
     union {
         fuco_ir_label_t label;
         uint64_t data;
     } imm;
+    fuco_ir_attr_t attrs;
+} fuco_ir_unit_t;
 
-    struct fuco_ir_node_t *next;
-} fuco_ir_node_t;
+#define FUCO_OBJECT_INIT_SIZE 16
 
 /* Insertion at end */
 typedef struct {
-    fuco_ir_label_t label;
-    fuco_ir_node_t *begin;
-    fuco_ir_node_t *end;
+    fuco_ir_unit_t *units;
+    size_t size;
+    size_t cap;
     fuco_node_t *def;
 } fuco_ir_object_t;
 
@@ -50,14 +49,9 @@ typedef struct {
     fuco_ir_label_t label;
 } fuco_ir_t;
 
-fuco_ir_node_t *fuco_ir_node_new(fuco_opcode_t opcode, fuco_ir_attr_t attrs);
+void fuco_ir_unit_write(fuco_ir_unit_t *unit, FILE *stream);
 
-void fuco_ir_node_free(fuco_ir_node_t *node);
-
-void fuco_ir_node_write(fuco_ir_node_t *node, FILE *stream);
-
-void fuco_ir_object_init(fuco_ir_object_t *object, fuco_ir_label_t label, 
-                         fuco_node_t *def);
+void fuco_ir_object_init(fuco_ir_object_t *object, fuco_node_t *def);
 
 void fuco_ir_object_destruct(fuco_ir_object_t *object);
 
@@ -72,7 +66,8 @@ void fuco_ir_write(fuco_ir_t *ir, FILE *stream);
 size_t fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label, 
                           fuco_node_t *def);
 
-void fuco_ir_add_node(fuco_ir_t *ir, size_t obj, fuco_ir_node_t *node);
+fuco_ir_unit_t *fuco_ir_add_unit(fuco_ir_t *ir, size_t obj, 
+                                 fuco_opcode_t opcode, fuco_ir_attr_t attrs);
 
 void fuco_ir_add_instr(fuco_ir_t *ir, size_t obj, fuco_opcode_t opcode);
 
