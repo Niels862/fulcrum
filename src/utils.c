@@ -40,9 +40,13 @@ char fuco_base_char(int i) {
 }
 
 char *fuco_repr_char(char c) {
-    static char buf[5];
+    static char bufs[16][5];
+    static size_t idx = 0;
 
+    char *buf = bufs[idx];
     unsigned char b = c;
+
+    idx = (idx + 1) % 16;
 
     if (isprint(b)) {
         buf[0] = c;

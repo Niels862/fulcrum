@@ -78,12 +78,13 @@ int fuco_tokenizer_move(fuco_tokenizer_t *tokenizer, fuco_node_t *node);
 /* Token handler: discards and loads next source. Token must be EOF. */
 int fuco_tokenizer_open_next_source(fuco_tokenizer_t *tokenizer);
 
-/* Helper functions */
-
 bool fuco_tokenizer_discard_if(fuco_tokenizer_t *tokenizer, 
                                fuco_tokentype_t type);
 
 bool fuco_tokenizer_move_if(fuco_tokenizer_t *tokenizer, 
                             fuco_tokentype_t type, fuco_node_t *node);
+
+bool fuco_tokenizer_discard_operator_if(fuco_tokenizer_t *tokenizer, 
+                                        fuco_tokentype_t type);
 
 #endif

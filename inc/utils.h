@@ -15,6 +15,7 @@ void fuco_syntax_error(fuco_textsource_t *source, char const *format, ...);
 
 char fuco_base_char(int i);
 
+/* Static rotation: max. 16 uses at once */
 char *fuco_repr_char(char c);
 
 int fuco_ceil_log(unsigned int i, unsigned int base);

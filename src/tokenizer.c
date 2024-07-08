@@ -219,16 +219,9 @@ int fuco_tokenizer_skip_nontokens(fuco_tokenizer_t *tokenizer, int c) {
 
 bool fuco_tokenizer_expect(fuco_tokenizer_t *tokenizer, fuco_tokentype_t type) {
     if (tokenizer->curr.type != type) {
-        char *other;
-        if (fuco_tokentype_has_attr(tokenizer->curr.type, 
-                                    FUCO_TOKENTYPE_HAS_LEXEME)) {
-            other = tokenizer->curr.lexeme;
-        } else {
-            other = fuco_tokentype_string(tokenizer->curr.type);
-        }
-        
         fuco_syntax_error(&tokenizer->curr.source, "expected %s, but got %s", 
-                          fuco_tokentype_string(type), other);
+                          fuco_tokentype_string(type), 
+                          fuco_token_string(&tokenizer->curr));
 
         return false;
     }
@@ -329,4 +322,45 @@ bool fuco_tokenizer_move_if(fuco_tokenizer_t *tokenizer,
     }
 
     return true;
+}
+
+bool fuco_tokenizer_discard_operator_if(fuco_tokenizer_t *tokenizer, 
+                                        fuco_tokentype_t type) {
+    if (tokenizer->curr.type != FUCO_TOKEN_OPERATOR) {
+        fuco_syntax_error(&tokenizer->curr.source, "expected %s, but got %s", 
+                          fuco_tokentype_string(type), 
+                          fuco_token_string(&tokenizer->curr));
+
+        return false;
+    }
+
+    char *operator = token_descriptors[type].string;
+    char *lexeme = tokenizer->curr.lexeme;
+
+    size_t i = 0;
+    while (operator[i] == lexeme[i] && operator[i] != '\0') {
+        i++;
+    }
+
+    if (operator[i] == '\0') {
+        if (lexeme[i] == '\0') {
+            fuco_tokenizer_discard(tokenizer);
+        } else {
+            size_t j;
+            for (j = i; lexeme[j] != '\0'; j++) {
+                lexeme[j - i] = lexeme[j];
+            }
+            
+            lexeme[j - i] = '\0';
+        }
+
+        tokenizer->last = type;
+
+        return true;
+    } else {
+        /* Will fail, used for syntax_error message */
+        fuco_tokenizer_expect(tokenizer, type);
+
+        return false;
+    }
 }

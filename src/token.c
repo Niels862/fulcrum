@@ -23,6 +23,8 @@ fuco_token_descriptor_t const token_descriptors[] = {
     { FUCO_TOKEN_SEMICOLON, FUCO_TOKENTYPE_IS_SEPARATOR, ";" },
     { FUCO_TOKEN_COLON, FUCO_TOKENTYPE_IS_SEPARATOR, ":" },
 
+    { FUCO_TOKEN_ARROW, 0, "->" },
+
     { FUCO_TOKEN_EOF, 0, "eof" }
 };
 
@@ -77,4 +79,21 @@ void fuco_token_write(fuco_token_t *token, FILE *stream) {
                 abort();
         }
     }
+}
+
+char *fuco_token_string(fuco_token_t *token) {
+    static char *strs[16];
+    static size_t idx = 0;
+
+    char **str = &strs[idx];
+
+    if (token_descriptors[token->type].attr & FUCO_TOKENTYPE_HAS_LEXEME) {
+        *str = token->lexeme;
+    } else {
+        *str = fuco_tokentype_string(token->type);
+    }
+
+    idx = (idx + 1) % 16;
+
+    return *str;
 }

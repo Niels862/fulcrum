@@ -24,6 +24,9 @@ typedef enum {
     FUCO_TOKEN_COMMA,
     FUCO_TOKEN_SEMICOLON,
     FUCO_TOKEN_COLON,
+
+    FUCO_TOKEN_ARROW,
+
     FUCO_TOKEN_EOF
 } fuco_tokentype_t;
 
@@ -60,5 +63,8 @@ void fuco_token_init(fuco_token_t *token);
 void fuco_token_destruct(fuco_token_t *token);
 
 void fuco_token_write(fuco_token_t *token, FILE *stream);
+
+/* Static rotation: max. 16 uses at once */
+char *fuco_token_string(fuco_token_t *token);
 
 #endif

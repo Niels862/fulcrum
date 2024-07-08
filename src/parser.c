@@ -39,6 +39,8 @@ fuco_node_t *fuco_parse_function_declaration(fuco_tokenizer_t *tokenizer) {
 
     if (!fuco_tokenizer_move_if(tokenizer, FUCO_TOKEN_IDENTIFIER, node)
         || (params = fuco_parse_param_list(tokenizer)) == NULL
+        || !fuco_tokenizer_discard_operator_if(tokenizer, FUCO_TOKEN_ARROW)
+        || !fuco_tokenizer_discard_if(tokenizer, FUCO_TOKEN_IDENTIFIER)
         || (body = fuco_parse_braced_block(tokenizer)) == NULL) {
         fuco_node_free(node);
 
@@ -100,7 +102,9 @@ fuco_node_t *fuco_parse_param_list(fuco_tokenizer_t *tokenizer) {
 fuco_node_t *fuco_parse_param(fuco_tokenizer_t *tokenizer) {
     fuco_node_t *node = fuco_node_new(FUCO_NODE_PARAM);
 
-    if (!fuco_tokenizer_move_if(tokenizer, FUCO_TOKEN_IDENTIFIER, node)) {
+    if (!fuco_tokenizer_move_if(tokenizer, FUCO_TOKEN_IDENTIFIER, node)
+        || !fuco_tokenizer_discard_if(tokenizer, FUCO_TOKEN_COLON)
+        || !fuco_tokenizer_discard_if(tokenizer, FUCO_TOKEN_IDENTIFIER)) {
         fuco_node_free(node);
         return NULL;
     }
