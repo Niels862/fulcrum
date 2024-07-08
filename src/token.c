@@ -7,7 +7,8 @@ fuco_token_descriptor_t const token_descriptors[] = {
 
     { FUCO_TOKEN_INTEGER, FUCO_TOKENTYPE_HAS_LEXEME, "integer" },
     { FUCO_TOKEN_IDENTIFIER, FUCO_TOKENTYPE_HAS_LEXEME, "identifier" },
-    
+    { FUCO_TOKEN_OPERATOR, FUCO_TOKENTYPE_HAS_LEXEME, "operator" },
+
     { FUCO_TOKEN_DEF, FUCO_TOKENTYPE_IS_KEYWORD, "def" },
     { FUCO_TOKEN_RETURN, FUCO_TOKENTYPE_IS_KEYWORD, "return" },
 
@@ -20,7 +21,8 @@ fuco_token_descriptor_t const token_descriptors[] = {
     { FUCO_TOKEN_DOT, FUCO_TOKENTYPE_IS_SEPARATOR, "." },
     { FUCO_TOKEN_COMMA, FUCO_TOKENTYPE_IS_SEPARATOR, "," },
     { FUCO_TOKEN_SEMICOLON, FUCO_TOKENTYPE_IS_SEPARATOR, ";" },
-    
+    { FUCO_TOKEN_COLON, FUCO_TOKENTYPE_IS_SEPARATOR, ":" },
+
     { FUCO_TOKEN_EOF, 0, "eof" }
 };
 
@@ -60,9 +62,11 @@ void fuco_token_destruct(fuco_token_t *token) {
 void fuco_token_write(fuco_token_t *token, FILE *stream) {
     fuco_textsource_write(&token->source, stream);
     fprintf(stream, ": %s", fuco_tokentype_string(token->type));
-    if (token->lexeme != NULL) {
+    
+    if (token->lexeme != NULL) { /* TODO: use HAS_LEXEME */
         fprintf(stream, ": '%s'", token->lexeme);
     }
+    
     if (token->data != NULL) {
         switch (token->type) {
             case FUCO_TOKEN_INTEGER:

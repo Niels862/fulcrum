@@ -18,6 +18,13 @@ bool fuco_is_identifier_continue(int c) {
     return isalpha(c) || isdigit(c) || c == '_';
 }
 
+bool fuco_is_operator(int c) {
+    return c == '-' || c == '+' || c == '*' || c == '/'
+        || c == '%' || c == '!' || c == '^' || c == '&'
+        || c == '~' || c == '|' || c == '<' || c == '>'
+        || c == '=';
+}
+
 uint64_t *fuco_parse_integer(char *lexeme) {
     uint64_t data = 0;
 
@@ -123,6 +130,13 @@ int fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
                 break;
             }
         }
+    } else if (fuco_is_operator(c)) {
+        curr->type = FUCO_TOKEN_OPERATOR;
+
+        do {
+            fuco_strbuf_append_char(&tokenizer->temp, c);
+            c = fuco_tokenizer_next_char(tokenizer, c);
+        } while (fuco_is_operator(c));
     } else {
         for (fuco_tokentype_t type = 0; type < fuco_n_tokentypes(); type++) {
             if (fuco_tokentype_has_attr(type, FUCO_TOKENTYPE_IS_SEPARATOR) 
@@ -205,9 +219,16 @@ int fuco_tokenizer_skip_nontokens(fuco_tokenizer_t *tokenizer, int c) {
 
 bool fuco_tokenizer_expect(fuco_tokenizer_t *tokenizer, fuco_tokentype_t type) {
     if (tokenizer->curr.type != type) {
+        char *other;
+        if (fuco_tokentype_has_attr(tokenizer->curr.type, 
+                                    FUCO_TOKENTYPE_HAS_LEXEME)) {
+            other = tokenizer->curr.lexeme;
+        } else {
+            other = fuco_tokentype_string(tokenizer->curr.type);
+        }
+        
         fuco_syntax_error(&tokenizer->curr.source, "expected %s, but got %s", 
-                          fuco_tokentype_string(type),
-                          fuco_tokentype_string(tokenizer->curr.type));
+                          fuco_tokentype_string(type), other);
 
         return false;
     }

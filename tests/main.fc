@@ -1,67 +1,11 @@
-def f(x, y) {
+def f(x: Int, y: Int) -> Int {
     return x;
 }
 
-def main() {
+def main() -> Int {
     return g(); 
 }
 
-def g() {
-    return f(a(), 420);
-}
-
-def a() {
-    return b();
-}
-
-def b() {
-    return c();
-}
-
-def c() {
-    return d();
-}
-
-def d() {
-    return e();
-}
-
-def e() {
-    return h();
-}
-
-def h() {
-    return i();
-}
-
-def i() {
-    return j();
-}
-
-def j() {
-    return k();
-}
-
-def k() {
-    return l();
-}
-
-def l() {
-    return m();
-}
-
-def m() {
-    return n();
-}
-
-def n() {
-    return o();
-}
-
-def o() {
-    return p();
-}
-
-def p() {
-    return 69;
+def g() -> Int {
+    return f(69, 420);
 }

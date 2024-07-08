@@ -9,7 +9,8 @@ typedef enum {
     FUCO_TOKEN_EMPTY,
     FUCO_TOKEN_INTEGER,
     FUCO_TOKEN_IDENTIFIER,
-    
+    FUCO_TOKEN_OPERATOR,
+
     FUCO_TOKEN_DEF,
     FUCO_TOKEN_RETURN,
 
@@ -22,14 +23,15 @@ typedef enum {
     FUCO_TOKEN_DOT,
     FUCO_TOKEN_COMMA,
     FUCO_TOKEN_SEMICOLON,
-    
+    FUCO_TOKEN_COLON,
     FUCO_TOKEN_EOF
 } fuco_tokentype_t;
 
 typedef enum {
     FUCO_TOKENTYPE_IS_KEYWORD = 0x1,
     FUCO_TOKENTYPE_IS_SEPARATOR = 0x2,
-    FUCO_TOKENTYPE_HAS_LEXEME = 0x4
+    FUCO_TOKENIZER_IS_OPERATOR = 0x4,
+    FUCO_TOKENTYPE_HAS_LEXEME = 0x8,
 } fuco_token_attr_t;
 
 typedef struct {
@@ -44,8 +46,6 @@ typedef struct {
     fuco_textsource_t source;
     fuco_tokentype_t type;
 } fuco_token_t;
-
-#define a sizeof(fuco_token_t)
 
 extern fuco_token_descriptor_t const token_descriptors[];
 
