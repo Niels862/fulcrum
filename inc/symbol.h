@@ -36,12 +36,19 @@ typedef struct fuco_scope_t {
     struct fuco_scope_t *prev;
 } fuco_scope_t;
 
-#define FUCO_SYMBOLTABLE_INIT_SIZE 64
+#define FUCO_SYMBOL_CHUNK_SIZE 512
+
+typedef struct fuco_symbol_chunk_t {
+    fuco_symbol_t data[FUCO_SYMBOL_CHUNK_SIZE];
+    size_t size;
+    struct fuco_symbol_chunk_t *next;
+} fuco_symbol_chunk_t;
 
 struct fuco_symboltable_t {
-    fuco_symbol_t *list;
+    /* Insertion at front: [back, ..., front] */
+    fuco_symbol_chunk_t *back;
+    fuco_symbol_chunk_t *front;
     size_t size;
-    size_t cap;
 };
 
 void fuco_scope_init(fuco_scope_t *scope, fuco_scope_t *prev);
@@ -56,6 +63,8 @@ fuco_symbol_t *fuco_scope_lookup_token(fuco_scope_t *scope,
 
 fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope, 
                                  fuco_token_t *token, fuco_symbol_t *symbol);
+
+fuco_symbol_chunk_t *fuco_symbol_chunk_new();
 
 void fuco_symboltable_init(fuco_symboltable_t *table);
 

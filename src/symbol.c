@@ -50,6 +50,15 @@ fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope,
     return symbol;
 }
 
+fuco_symbol_chunk_t *fuco_symbol_chunk_new() {
+    fuco_symbol_chunk_t *chunk = malloc(sizeof(fuco_symbol_chunk_t));
+    
+    chunk->size = 0;
+    chunk->next = NULL;
+
+    return chunk;
+}
+
 void fuco_symboltable_init(fuco_symboltable_t *table) {
     static fuco_token_t null_token = {
         .lexeme = "(null)", 
@@ -61,46 +70,47 @@ void fuco_symboltable_init(fuco_symboltable_t *table) {
         .type = FUCO_TOKEN_EMPTY
     };
 
-    table->list = malloc(FUCO_SYMBOLTABLE_INIT_SIZE * sizeof(fuco_symbol_t));
-    table->size = FUCO_SYMBOLID_INVALID;
-    table->cap = FUCO_SYMBOLTABLE_INIT_SIZE;
+    table->front = table->back = fuco_symbol_chunk_new();
+    table->size = 0;
 
-    fuco_symbol_t *symbol = &table->list[0];
-    /* Insert null-symbol */
-    table->size++;
-    symbol->token = &null_token;
-    symbol->id = 0;
-    symbol->def = symbol->value = NULL;
-    symbol->obj = 0;
+    fuco_symboltable_insert(table, NULL, &null_token, NULL);
 }
 
-void fuco_symboltable_destruct(fuco_symboltable_t *table) {
-    for (size_t i = 0; i < table->size; i++) {
-        fuco_symbol_t *symbol = &table->list[i];
-
-        FUCO_UNUSED(symbol);
-    }
-    
-    if (table->list != NULL) {
-        free(table->list);
+void fuco_symboltable_destruct(fuco_symboltable_t *table) {    
+    fuco_symbol_chunk_t *chunk = table->back;
+    while (chunk != NULL) {
+        fuco_symbol_chunk_t *next = chunk->next;
+        free(chunk);
+        chunk = next;
     }
 }
 
 void fuco_symboltable_write(fuco_symboltable_t *table, FILE *stream) {
     size_t max = 0;
-    for (size_t i = 0; i < table->size; i++) {
-        size_t len = strlen(table->list[i].token->lexeme);
-        if (len > max) {
-            max = len;
+
+    fuco_symbol_chunk_t *chunk = table->back;
+    while (chunk != NULL) {
+        for (size_t i = 0; i < chunk->size; i++) {
+            size_t len = strlen(chunk->data[i].token->lexeme);
+            if (len > max) {
+                max = len;
+            }
         }
+
+        chunk = chunk->next;
     }
 
-    for (size_t i = 0; i < table->size; i++) {
-        fuco_symbol_t *symbol = &table->list[i];
-        fprintf(stream, " %*s: %*d (def=%d,val=%d,obj=%ld)\n", (int)max, 
-                symbol->token->lexeme, fuco_ceil_log(table->size, 10),
-                symbol->id, symbol->def != NULL,
-                symbol->value != NULL, symbol->obj);
+    chunk = table->back;
+    while (chunk != NULL) {
+        for (size_t i = 0; i < chunk->size; i++) {
+            fuco_symbol_t *symbol = &chunk->data[i];
+            fprintf(stream, " %*s: %*d (def=%d,val=%d,obj=%ld)\n", (int)max, 
+                    symbol->token->lexeme, fuco_ceil_log(table->size, 10),
+                    symbol->id, symbol->def != NULL,
+                    symbol->value != NULL, symbol->obj);
+        }
+
+        chunk = chunk->next;
     }
 }
 
@@ -108,13 +118,13 @@ fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table,
                                        fuco_scope_t *scope,
                                        fuco_token_t *token,
                                        fuco_node_t *def) {
-    if (table->size >= table->cap) {
-        table->list = realloc(table->list, 
-                              2 * table->cap * sizeof(fuco_symbol_t));
-        table->cap *= 2;
+    fuco_symbol_chunk_t *chunk = table->front;
+    
+    if (chunk->size >= FUCO_SYMBOL_CHUNK_SIZE) {
+        table->front = chunk = chunk->next = fuco_symbol_chunk_new();
     }
 
-    fuco_symbol_t *symbol = &table->list[table->size];
+    fuco_symbol_t *symbol = &chunk->data[chunk->size];
 
     symbol->token = token;
     symbol->id = table->size;
@@ -123,8 +133,10 @@ fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table,
     symbol->obj = 0;
 
     table->size++;
+    chunk->size++;
 
-    if (fuco_scope_insert(scope, symbol->token, symbol) == NULL) {
+    if (scope != NULL && 
+        fuco_scope_insert(scope, symbol->token, symbol) == NULL) {
         return NULL;
     }
 
