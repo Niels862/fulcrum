@@ -27,14 +27,16 @@ void fuco_compiler_destruct(fuco_compiler_t *compiler) {
 }
 
 int fuco_compiler_run(fuco_compiler_t *compiler) {
-    fuco_token_t *tokens = fuco_lexer_lex(compiler->file);
+    fuco_tstream_t tstream = fuco_lexer_lex(compiler->file);
     
-    if (tokens == NULL) {
+    if (tstream == NULL) {
         fprintf(stderr, "lexing failed");
         return 1;
     }
 
-    fuco_tokenlist_write(tokens, stderr);
+    fuco_tstream_write(tstream, stderr);
+
+    fuco_tstream_destruct(tstream);
 
     return 1;
 

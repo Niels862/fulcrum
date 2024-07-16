@@ -3,6 +3,8 @@
 
 #include "token.h"
 
+typedef fuco_token_t *fuco_tstream_t;
+
 #define FUCO_TOKENLIST_INIT_SIZE 256
 
 /* Only used during lexing, afterwards only the token pointer terminated by 
@@ -13,15 +15,19 @@ typedef struct {
     size_t cap;
 } fuco_tokenlist_t;
 
+#define FUCO_PARTIAL_TSTREAM(list) (fuco_tstream_t)((list)->tokens)
+
 void fuco_tokenlist_init(fuco_tokenlist_t *list);
 
 void fuco_tokenlist_destruct(fuco_tokenlist_t *list);
 
-void fuco_tokenlist_write(fuco_token_t *tokens, FILE *file);
+void fuco_tstream_destruct(fuco_tstream_t tstream);
+
+void fuco_tstream_write(fuco_tstream_t tstream, FILE *file);
 
 /* Returns reference to appended empty token, invalidated at next call */
 fuco_token_t *fuco_tokenlist_append(fuco_tokenlist_t *list);
 
-fuco_token_t *fuco_tokenlist_terminate(fuco_tokenlist_t *list);
+fuco_tstream_t fuco_tokenlist_terminate(fuco_tokenlist_t *list);
 
 #endif
