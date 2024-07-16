@@ -25,7 +25,9 @@ fuco_token_descriptor_t const token_descriptors[] = {
 
     { FUCO_TOKEN_ARROW, 0, "->" },
 
-    { FUCO_TOKEN_EOF, 0, "eof" }
+    { FUCO_TOKEN_END_OF_FILE, 0, "end of file" },
+
+    { FUCO_TOKEN_END_OF_SOURCE, 0, "end of source" }
 };
 
 #define FUCO_N_TOKENTYPES sizeof(token_descriptors) / sizeof(*token_descriptors)
@@ -61,18 +63,18 @@ void fuco_token_destruct(fuco_token_t *token) {
     token->data = NULL;
 }
 
-void fuco_token_write(fuco_token_t *token, FILE *stream) {
-    fuco_textsource_write(&token->source, stream);
-    fprintf(stream, ": %s", fuco_tokentype_string(token->type));
+void fuco_token_write(fuco_token_t *token, FILE *file) {
+    fuco_textsource_write(&token->source, file);
+    fprintf(file, ": %s", fuco_tokentype_string(token->type));
     
     if (token->lexeme != NULL) { /* TODO: use HAS_LEXEME */
-        fprintf(stream, ": '%s'", token->lexeme);
+        fprintf(file, ": '%s'", token->lexeme);
     }
     
     if (token->data != NULL) {
         switch (token->type) {
             case FUCO_TOKEN_INTEGER:
-                fprintf(stream, " (=%ld)", *(uint64_t *)token->data);
+                fprintf(file, " (=%ld)", *(uint64_t *)token->data);
                 break;
 
             default:

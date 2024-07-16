@@ -70,7 +70,7 @@ void fuco_symboltable_init(fuco_symboltable_t *table);
 
 void fuco_symboltable_destruct(fuco_symboltable_t *table);
 
-void fuco_symboltable_write(fuco_symboltable_t *table, FILE *stream);
+void fuco_symboltable_write(fuco_symboltable_t *table, FILE *file);
 
 fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table, 
                                        fuco_scope_t *scope,

@@ -1,4 +1,6 @@
 #include "compiler.h"
+#include "lexer.h"
+#include "tokenlist.h"
 #include "parser.h"
 #include "utils.h"
 
@@ -25,6 +27,19 @@ void fuco_compiler_destruct(fuco_compiler_t *compiler) {
 }
 
 int fuco_compiler_run(fuco_compiler_t *compiler) {
+    fuco_token_t *tokens = fuco_lexer_lex(compiler->file);
+    
+    if (tokens == NULL) {
+        fprintf(stderr, "lexing failed");
+        return 1;
+    }
+
+    fuco_tokenlist_write(tokens, stderr);
+
+    return 1;
+
+    /* temporarily disabled */
+    
     fuco_tokenizer_add_source_filename(&compiler->tokenizer, 
                                        fuco_strdup(compiler->file));
 

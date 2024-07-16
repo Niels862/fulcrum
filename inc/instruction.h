@@ -51,13 +51,13 @@ typedef struct {
 
 extern fuco_instr_descriptor_t instr_descriptors[];
 
-void fuco_instr_write(fuco_instr_t instr, FILE *stream);
+void fuco_instr_write(fuco_instr_t instr, FILE *file);
 
 void fuco_bytecode_init(fuco_bytecode_t *bytecode);
 
 void fuco_bytecode_destruct(fuco_bytecode_t *bytecode);
 
-void fuco_bytecode_write(fuco_bytecode_t *bytecode, FILE *stream);
+void fuco_bytecode_write(fuco_bytecode_t *bytecode, FILE *file);
 
 void fuco_bytecode_add_instr(fuco_bytecode_t *bytecode, fuco_instr_t instr);
 

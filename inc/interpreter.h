@@ -22,7 +22,7 @@ void fuco_program_init(fuco_program_t *program, fuco_instr_t *instrs,
 
 void fuco_program_destruct(fuco_program_t *program);
 
-void fuco_program_write_stack(fuco_program_t *program, FILE *stream);
+void fuco_program_write_stack(fuco_program_t *program, FILE *file);
 
 int32_t fuco_interpret(fuco_instr_t *program);
 

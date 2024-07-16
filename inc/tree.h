@@ -97,9 +97,9 @@ fuco_node_t *fuco_node_add_child(fuco_node_t *node, fuco_node_t *child,
 void fuco_node_set_child(fuco_node_t *node, fuco_node_t *child, 
                          fuco_node_layout_t index);
 
-void fuco_node_write(fuco_node_t *node, FILE *stream);
+void fuco_node_write(fuco_node_t *node, FILE *file);
 
-void fuco_node_pretty_write(fuco_node_t *node, FILE *stream);
+void fuco_node_pretty_write(fuco_node_t *node, FILE *file);
 
 void fuco_node_validate(fuco_node_t *node);
 

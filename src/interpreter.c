@@ -26,14 +26,14 @@ void fuco_program_destruct(fuco_program_t *program) {
     free(program->stack);
 }
 
-void fuco_program_write_stack(fuco_program_t *program, FILE *stream) {
-    fprintf(stream, "SP: %ld\n", program->sp);
+void fuco_program_write_stack(fuco_program_t *program, FILE *file) {
+    fprintf(file, "SP: %ld\n", program->sp);
     for (size_t i = 0; i < program->sp; i += 16) {
-        fprintf(stream, "%04ld ", i);
+        fprintf(file, "%04ld ", i);
         for (size_t j = 0; j < 16 && i + j < program->sp; j++) {
-            fprintf(stream, "%02x ", program->stack[i + j]);
+            fprintf(file, "%02x ", program->stack[i + j]);
         }
-        fprintf(stream, "\n");
+        fprintf(file, "\n");
     }
 }
 

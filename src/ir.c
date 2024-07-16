@@ -4,20 +4,20 @@
 #include <stdlib.h>
 #include <assert.h>
 
-void fuco_ir_unit_write(fuco_ir_unit_t *unit, FILE *stream) {
+void fuco_ir_unit_write(fuco_ir_unit_t *unit, FILE *file) {
     if (unit->attrs & FUCO_IR_INSTR) {
-        fprintf(stream, "  %s", instr_descriptors[unit->opcode].mnemonic);
+        fprintf(file, "  %s", instr_descriptors[unit->opcode].mnemonic);
         
         if (unit->attrs & FUCO_IR_INCLUDES_DATA) {
             if (unit->attrs & FUCO_IR_REFERENCES_LABEL) {
-                fprintf(stream, " .L%ld", unit->imm.label);
+                fprintf(file, " .L%ld", unit->imm.label);
             } else {
-                fprintf(stream, " %ld", unit->imm.data);
+                fprintf(file, " %ld", unit->imm.data);
             }
         }
-        fprintf(stream, "\n");
+        fprintf(file, "\n");
     } else {
-        fprintf(stream, ".L%ld:\n", unit->imm.label);
+        fprintf(file, ".L%ld:\n", unit->imm.label);
     }
 }
 
@@ -32,19 +32,19 @@ void fuco_ir_object_destruct(fuco_ir_object_t *object) {
     free(object->units);
 }
 
-void fuco_ir_object_write(fuco_ir_object_t *object, FILE *stream) {
-    fprintf(stream, "object {\n");
+void fuco_ir_object_write(fuco_ir_object_t *object, FILE *file) {
+    fprintf(file, "object {\n");
 
     if (object->size == 0) {
-        fprintf(stream, "  (empty)\n");
+        fprintf(file, "  (empty)\n");
     } else {
         for (size_t i = 0; i < object->size; i++) {
-            fprintf(stream, "  ");
-            fuco_ir_unit_write(&object->units[i], stream);
+            fprintf(file, "  ");
+            fuco_ir_unit_write(&object->units[i], file);
         }
     }
 
-    fprintf(stream, "}\n");
+    fprintf(file, "}\n");
 }
 
 void fuco_ir_init(fuco_ir_t *ir) {
@@ -64,9 +64,9 @@ void fuco_ir_destruct(fuco_ir_t *ir) {
     }
 }
 
-void fuco_ir_write(fuco_ir_t *ir, FILE *stream) {
+void fuco_ir_write(fuco_ir_t *ir, FILE *file) {
     for (size_t i = 0; i < ir->size; i++) {
-        fuco_ir_object_write(&ir->objects[i], stream);
+        fuco_ir_object_write(&ir->objects[i], file);
     }
 }
 

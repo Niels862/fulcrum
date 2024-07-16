@@ -52,14 +52,14 @@ void fuco_filebuf_init(fuco_filebuf_t *buf) {
 void fuco_tokenizer_init(fuco_tokenizer_t *tokenizer) {
     tokenizer->file = NULL;
     tokenizer->filename = NULL;
-    tokenizer->last = FUCO_TOKEN_EOF;
+    tokenizer->last = FUCO_TOKEN_END_OF_FILE;
 
     fuco_filebuf_init(&tokenizer->buf);
     fuco_queue_init(&tokenizer->sources);
     fuco_token_init(&tokenizer->curr);
     fuco_strbuf_init(&tokenizer->temp);
 
-    tokenizer->curr.type = FUCO_TOKEN_EOF;
+    tokenizer->curr.type = FUCO_TOKEN_END_OF_FILE;
 
     for (size_t i = 0; i < fuco_n_tokentypes(); i++) {
         assert(i == token_descriptors[i].type);
@@ -106,7 +106,7 @@ int fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
     curr->source = tokenizer->buf.source;
 
     if (c < 0) {
-        curr->type = FUCO_TOKEN_EOF;
+        curr->type = FUCO_TOKEN_END_OF_FILE;
     } else if (isdigit(c)) {
         curr->type = FUCO_TOKEN_INTEGER;
 
@@ -264,7 +264,7 @@ int fuco_tokenizer_move(fuco_tokenizer_t *tokenizer, fuco_node_t *node) {
 }
 
 int fuco_tokenizer_open_next_source(fuco_tokenizer_t *tokenizer) {
-    assert(tokenizer->curr.type == FUCO_TOKEN_EOF);
+    assert(tokenizer->curr.type == FUCO_TOKEN_END_OF_FILE);
 
     fuco_tokenizer_handle_curr(tokenizer);
 

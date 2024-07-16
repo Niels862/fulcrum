@@ -49,19 +49,19 @@ typedef struct {
     fuco_ir_label_t label;
 } fuco_ir_t;
 
-void fuco_ir_unit_write(fuco_ir_unit_t *unit, FILE *stream);
+void fuco_ir_unit_write(fuco_ir_unit_t *unit, FILE *file);
 
 void fuco_ir_object_init(fuco_ir_object_t *object, fuco_node_t *def);
 
 void fuco_ir_object_destruct(fuco_ir_object_t *object);
 
-void fuco_ir_object_write(fuco_ir_object_t *object, FILE *stream);
+void fuco_ir_object_write(fuco_ir_object_t *object, FILE *file);
 
 void fuco_ir_init(fuco_ir_t *ir);
 
 void fuco_ir_destruct(fuco_ir_t *ir);
 
-void fuco_ir_write(fuco_ir_t *ir, FILE *stream);
+void fuco_ir_write(fuco_ir_t *ir, FILE *file);
 
 size_t fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label, 
                           fuco_node_t *def);

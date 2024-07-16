@@ -128,20 +128,20 @@ void fuco_node_set_child(fuco_node_t *node, fuco_node_t *child,
     node->children[index] = child;
 }
 
-void fuco_node_write(fuco_node_t *node, FILE *stream) {
-    fprintf(stream, "[(");
-    fuco_token_write(&node->token, stream);
-    fprintf(stream, ")");
+void fuco_node_write(fuco_node_t *node, FILE *file) {
+    fprintf(file, "[(");
+    fuco_token_write(&node->token, file);
+    fprintf(file, ")");
 
     for (size_t i = 0; i < node->count; i++) {
-        fprintf(stream, " ");
-        fuco_node_write(node->children[i], stream);
+        fprintf(file, " ");
+        fuco_node_write(node->children[i], file);
     }
     
-    fprintf(stream, "]");
+    fprintf(file, "]");
 }
 
-void fuco_node_pretty_write(fuco_node_t *node, FILE *stream) {
+void fuco_node_pretty_write(fuco_node_t *node, FILE *file) {
     static bool is_last[256];
     static size_t depth = 0;
 
@@ -149,17 +149,17 @@ void fuco_node_pretty_write(fuco_node_t *node, FILE *stream) {
 
     for (size_t i = 1; i < depth; i++) {
         if (is_last[i - 1]) {
-            fprintf(stream, "    ");
+            fprintf(file, "    ");
         } else {
-            fprintf(stream, "│   ");
+            fprintf(file, "│   ");
         }
     }
 
     if (depth > 0) {
         if (is_last[depth - 1]) {
-            fprintf(stream, "└───");
+            fprintf(file, "└───");
         } else {
-            fprintf(stream, "├───");
+            fprintf(file, "├───");
         }
     }
 
@@ -168,25 +168,25 @@ void fuco_node_pretty_write(fuco_node_t *node, FILE *stream) {
     } else {
         char *label = node_descriptors[node->type].label;
         if (*label != '\0') {
-            fprintf(stream, "%s", label);
+            fprintf(file, "%s", label);
         }
 
         if (node->token.type != FUCO_TOKEN_EMPTY) {
-            fprintf(stream, ": ");
-            fuco_token_write(&node->token, stream);
+            fprintf(file, ": ");
+            fuco_token_write(&node->token, file);
         }
 
         if (node->symbol != NULL) {
-            fprintf(stream, " (id=%d)", node->symbol->id);
+            fprintf(file, " (id=%d)", node->symbol->id);
         }
         
-        fprintf(stream, "\n");
+        fprintf(file, "\n");
 
         depth++;
 
         for (size_t i = 0; i < node->count; i++) {
             is_last[depth - 1] = i == node->count - 1;
-            fuco_node_pretty_write(node->children[i], stream);
+            fuco_node_pretty_write(node->children[i], file);
         }
 
         depth--;

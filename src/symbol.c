@@ -85,7 +85,7 @@ void fuco_symboltable_destruct(fuco_symboltable_t *table) {
     }
 }
 
-void fuco_symboltable_write(fuco_symboltable_t *table, FILE *stream) {
+void fuco_symboltable_write(fuco_symboltable_t *table, FILE *file) {
     size_t max = 0;
 
     fuco_symbol_chunk_t *chunk = table->back;
@@ -104,7 +104,7 @@ void fuco_symboltable_write(fuco_symboltable_t *table, FILE *stream) {
     while (chunk != NULL) {
         for (size_t i = 0; i < chunk->size; i++) {
             fuco_symbol_t *symbol = &chunk->data[i];
-            fprintf(stream, " %*s: %*d (def=%d,val=%d,obj=%ld)\n", (int)max, 
+            fprintf(file, " %*s: %*d (def=%d,val=%d,obj=%ld)\n", (int)max, 
                     symbol->token->lexeme, fuco_ceil_log(table->size, 10),
                     symbol->id, symbol->def != NULL,
                     symbol->value != NULL, symbol->obj);
