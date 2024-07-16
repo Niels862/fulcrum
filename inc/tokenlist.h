@@ -21,6 +21,8 @@ void fuco_tokenlist_init(fuco_tokenlist_t *list);
 
 void fuco_tokenlist_destruct(fuco_tokenlist_t *list);
 
+/* Destructs entire tstream and its tokens starting from any position 
+   in tstream */
 void fuco_tstream_destruct(fuco_tstream_t tstream);
 
 void fuco_tstream_write(fuco_tstream_t tstream, FILE *file);

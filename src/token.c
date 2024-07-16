@@ -1,9 +1,12 @@
 #include "token.h"
 #include <stdlib.h>
 #include <stdint.h>
+#include <assert.h>
 
 fuco_token_descriptor_t const token_descriptors[] = {
     { FUCO_TOKEN_EMPTY, 0, "empty" },
+
+    { FUCO_TOKEN_START_OF_SOURCE, 0, "start of source" },
 
     { FUCO_TOKEN_INTEGER, FUCO_TOKENTYPE_HAS_LEXEME, "integer" },
     { FUCO_TOKEN_IDENTIFIER, FUCO_TOKENTYPE_HAS_LEXEME, "identifier" },
@@ -33,6 +36,8 @@ fuco_token_descriptor_t const token_descriptors[] = {
 #define FUCO_N_TOKENTYPES sizeof(token_descriptors) / sizeof(*token_descriptors)
 
 char *fuco_tokentype_string(fuco_tokentype_t type) {
+    assert(type < FUCO_N_TOKENTYPES);
+
     return token_descriptors[type].string;
 }
 

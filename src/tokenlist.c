@@ -5,6 +5,9 @@ void fuco_tokenlist_init(fuco_tokenlist_t *list) {
     list->cap = FUCO_TOKENLIST_INIT_SIZE;
     list->tokens = malloc(list->cap * sizeof(fuco_token_t));
     list->size = 0;
+
+    fuco_token_t *token = fuco_tokenlist_append(list);
+    token->type = FUCO_TOKEN_START_OF_SOURCE;
 }
 
 void fuco_tokenlist_destruct(fuco_tokenlist_t *list) {
@@ -17,6 +20,12 @@ void fuco_tokenlist_destruct(fuco_tokenlist_t *list) {
 
 void fuco_tstream_destruct(fuco_tstream_t tstream) {
     fuco_tstream_t start = tstream;
+
+    while (start->type != FUCO_TOKEN_START_OF_SOURCE) {
+        start--;
+    }
+
+    tstream = start;
     
     while (tstream->type != FUCO_TOKEN_END_OF_SOURCE) {
         fuco_token_destruct(tstream);
@@ -33,7 +42,13 @@ void fuco_tstream_write(fuco_tstream_t tstream, FILE *file) {
         fprintf(file, "  ");
         fuco_token_write(tstream, file);
         fprintf(file, "\n");
-    } while (tstream->type != FUCO_TOKEN_END_OF_SOURCE && tstream++);
+        
+        if (tstream->type == FUCO_TOKEN_END_OF_SOURCE) {
+            break;
+        }
+
+        tstream++;
+    } while (true);
 
     fprintf(file, "}\n");
 }
