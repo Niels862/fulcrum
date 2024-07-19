@@ -3,6 +3,7 @@
 
 #include "tokenizer.h"
 #include "lexer.h"
+#include "parser.h"
 #include "symbol.h"
 #include "instruction.h"
 #include "tree.h"
@@ -13,6 +14,7 @@ typedef struct {
     /* To be replaced */
     fuco_tokenizer_t tokenizer;
     
+    fuco_parser_t parser;
     fuco_symboltable_t table;
     fuco_scope_t global;
     fuco_ir_t ir;

@@ -1,12 +1,12 @@
 #include "compiler.h"
 #include "lexer.h"
 #include "tokenlist.h"
-#include "parser.h"
 #include "utils.h"
 
 void fuco_compiler_init(fuco_compiler_t *compiler, char *filename) {
     fuco_lexer_init(&compiler->lexer, filename);
     fuco_tokenizer_init(&compiler->tokenizer);
+    fuco_parser_init(&compiler->parser);
     fuco_symboltable_init(&compiler->table);
     fuco_scope_init(&compiler->global, NULL);
     fuco_ir_init(&compiler->ir);
@@ -32,23 +32,17 @@ int fuco_compiler_run(fuco_compiler_t *compiler) {
     fuco_tstream_t tstream = fuco_lexer_lex(&compiler->lexer);
     
     if (tstream == NULL) {
-        fprintf(stderr, "lexing failed\n");
         return 1;
     }
-
-    fuco_tstream_write(tstream, stderr);
-
-    return 1;
-
-    /* temporarily disabled */
     
-    fuco_tokenizer_add_source_filename(&compiler->tokenizer, 
-                                       fuco_strdup(compiler->filename));
+    compiler->parser.tstream = tstream;
 
-    compiler->root = fuco_parse_filebody(&compiler->tokenizer);
+    compiler->root = fuco_parse_filebody(&compiler->parser);
     if (compiler->root == NULL) {
         return 1;
     }
+
+    fuco_node_pretty_write(compiler->root, stderr);
 
     if (fuco_node_resolve_global(compiler->root, &compiler->table, 
                                  &compiler->global)) {
