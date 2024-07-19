@@ -1,7 +1,7 @@
 #ifndef FUCO_TREE_H
 #define FUCO_TREE_H
 
-#include "tokenizer.h"
+#include "token.h"
 #include "symbol.h"
 #include "ir.h"
 

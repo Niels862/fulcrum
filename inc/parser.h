@@ -1,7 +1,6 @@
 #ifndef FUCO_PARSER_H
 #define FUCO_PARSER_H
 
-#include "tokenizer.h"
 #include "tokenlist.h"
 #include "tree.h"
 

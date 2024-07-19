@@ -1,8 +1,8 @@
 #ifndef FUCO_SYMBOL_H
 #define FUCO_SYMBOL_H
 
+#include "token.h"
 #include "map.h"
-#include "tokenizer.h"
 #include "ir.h"
 #include <stdint.h>
 #include <stdio.h>

@@ -7,12 +7,48 @@
 #include <ctype.h>
 #include <assert.h>
 
+bool fuco_is_nontoken(int c) {
+    return c == ' ' || c == '\n' || c == '\r' || c == '\t';
+}
+
+bool fuco_is_identifier_start(int c) {
+    return isalpha(c) || c == '_';
+}
+
+bool fuco_is_identifier_continue(int c) {
+    return isalpha(c) || isdigit(c) || c == '_';
+}
+
 bool fuco_is_number_start(int c) {
     return isdigit(c);
 }
 
 bool fuco_is_number_continue(int c) {
     return isdigit(c);
+}
+
+bool fuco_is_operator(int c) {
+    return c == '-' || c == '+' || c == '*' || c == '/'
+        || c == '%' || c == '!' || c == '^' || c == '&'
+        || c == '~' || c == '|' || c == '<' || c == '>'
+        || c == '=';
+}
+
+uint64_t *fuco_parse_integer(char *lexeme) {
+    uint64_t data = 0;
+
+    while (*lexeme != '\0') {
+        assert(isdigit(*lexeme));
+
+        data = 10 * data + *lexeme - '0';
+
+        lexeme++;
+    }
+
+    uint64_t *p = malloc(sizeof(uint64_t));
+    *p = data;
+
+    return p;
 }
 
 size_t fuco_filebuf_read(fuco_filebuf_t *filebuf, FILE *file) {
@@ -132,9 +168,6 @@ fuco_tstream_t fuco_lexer_lex(fuco_lexer_t *lexer) {
 
     while (true) {
         type = FUCO_TOKEN_EMPTY;
-
-        fuco_textsource_write(&lexer->curr, stderr);
-        fprintf(stderr, "-> '%s'\n", fuco_repr_char(lexer->c));
 
         fuco_lexer_skip_nontokens(lexer);
 

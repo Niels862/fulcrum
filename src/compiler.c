@@ -5,7 +5,6 @@
 
 void fuco_compiler_init(fuco_compiler_t *compiler, char *filename) {
     fuco_lexer_init(&compiler->lexer, filename);
-    fuco_tokenizer_init(&compiler->tokenizer);
     fuco_parser_init(&compiler->parser);
     fuco_symboltable_init(&compiler->table);
     fuco_scope_init(&compiler->global, NULL);
@@ -17,7 +16,6 @@ void fuco_compiler_init(fuco_compiler_t *compiler, char *filename) {
 
 void fuco_compiler_destruct(fuco_compiler_t *compiler) {
     fuco_lexer_destruct(&compiler->lexer);
-    fuco_tokenizer_destruct(&compiler->tokenizer);
     fuco_symboltable_destruct(&compiler->table);
     fuco_scope_destruct(&compiler->global);
     fuco_ir_destruct(&compiler->ir);

@@ -4,9 +4,8 @@
 #include "tokenlist.h"
 #include "textsource.h"
 #include "strutils.h"
+#include <stdint.h>
 #include <stdbool.h>
-
-#include "tokenizer.h" /* for parse_integer, remove later */
 
 #define FUCO_LEXER_FILE_BUF_SIZE 1024
 
@@ -28,9 +27,19 @@ typedef struct {
     int c;
 } fuco_lexer_t;
 
+bool fuco_is_nontoken(int c);
+
+bool fuco_is_identifier_start(int c);
+
+bool fuco_is_identifier_continue(int c);
+
 bool fuco_is_number_start(int c);
 
 bool fuco_is_number_continue(int c);
+
+bool fuco_is_operator(int c);
+
+uint64_t *fuco_parse_integer(char *lexeme);
 
 size_t fuco_filebuf_read(fuco_filebuf_t *filebuf, FILE *file);
 

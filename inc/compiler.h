@@ -1,7 +1,6 @@
 #ifndef FUCO_COMPILER_H
 #define FUCO_COMPILER_H
 
-#include "tokenizer.h"
 #include "lexer.h"
 #include "parser.h"
 #include "symbol.h"
@@ -9,11 +8,7 @@
 #include "tree.h"
 
 typedef struct {
-    fuco_lexer_t lexer;
-
-    /* To be replaced */
-    fuco_tokenizer_t tokenizer;
-    
+    fuco_lexer_t lexer;    
     fuco_parser_t parser;
     fuco_symboltable_t table;
     fuco_scope_t global;

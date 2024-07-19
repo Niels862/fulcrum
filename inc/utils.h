@@ -2,7 +2,6 @@
 #define FUCO_UTILS_H
 
 #include "textsource.h"
-#include <stdint.h>
 
 #define FUCO_ANSI_RED "\033[91m"
 #define FUCO_ANSI_RESET "\033[0m"
@@ -21,5 +20,4 @@ char *fuco_repr_char(char c);
 
 int fuco_ceil_log(unsigned int i, unsigned int base);
 
-uint64_t *fuco_parse_integer(char *lexeme);
 #endif
