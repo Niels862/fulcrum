@@ -42,7 +42,7 @@ uint64_t *fuco_parse_integer(char *lexeme) {
     return p;
 }
 
-void fuco_filebuf_init(fuco_filebuf_t *buf) {
+void fuco_filebuf_init(fuco_filebuf_t_depr *buf) {
     buf->file = NULL;
     buf->p = buf->size = 0;
     buf->last = '\0';
@@ -177,7 +177,7 @@ int fuco_tokenizer_next_token(fuco_tokenizer_t *tokenizer) {
 }
 
 int fuco_tokenizer_next_char(fuco_tokenizer_t *tokenizer, int c) {
-    fuco_filebuf_t *buf = &tokenizer->buf;
+    fuco_filebuf_t_depr *buf = &tokenizer->buf;
     
     if (buf->p >= buf->size) {
         buf->size = fread(buf->data, 1, FUCO_FILEBUF_SIZE, buf->file);

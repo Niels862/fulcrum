@@ -20,7 +20,7 @@ typedef struct {
     size_t size;
     int last;
     char data[FUCO_FILEBUF_SIZE];
-} fuco_filebuf_t;
+} fuco_filebuf_t_depr;
 
 typedef struct {
     FILE *file;
@@ -29,7 +29,7 @@ typedef struct {
     fuco_queue_t sources;
     fuco_token_t curr;
     fuco_strbuf_t temp;
-    fuco_filebuf_t buf;
+    fuco_filebuf_t_depr buf;
 } fuco_tokenizer_t;
 
 bool fuco_is_nontoken(int c);
@@ -42,7 +42,7 @@ bool fuco_is_operator(int c);
 
 uint64_t *fuco_parse_integer(char *lexeme);
 
-void fuco_filebuf_init(fuco_filebuf_t *buf);
+void fuco_filebuf_init(fuco_filebuf_t_depr *buf);
 
 void fuco_tokenizer_init(fuco_tokenizer_t *tokenizer);
 

@@ -4,17 +4,19 @@
 #include "parser.h"
 #include "utils.h"
 
-void fuco_compiler_init(fuco_compiler_t *compiler, char *file) {
+void fuco_compiler_init(fuco_compiler_t *compiler, char *filename) {
+    fuco_lexer_init(&compiler->lexer, filename);
     fuco_tokenizer_init(&compiler->tokenizer);
     fuco_symboltable_init(&compiler->table);
     fuco_scope_init(&compiler->global, NULL);
     fuco_ir_init(&compiler->ir);
     fuco_bytecode_init(&compiler->bytecode);
     compiler->root = NULL;
-    compiler->file = file;
+    compiler->filename = filename;
 }
 
 void fuco_compiler_destruct(fuco_compiler_t *compiler) {
+    fuco_lexer_destruct(&compiler->lexer);
     fuco_tokenizer_destruct(&compiler->tokenizer);
     fuco_symboltable_destruct(&compiler->table);
     fuco_scope_destruct(&compiler->global);
@@ -27,23 +29,21 @@ void fuco_compiler_destruct(fuco_compiler_t *compiler) {
 }
 
 int fuco_compiler_run(fuco_compiler_t *compiler) {
-    fuco_tstream_t tstream = fuco_lexer_lex(compiler->file);
+    fuco_tstream_t tstream = fuco_lexer_lex(&compiler->lexer);
     
     if (tstream == NULL) {
-        fprintf(stderr, "lexing failed");
+        fprintf(stderr, "lexing failed\n");
         return 1;
     }
 
     fuco_tstream_write(tstream, stderr);
-
-    fuco_tstream_destruct(tstream);
 
     return 1;
 
     /* temporarily disabled */
     
     fuco_tokenizer_add_source_filename(&compiler->tokenizer, 
-                                       fuco_strdup(compiler->file));
+                                       fuco_strdup(compiler->filename));
 
     compiler->root = fuco_parse_filebody(&compiler->tokenizer);
     if (compiler->root == NULL) {

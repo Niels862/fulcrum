@@ -10,6 +10,8 @@ typedef fuco_token_t *fuco_tstream_t;
 /* Only used during lexing, afterwards only the token pointer terminated by 
    FUCO_TOKEN_END_OF_SOURCE remains */
 typedef struct {
+   /* Note: no invalid token pointers on reallocation if handled properly, as 
+      they are only valid until next append */
     fuco_token_t *tokens;
     size_t size;
     size_t cap;

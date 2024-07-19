@@ -14,4 +14,6 @@ void fuco_textsource_init(fuco_textsource_t *source, char *filename);
 
 void fuco_textsource_write(fuco_textsource_t *source, FILE *file);
 
+void fuco_textsource_next_char(fuco_textsource_t *source, int c);
+
 #endif
