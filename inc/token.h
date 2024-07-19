@@ -37,7 +37,7 @@ typedef enum {
 typedef enum {
     FUCO_TOKENTYPE_IS_KEYWORD = 0x1,
     FUCO_TOKENTYPE_IS_SEPARATOR = 0x2,
-    FUCO_TOKENIZER_IS_OPERATOR = 0x4,
+    FUCO_TOKENTYPE_IS_OPERATOR = 0x4,
     FUCO_TOKENTYPE_HAS_LEXEME = 0x8
 } fuco_token_attr_t;
 
@@ -61,6 +61,9 @@ char *fuco_tokentype_string(fuco_tokentype_t type);
 bool fuco_tokentype_has_attr(fuco_tokentype_t type, fuco_token_attr_t attr);
 
 size_t fuco_n_tokentypes();
+
+fuco_tokentype_t fuco_tokentype_lookup_string(char *string, 
+                                              fuco_token_attr_t attr_mask);
 
 void fuco_token_init(fuco_token_t *token);
 

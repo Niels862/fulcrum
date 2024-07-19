@@ -7,6 +7,14 @@
 #include <ctype.h>
 #include <assert.h>
 
+bool fuco_is_number_start(int c) {
+    return isdigit(c);
+}
+
+bool fuco_is_number_continue(int c) {
+    return isdigit(c);
+}
+
 size_t fuco_filebuf_read(fuco_filebuf_t *filebuf, FILE *file) {
     filebuf->i = 0;
     filebuf->size = fread(filebuf->data, 1, FUCO_LEXER_FILE_BUF_SIZE, file);
@@ -84,6 +92,23 @@ void fuco_lexer_next_char(fuco_lexer_t *lexer) {
     }
 }
 
+void fuco_lexer_skip_nontokens(fuco_lexer_t *lexer) {
+    bool comment = false;
+    
+    while (lexer->c != -1) {
+        if (lexer->c == '#') {
+            comment = true;
+        } else if (lexer->c == '\n') {
+            comment = false;
+        } else if (!(comment && isprint(lexer->c)) 
+                   && !fuco_is_nontoken(lexer->c)) {
+            return;
+        }
+
+        fuco_lexer_next_char(lexer);
+    }
+}
+
 void fuco_lexer_append_token(fuco_lexer_t *lexer, fuco_tokentype_t type, char *lexeme, void *data) {
     assert((token_descriptors[type].attr & FUCO_TOKENTYPE_HAS_LEXEME) == 0 
            || lexeme != NULL);
@@ -106,42 +131,40 @@ fuco_tstream_t fuco_lexer_lex(fuco_lexer_t *lexer) {
     void *data;
 
     while (true) {
+        type = FUCO_TOKEN_EMPTY;
+
         fuco_textsource_write(&lexer->curr, stderr);
         fprintf(stderr, "-> '%s'\n", fuco_repr_char(lexer->c));
+
+        fuco_lexer_skip_nontokens(lexer);
 
         lexer->start = lexer->curr;
         fuco_strbuf_clear(&lexer->strbuf);
 
-        if (isalpha(lexer->c) || lexer->c == '_') {
+        if (fuco_is_identifier_start(lexer->c)) {
             type = FUCO_TOKEN_IDENTIFIER;
 
             do {
                 fuco_strbuf_append_char(&lexer->strbuf, lexer->c);
                 fuco_lexer_next_char(lexer);
-            } while (isalpha(lexer->c) || isdigit(lexer->c) || lexer->c == '_');
+            } while (fuco_is_identifier_continue(lexer->c));
 
-            for (size_t i = 0; i < fuco_n_tokentypes(); i++) {
-                if (token_descriptors[i].attr & FUCO_TOKENTYPE_IS_KEYWORD) {
-                    char *keyword = token_descriptors[i].string;
-                    if (strcmp(lexer->strbuf.data, keyword) == 0) {
-                        type = i;
-                        break;
-                    }
-                }
-            }
+            type = fuco_tokentype_lookup_string(lexer->strbuf.data, 
+                                                FUCO_TOKENTYPE_IS_KEYWORD);
 
-            if (type == FUCO_TOKEN_IDENTIFIER) {
+            if (type == FUCO_TOKEN_EMPTY) {
+                type = FUCO_TOKEN_IDENTIFIER;
                 lexeme = fuco_strbuf_dup(&lexer->strbuf);
             } else {
                 lexeme = NULL;
             }
             
             fuco_lexer_append_token(lexer, type, lexeme, NULL);
-        } else if (isdigit(lexer->c)) {
+        } else if (fuco_is_number_start(lexer->c)) {
             do {
                 fuco_strbuf_append_char(&lexer->strbuf, lexer->c);
                 fuco_lexer_next_char(lexer);
-            } while (isdigit(lexer->c));
+            } while (fuco_is_number_continue(lexer->c));
 
             data = fuco_parse_integer(lexer->strbuf.data);
             if (data == NULL) {
@@ -151,6 +174,22 @@ fuco_tstream_t fuco_lexer_lex(fuco_lexer_t *lexer) {
             lexeme = fuco_strbuf_dup(&lexer->strbuf);
 
             fuco_lexer_append_token(lexer, FUCO_TOKEN_INTEGER, lexeme, data);
+        } else if (fuco_is_operator(lexer->c)) { /* For now: greedy operators */
+            do {
+                fuco_strbuf_append_char(&lexer->strbuf, lexer->c);
+                fuco_lexer_next_char(lexer);
+            } while (fuco_is_operator(lexer->c));
+
+            type = fuco_tokentype_lookup_string(lexer->strbuf.data, 
+                                                FUCO_TOKENTYPE_IS_OPERATOR);
+            
+            if (type == FUCO_TOKEN_EMPTY) {
+                fuco_syntax_error(&lexer->start, "invalid operator: '%s'", 
+                                  lexer->strbuf.data);
+                return NULL;
+            }
+
+            fuco_lexer_append_token(lexer, type, NULL, NULL);
         } else if (lexer->c == -1) {
             fuco_lexer_append_token(lexer, FUCO_TOKEN_END_OF_FILE, NULL, NULL);
 
@@ -161,8 +200,21 @@ fuco_tstream_t fuco_lexer_lex(fuco_lexer_t *lexer) {
                     return NULL;
                 }
             }
-        }
+        } else {
+            fuco_strbuf_append_char(&lexer->strbuf, lexer->c);
 
-        fuco_lexer_next_char(lexer);
+            fuco_lexer_next_char(lexer);
+
+            type = fuco_tokentype_lookup_string(lexer->strbuf.data, 
+                                                FUCO_TOKENTYPE_IS_SEPARATOR);
+
+            if (type == FUCO_TOKEN_EMPTY) {
+                fuco_syntax_error(&lexer->start, "invalid character: '%s'", 
+                                  fuco_repr_char(lexer->c));
+                return NULL;
+            }
+
+            fuco_lexer_append_token(lexer, type, NULL, NULL);
+        }
     }
 }

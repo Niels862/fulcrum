@@ -28,6 +28,10 @@ typedef struct {
     int c;
 } fuco_lexer_t;
 
+bool fuco_is_number_start(int c);
+
+bool fuco_is_number_continue(int c);
+
 size_t fuco_filebuf_read(fuco_filebuf_t *filebuf, FILE *file);
 
 void fuco_lexer_init(fuco_lexer_t *lexer, char *filename);
@@ -37,6 +41,8 @@ void fuco_lexer_destruct(fuco_lexer_t *lexer);
 int fuco_lexer_open_next_file(fuco_lexer_t *lexer);
 
 void fuco_lexer_next_char(fuco_lexer_t *lexer);
+
+void fuco_lexer_skip_nontokens(fuco_lexer_t *lexer);
 
 void fuco_lexer_append_token(fuco_lexer_t *lexer, fuco_tokentype_t type, 
                              char *lexeme, void *data);

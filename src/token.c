@@ -1,6 +1,7 @@
 #include "token.h"
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <assert.h>
 
 fuco_token_descriptor_t const token_descriptors[] = {
@@ -26,7 +27,7 @@ fuco_token_descriptor_t const token_descriptors[] = {
     { FUCO_TOKEN_SEMICOLON, FUCO_TOKENTYPE_IS_SEPARATOR, ";" },
     { FUCO_TOKEN_COLON, FUCO_TOKENTYPE_IS_SEPARATOR, ":" },
 
-    { FUCO_TOKEN_ARROW, 0, "->" },
+    { FUCO_TOKEN_ARROW, FUCO_TOKENTYPE_IS_OPERATOR, "->" },
 
     { FUCO_TOKEN_END_OF_FILE, 0, "end of file" },
 
@@ -47,6 +48,18 @@ bool fuco_tokentype_has_attr(fuco_tokentype_t type, fuco_token_attr_t attr) {
 
 size_t fuco_n_tokentypes() {
     return FUCO_N_TOKENTYPES;
+}
+
+fuco_tokentype_t fuco_tokentype_lookup_string(char *string, 
+                                              fuco_token_attr_t attr_mask) {
+    for (size_t i = 0; i < FUCO_N_TOKENTYPES; i++) {
+        if ((token_descriptors[i].attr & attr_mask) == attr_mask
+            && strcmp(token_descriptors[i].string, string) == 0) {
+            return i;
+        }
+    }
+
+    return FUCO_TOKEN_EMPTY;
 }
 
 void fuco_token_init(fuco_token_t *token) {
