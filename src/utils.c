@@ -99,3 +99,20 @@ int fuco_ceil_log(unsigned int i, unsigned int base) {
 
     return log;
 }
+
+uint64_t *fuco_parse_integer(char *lexeme) {
+    uint64_t data = 0;
+
+    while (*lexeme != '\0') {
+        assert(isdigit(*lexeme));
+
+        data = 10 * data + *lexeme - '0';
+
+        lexeme++;
+    }
+
+    uint64_t *p = malloc(sizeof(uint64_t));
+    *p = data;
+
+    return p;
+}

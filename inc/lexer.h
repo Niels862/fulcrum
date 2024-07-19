@@ -3,7 +3,10 @@
 
 #include "tokenlist.h"
 #include "textsource.h"
+#include "strutils.h"
 #include <stdbool.h>
+
+#include "tokenizer.h" /* for parse_integer, remove later */
 
 #define FUCO_LEXER_FILE_BUF_SIZE 1024
 
@@ -16,8 +19,10 @@ typedef struct {
 
 typedef struct {
     fuco_filebuf_t filebuf;
+    fuco_strbuf_t strbuf;
     fuco_tokenlist_t list;
-    fuco_textsource_t source;
+    fuco_textsource_t start;
+    fuco_textsource_t curr;
     FILE *file;
     char *filename; /* Will be replaced by a queue of files (jobs) later */
     int c;
@@ -33,7 +38,8 @@ int fuco_lexer_open_next_file(fuco_lexer_t *lexer);
 
 void fuco_lexer_next_char(fuco_lexer_t *lexer);
 
-void fuco_lexer_append_token(fuco_lexer_t *lexer);
+void fuco_lexer_append_token(fuco_lexer_t *lexer, fuco_tokentype_t type, 
+                             char *lexeme, void *data);
 
 fuco_tstream_t fuco_lexer_lex(fuco_lexer_t *lexer);
 

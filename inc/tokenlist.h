@@ -2,6 +2,7 @@
 #define FUCO_TOKENLIST_H
 
 #include "token.h"
+#include "tokenizer.h" /* for parse_integer, remove later */
 
 typedef fuco_token_t *fuco_tstream_t;
 

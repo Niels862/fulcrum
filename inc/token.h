@@ -38,7 +38,7 @@ typedef enum {
     FUCO_TOKENTYPE_IS_KEYWORD = 0x1,
     FUCO_TOKENTYPE_IS_SEPARATOR = 0x2,
     FUCO_TOKENIZER_IS_OPERATOR = 0x4,
-    FUCO_TOKENTYPE_HAS_LEXEME = 0x8,
+    FUCO_TOKENTYPE_HAS_LEXEME = 0x8
 } fuco_token_attr_t;
 
 typedef struct {

@@ -40,8 +40,6 @@ bool fuco_is_identifier_continue(int c);
 
 bool fuco_is_operator(int c);
 
-uint64_t *fuco_parse_integer(char *lexeme);
-
 void fuco_filebuf_init(fuco_filebuf_t_depr *buf);
 
 void fuco_tokenizer_init(fuco_tokenizer_t *tokenizer);

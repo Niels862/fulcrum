@@ -3,6 +3,7 @@
 #include "tokenlist.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 #include <assert.h>
 
@@ -18,8 +19,9 @@ void fuco_lexer_init(fuco_lexer_t *lexer, char *filename) {
     lexer->filebuf.i = lexer->filebuf.size = 0;
     lexer->filebuf.eof = true; /* Start at EOF -> 'next' file opened */
 
+    fuco_strbuf_init(&lexer->strbuf);
     fuco_tokenlist_init(&lexer->list);
-    fuco_textsource_init(&lexer->source, NULL);
+    fuco_textsource_init(&lexer->curr, NULL);
 
     lexer->file = NULL;
     lexer->filename = filename;
@@ -27,7 +29,12 @@ void fuco_lexer_init(fuco_lexer_t *lexer, char *filename) {
 }
 
 void fuco_lexer_destruct(fuco_lexer_t *lexer) {
+    fuco_strbuf_destruct(&lexer->strbuf);
     fuco_tokenlist_destruct(&lexer->list);
+
+    if (lexer->file != NULL) {
+        fclose(lexer->file);
+    }
 }
 
 int fuco_lexer_open_next_file(fuco_lexer_t *lexer) {
@@ -45,7 +52,7 @@ int fuco_lexer_open_next_file(fuco_lexer_t *lexer) {
         return 1;
     }
 
-    fuco_textsource_init(&lexer->source, lexer->filename);
+    fuco_textsource_init(&lexer->curr, lexer->filename);
 
     lexer->filename = NULL;
 
@@ -68,38 +75,84 @@ void fuco_lexer_next_char(fuco_lexer_t *lexer) {
         fuco_filebuf_read(&lexer->filebuf, lexer->file);
     }
 
-    fuco_textsource_next_char(&lexer->source, lexer->c);
+    fuco_textsource_next_char(&lexer->curr, lexer->c);
 
     if (lexer->filebuf.eof) {
         lexer->c = -1;
     } else {
         lexer->c = (unsigned char)lexer->filebuf.data[lexer->filebuf.i];
     }
-
-    printf("read %ld / %ld...\n", lexer->filebuf.i, lexer->filebuf.size);
 }
 
-void fuco_lexer_append_token(fuco_lexer_t *lexer) {
+void fuco_lexer_append_token(fuco_lexer_t *lexer, fuco_tokentype_t type, char *lexeme, void *data) {
+    assert((token_descriptors[type].attr & FUCO_TOKENTYPE_HAS_LEXEME) == 0 
+           || lexeme != NULL);
+    
     fuco_token_t *token = fuco_tokenlist_append(&lexer->list);
     
-    FUCO_UNUSED(token);
-
-    /* TODO */
+    token->type = type;
+    token->lexeme = lexeme;
+    token->data = data;
+    token->source = lexer->start;
 }
 
 fuco_tstream_t fuco_lexer_lex(fuco_lexer_t *lexer) {
-    fuco_lexer_open_next_file(lexer);
+    if (fuco_lexer_open_next_file(lexer)) {
+        return NULL;
+    }
+
+    fuco_tokentype_t type;
+    char *lexeme;
+    void *data;
 
     while (true) {
-        fuco_textsource_write(&lexer->source, stderr);
+        fuco_textsource_write(&lexer->curr, stderr);
         fprintf(stderr, "-> '%s'\n", fuco_repr_char(lexer->c));
 
+        lexer->start = lexer->curr;
+        fuco_strbuf_clear(&lexer->strbuf);
+
         if (isalpha(lexer->c) || lexer->c == '_') {
-            /* TODO identifier */
+            type = FUCO_TOKEN_IDENTIFIER;
+
+            do {
+                fuco_strbuf_append_char(&lexer->strbuf, lexer->c);
+                fuco_lexer_next_char(lexer);
+            } while (isalpha(lexer->c) || isdigit(lexer->c) || lexer->c == '_');
+
+            for (size_t i = 0; i < fuco_n_tokentypes(); i++) {
+                if (token_descriptors[i].attr & FUCO_TOKENTYPE_IS_KEYWORD) {
+                    char *keyword = token_descriptors[i].string;
+                    if (strcmp(lexer->strbuf.data, keyword) == 0) {
+                        type = i;
+                        break;
+                    }
+                }
+            }
+
+            if (type == FUCO_TOKEN_IDENTIFIER) {
+                lexeme = fuco_strbuf_dup(&lexer->strbuf);
+            } else {
+                lexeme = NULL;
+            }
+            
+            fuco_lexer_append_token(lexer, type, lexeme, NULL);
         } else if (isdigit(lexer->c)) {
-            /* TODO number */
+            do {
+                fuco_strbuf_append_char(&lexer->strbuf, lexer->c);
+                fuco_lexer_next_char(lexer);
+            } while (isdigit(lexer->c));
+
+            data = fuco_parse_integer(lexer->strbuf.data);
+            if (data == NULL) {
+                return NULL;
+            }
+
+            lexeme = fuco_strbuf_dup(&lexer->strbuf);
+
+            fuco_lexer_append_token(lexer, FUCO_TOKEN_INTEGER, lexeme, data);
         } else if (lexer->c == -1) {
-            fuco_lexer_append_token(lexer);
+            fuco_lexer_append_token(lexer, FUCO_TOKEN_END_OF_FILE, NULL, NULL);
 
             if (lexer->filename == NULL) {
                 return fuco_tokenlist_terminate(&lexer->list);
