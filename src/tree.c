@@ -24,7 +24,7 @@ fuco_node_t *fuco_node_base_new(fuco_nodetype_t type, size_t allocated,
     fuco_node_t *node = malloc(FUCO_NODE_SIZE(allocated));
     
     node->type = type;
-    fuco_token_init(&node->token);
+    node->token = NULL;
     node->symbol = NULL;
     node->count = count;
 
@@ -97,7 +97,6 @@ void fuco_node_free(fuco_node_t *node) {
         }
     }
 
-    fuco_token_destruct(&node->token);
     free(node);
 }
 
@@ -130,7 +129,7 @@ void fuco_node_set_child(fuco_node_t *node, fuco_node_t *child,
 
 void fuco_node_write(fuco_node_t *node, FILE *file) {
     fprintf(file, "[(");
-    fuco_token_write(&node->token, file);
+    fuco_token_write(node->token, file);
     fprintf(file, ")");
 
     for (size_t i = 0; i < node->count; i++) {
@@ -171,9 +170,9 @@ void fuco_node_pretty_write(fuco_node_t *node, FILE *file) {
             fprintf(file, "%s", label);
         }
 
-        if (node->token.type != FUCO_TOKEN_EMPTY) {
+        if (node->token != NULL) {
             fprintf(file, ": ");
-            fuco_token_write(&node->token, file);
+            fuco_token_write(node->token, file);
         }
 
         if (node->symbol != NULL) {
@@ -229,7 +228,7 @@ int fuco_node_resolve_global(fuco_node_t *node,
 
         case FUCO_NODE_FUNCTION:
             node->symbol = fuco_symboltable_insert(table, scope, 
-                                                   &node->token, node);
+                                                   node->token, node);
             if (node->symbol == NULL) {
                 return 1;
             }
@@ -309,7 +308,7 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
 
         case FUCO_NODE_PARAM:
             node->symbol = fuco_symboltable_insert(table, scope, 
-                                                   &node->token, node);
+                                                   node->token, node);
             if (node->symbol == NULL) {
                 return 1;
             }
@@ -319,7 +318,7 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
         case FUCO_NODE_VARIABLE:
             fuco_node_resolve_local_propagate(node, table, scope);
 
-            node->symbol = fuco_scope_lookup_token(scope, &node->token);
+            node->symbol = fuco_scope_lookup_token(scope, node->token);
             if (node->symbol == NULL) {
                 return 1;
             }
@@ -383,7 +382,7 @@ void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir,
 
         case FUCO_NODE_INTEGER:
             fuco_ir_add_instr_imm48(ir, obj, FUCO_OPCODE_PUSHQ, 
-                                   *(uint64_t *)node->token.data);
+                                   *(uint64_t *)node->token->data);
             break;
 
         case FUCO_NODE_RETURN:

@@ -26,7 +26,7 @@ typedef enum {
 
 #define FUCO_SET_IMM48(instr, imm48) ((instr) |= ((imm48) << 16))
 
-#define FUCO_SEX_IMM48(imm48) (((int64_t)imm48) << 16) >> 16
+#define FUCO_SEX_IMM48(imm48) (((int64_t)(imm48)) << 16) >> 16
 
 #define FUCO_INSTR_FORMAT "%016lx"
 

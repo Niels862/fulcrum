@@ -1,6 +1,7 @@
 #include "parser.h"
 #include "utils.h"
 #include <stdlib.h>
+#include <assert.h>
 
 void fuco_parser_init(fuco_parser_t *parser) {
     parser->tstream = NULL;
@@ -13,7 +14,9 @@ void fuco_parser_advance(fuco_parser_t *parser) {
 }
 
 void fuco_parser_move(fuco_parser_t *parser, fuco_node_t *node) {
-    FUCO_UNUSED(parser), FUCO_UNUSED(node);
+    assert(node->token == NULL);
+
+    node->token = parser->tstream;
 }
 
 bool fuco_parser_accept(fuco_parser_t *parser, fuco_tokentype_t type, 

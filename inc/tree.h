@@ -63,7 +63,7 @@ typedef struct {
 
 struct fuco_node_t {
     fuco_nodetype_t type;
-    fuco_token_t token;
+    fuco_token_t *token;
     fuco_symbol_t *symbol;
     size_t count;
     struct fuco_node_t *children[];
