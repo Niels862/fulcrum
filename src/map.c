@@ -56,7 +56,7 @@ void fuco_map_entry_destruct(fuco_map_entry_t *entry, fuco_map_t *map) {
             }
 
             free(iter);
-            
+
             iter = next;
         }
     }
@@ -71,8 +71,9 @@ void fuco_map_init(fuco_map_t *map,
     map->equal_func = equal_func;
     map->key_free_func = key_free_func;
     map->value_free_func = value_free_func;
-    map->cap = FUCO_MAP_INIT_SIZE;
-    map->data = calloc(FUCO_MAP_INIT_SIZE, sizeof(fuco_map_entry_t *));
+    map->cap = 0;
+    map->size = 0;
+    map->data = NULL;
 }
 
 void fuco_map_destruct(fuco_map_t *map) {
@@ -93,10 +94,51 @@ void fuco_map_destruct(fuco_map_t *map) {
     }
 }
 
+void fuco_map_maybe_rehash(fuco_map_t *map) {
+    if (map->cap == 0 || map->size >= FUCO_MAP_LOAD_FACTOR * map->cap) {
+        fuco_map_rehash(map);
+    }
+}
+
+void fuco_map_rehash(fuco_map_t *map) {
+    if (map->cap == 0) {
+        map->cap = FUCO_MAP_INIT_SIZE;
+        map->data = calloc(map->cap, sizeof(fuco_map_entry_t *));
+        return;
+    }
+
+    fuco_map_entry_t **data_new = calloc(2 * map->cap, 
+                                            sizeof(fuco_map_entry_t *));
+
+    for (size_t i = 0; i < map->cap; i++) {
+        fuco_map_entry_t *entry = map->data[i];
+
+        while (entry != NULL) {
+            fuco_map_entry_t *next = entry->next;
+
+            size_t idx = entry->hash % (2 * map->cap);
+
+            entry->next = data_new[idx];
+            data_new[idx] = entry;
+
+            entry = next;
+        }
+    }
+
+    free(map->data);
+
+    map->data = data_new;
+    map->cap *= 2;
+}
+
 fuco_map_entry_t *fuco_map_lookup_entry_by_hash(fuco_map_t *map, void *key, 
                                                 fuco_hashvalue_t hash) {
     assert(key != NULL);
     
+    if (map->cap == 0) {
+        return NULL;
+    }
+
     size_t idx = hash % map->cap;
 
     fuco_map_entry_t *entry = map->data[idx];
@@ -115,6 +157,10 @@ fuco_map_entry_t *fuco_map_lookup_entry_by_hash(fuco_map_t *map, void *key,
 void *fuco_map_lookup(fuco_map_t *map, void *key) {
     assert(key != NULL);
 
+    if (map->cap == 0) {
+        return NULL;
+    }
+
     fuco_hashvalue_t hash = map->hash_func(key);
     fuco_map_entry_t *entry = fuco_map_lookup_entry_by_hash(map, key, hash);
 
@@ -128,6 +174,10 @@ void *fuco_map_lookup(fuco_map_t *map, void *key) {
 void *fuco_map_multi_lookup(fuco_map_t *map, void *key) {
     assert(key != NULL);
     
+    if (map->cap == 0) {
+        return NULL;
+    }
+
     fuco_hashvalue_t hash = map->hash_func(key);
     fuco_map_entry_t *entry = fuco_map_lookup_entry_by_hash(map, key, hash);
 
@@ -140,14 +190,18 @@ void *fuco_map_multi_lookup(fuco_map_t *map, void *key) {
 
 int fuco_map_insert(fuco_map_t *map, void *key, void *value) {
     fuco_hashvalue_t hash = map->hash_func(key);
-    size_t idx = hash % map->cap;
 
     if (fuco_map_lookup_entry_by_hash(map, key, hash) != NULL) {
         return 1;
     }
 
+    fuco_map_maybe_rehash(map);
+
+    size_t idx = hash % map->cap;
     map->data[idx] = fuco_map_entry_new(key, value, hash, 
                                         map->data[idx], true);
+
+    map->size++;
 
     return 0;
 }
@@ -157,9 +211,13 @@ int fuco_map_multi_insert(fuco_map_t *map, void *key, void *value) {
     fuco_map_entry_t *entry = fuco_map_lookup_entry_by_hash(map, key, hash);
 
     if (entry == NULL) {
+        fuco_map_maybe_rehash(map);
+
         size_t idx = hash % map->cap;
         map->data[idx] = fuco_map_entry_new(key, value, hash, 
                                             map->data[idx], false);
+        
+        map->size++;
     } else {
         if (FUCO_MAP_IS_SINGLE_ENTRY(entry)) {
             return 1;
@@ -170,6 +228,8 @@ int fuco_map_multi_insert(fuco_map_t *map, void *key, void *value) {
 
         entry->iter.value = value;
         entry->iter.next = iter;
+
+        /* Note: multiple entries with same key count as 1 towards size */
     }
 
     return 0;
