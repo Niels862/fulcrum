@@ -24,7 +24,7 @@ typedef struct {
 typedef enum {
     FUCO_SYMBOL_NULL,
     FUCO_SYMBOL_VARIABLE,
-    FUCO_SYMBOL_TYPE_IDENTIFIER,
+    FUCO_SYMBOL_TYPE,
     FUCO_SYMBOL_FUNCTION
 } fuco_symboltype_t;
 

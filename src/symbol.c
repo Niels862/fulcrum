@@ -10,8 +10,8 @@ char *fuco_symboltype_string(fuco_symboltype_t type) {
         case FUCO_SYMBOL_NULL:
             return "null";
         
-        case FUCO_SYMBOL_TYPE_IDENTIFIER:
-            return "type-id";
+        case FUCO_SYMBOL_TYPE:
+            return "type";
         
         case FUCO_SYMBOL_VARIABLE:
             return "var";
@@ -56,14 +56,12 @@ fuco_symbol_t *fuco_scope_lookup_token(fuco_scope_t *scope,
 
 fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope, 
                                  fuco_token_t *token, fuco_symbol_t *symbol) {
-    if (fuco_map_lookup(&scope->map, token->lexeme) != NULL) {
+    if (fuco_map_insert(&scope->map, token->lexeme, symbol)) {
         fuco_syntax_error(&token->source, 
                           "symbol '%s' already declared in this scope", 
                           token->lexeme);
         return NULL;
     }
-
-    fuco_map_insert(&scope->map, token->lexeme, symbol);
 
     return symbol;
 }
@@ -108,9 +106,9 @@ void fuco_symboltable_init(fuco_symboltable_t *table, fuco_scope_t *global) {
     fuco_symboltable_insert(table, NULL, &null_token, 
                             NULL, FUCO_SYMBOL_NULL);
     fuco_symboltable_insert(table, global, &int_token, 
-                            NULL, FUCO_SYMBOL_TYPE_IDENTIFIER);
+                            NULL, FUCO_SYMBOL_TYPE);
     fuco_symboltable_insert(table, global, &float_token, 
-                            NULL, FUCO_SYMBOL_TYPE_IDENTIFIER);
+                            NULL, FUCO_SYMBOL_TYPE);
 }
 
 void fuco_symboltable_destruct(fuco_symboltable_t *table) {    
@@ -141,7 +139,7 @@ void fuco_symboltable_write(fuco_symboltable_t *table, FILE *file) {
     while (chunk != NULL) {
         for (size_t i = 0; i < chunk->size; i++) {
             fuco_symbol_t *symbol = &chunk->data[i];
-            fprintf(file, " %*s: %*d %8s (def=%d,val=%d,obj=%ld)\n", 
+            fprintf(file, " %*s: %*d %6s (def=%d,val=%d,obj=%ld)\n", 
                     (int)max,
                     symbol->token->lexeme, fuco_ceil_log(table->size, 10),
                     symbol->id, fuco_symboltype_string(symbol->type),

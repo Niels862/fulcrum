@@ -313,12 +313,41 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
             break;
 
         case FUCO_NODE_CALL:
-        case FUCO_NODE_VARIABLE:
-        case FUCO_NODE_TYPE_IDENTIFIER:
-            fuco_node_resolve_local_propagate(node, table, scope);
-
             node->symbol = fuco_scope_lookup_token(scope, node->token);
             if (node->symbol == NULL) {
+                return 1;
+            }
+
+            if (node->symbol->type != FUCO_SYMBOL_FUNCTION) {
+                fuco_syntax_error(&node->token->source, "expected function");
+                return 1;
+            }
+
+            fuco_node_resolve_local_propagate(node, table, scope);
+
+            break;
+
+        case FUCO_NODE_VARIABLE:
+            node->symbol = fuco_scope_lookup_token(scope, node->token);
+            if (node->symbol == NULL) {
+                return 1;
+            }
+
+            if (node->symbol->type != FUCO_SYMBOL_VARIABLE) {
+                fuco_syntax_error(&node->token->source, "expected variable");
+                return 1;
+            }
+
+            break;
+
+        case FUCO_NODE_TYPE_IDENTIFIER:
+            node->symbol = fuco_scope_lookup_token(scope, node->token);
+            if (node->symbol == NULL) {
+                return 1;
+            }
+
+            if (node->symbol->type != FUCO_SYMBOL_TYPE) {
+                fuco_syntax_error(&node->token->source, "expected type");
                 return 1;
             }
             break;
