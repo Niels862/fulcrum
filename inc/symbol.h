@@ -21,9 +21,17 @@ typedef struct {
     fuco_symbol_context_t ctx;
 } fuco_function_def_t;
 
+typedef enum {
+    FUCO_SYMBOL_NULL,
+    FUCO_SYMBOL_VARIABLE,
+    FUCO_SYMBOL_TYPE_IDENTIFIER,
+    FUCO_SYMBOL_FUNCTION
+} fuco_symboltype_t;
+
 typedef struct {
     fuco_token_t *token;
     fuco_symbolid_t id;
+    fuco_symboltype_t type;
     fuco_node_t *def;
     /* In inline function generation: actual parameter value */
     void *value;
@@ -51,6 +59,8 @@ struct fuco_symboltable_t {
     size_t size;
 };
 
+char *fuco_symboltype_string(fuco_symboltype_t type);
+
 void fuco_scope_init(fuco_scope_t *scope, fuco_scope_t *prev);
 
 void fuco_scope_destruct(fuco_scope_t *scope);
@@ -66,15 +76,16 @@ fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope,
 
 fuco_symbol_chunk_t *fuco_symbol_chunk_new();
 
-void fuco_symboltable_init(fuco_symboltable_t *table);
+void fuco_symboltable_init(fuco_symboltable_t *table, fuco_scope_t *global);
 
 void fuco_symboltable_destruct(fuco_symboltable_t *table);
 
 void fuco_symboltable_write(fuco_symboltable_t *table, FILE *file);
 
-fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table, 
+fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table,
                                        fuco_scope_t *scope,
                                        fuco_token_t *token,
-                                       fuco_node_t *def);
+                                       fuco_node_t *def,
+                                       fuco_symboltype_t type);
 
 #endif

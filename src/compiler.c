@@ -6,8 +6,8 @@
 void fuco_compiler_init(fuco_compiler_t *compiler, char *filename) {
     fuco_lexer_init(&compiler->lexer, filename);
     fuco_parser_init(&compiler->parser);
-    fuco_symboltable_init(&compiler->table);
     fuco_scope_init(&compiler->global, NULL);
+    fuco_symboltable_init(&compiler->table, &compiler->global);
     fuco_ir_init(&compiler->ir);
     fuco_bytecode_init(&compiler->bytecode);
     compiler->root = NULL;

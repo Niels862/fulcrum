@@ -84,13 +84,12 @@ fuco_node_t *fuco_parse_function_declaration(fuco_parser_t *parser) {
     }
 
     fuco_node_t *node = fuco_node_new(FUCO_NODE_FUNCTION);
-    fuco_node_t *params = NULL;
-    fuco_node_t *body = NULL;
+    fuco_node_t *params = NULL, *body = NULL, *ret_type = NULL;
 
     if (!fuco_parser_expect(parser, FUCO_TOKEN_IDENTIFIER, node)
         || (params = fuco_parse_param_list(parser)) == NULL
         || !fuco_parser_expect(parser, FUCO_TOKEN_ARROW, NULL)
-        || !fuco_parser_expect(parser, FUCO_TOKEN_IDENTIFIER, NULL)
+        || (ret_type = fuco_parse_type(parser)) == NULL
         || (body = fuco_parse_braced_block(parser)) == NULL) {
         fuco_node_free(node);
 
@@ -102,12 +101,15 @@ fuco_node_t *fuco_parse_function_declaration(fuco_parser_t *parser) {
             fuco_node_free(body);
         }
 
+        if (ret_type != NULL) {
+            fuco_node_free(ret_type);
+        }
+
         return NULL;
     }
 
-    fuco_node_set_child(node, fuco_node_new(FUCO_NODE_EMPTY), 
-                        FUCO_LAYOUT_FUNCTION_TYPE);
     fuco_node_set_child(node, params, FUCO_LAYOUT_FUNCTION_PARAMS);
+    fuco_node_set_child(node, ret_type, FUCO_LAYOUT_FUNCTION_RET_TYPE);
     fuco_node_set_child(node, body, FUCO_LAYOUT_FUNCTION_BODY);
 
     return node;
@@ -149,16 +151,16 @@ fuco_node_t *fuco_parse_param_list(fuco_parser_t *parser) {
 
 fuco_node_t *fuco_parse_param(fuco_parser_t *parser) {
     fuco_node_t *node = fuco_node_new(FUCO_NODE_PARAM);
+    fuco_node_t *type = NULL;
 
     if (!fuco_parser_expect(parser, FUCO_TOKEN_IDENTIFIER, node)
         || !fuco_parser_expect(parser, FUCO_TOKEN_COLON, NULL)
-        || !fuco_parser_expect(parser, FUCO_TOKEN_IDENTIFIER, NULL)) {
+        || (type = fuco_parse_type(parser)) == NULL) {
         fuco_node_free(node);
         return NULL;
     }
 
-    fuco_node_set_child(node, fuco_node_new(FUCO_NODE_EMPTY), 
-                        FUCO_LAYOUT_PARAM_TYPE);
+    fuco_node_set_child(node, type, FUCO_LAYOUT_PARAM_TYPE);
 
     return node;
 }
@@ -292,6 +294,17 @@ fuco_node_t *fuco_parse_call_args(fuco_parser_t *parser) {
     }
 
     if (!fuco_parser_expect(parser, FUCO_TOKEN_BRACKET_CLOSE, NULL)) {
+        fuco_node_free(node);
+        return NULL;
+    }
+
+    return node;
+}
+
+fuco_node_t *fuco_parse_type(fuco_parser_t *parser) {
+    fuco_node_t *node = fuco_node_new(FUCO_NODE_TYPE_IDENTIFIER);
+
+    if (!fuco_parser_expect(parser, FUCO_TOKEN_IDENTIFIER, node)) {
         fuco_node_free(node);
         return NULL;
     }

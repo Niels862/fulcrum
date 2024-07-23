@@ -5,6 +5,24 @@
 #include <string.h>
 #include <assert.h>
 
+char *fuco_symboltype_string(fuco_symboltype_t type) {
+    switch (type) {
+        case FUCO_SYMBOL_NULL:
+            return "null";
+        
+        case FUCO_SYMBOL_TYPE_IDENTIFIER:
+            return "type-id";
+        
+        case FUCO_SYMBOL_VARIABLE:
+            return "var";
+        
+        case FUCO_SYMBOL_FUNCTION:
+            return "func";
+    }
+
+    return "(error-type)"; /* TODO unreached*/
+}
+
 void fuco_scope_init(fuco_scope_t *scope, fuco_scope_t *prev) {
     /* The scope map does not own the identifiers so they are not freed */
     fuco_map_init(&scope->map, fuco_hash_string, fuco_equal_string, NULL, NULL);
@@ -59,21 +77,40 @@ fuco_symbol_chunk_t *fuco_symbol_chunk_new() {
     return chunk;
 }
 
-void fuco_symboltable_init(fuco_symboltable_t *table) {
+void fuco_symboltable_init(fuco_symboltable_t *table, fuco_scope_t *global) {
     static fuco_token_t null_token = {
         .lexeme = "(null)", 
         .source = {
-            .col = 0, 
-            .row = 0, 
-            .filename = NULL
+            .col = 0, .row = 0, .filename = NULL
         }, 
         .type = FUCO_TOKEN_EMPTY
+    };
+
+    static fuco_token_t int_token = {
+        .lexeme = "Int",
+        .source = {
+            .col = 0, .row = 0, .filename = NULL
+        },
+        .type = FUCO_TOKEN_IDENTIFIER
+    };
+
+    static fuco_token_t float_token = {
+        .lexeme = "Float",
+        .source = {
+            .col = 0, .row = 0, .filename = NULL
+        },
+        .type = FUCO_TOKEN_IDENTIFIER
     };
 
     table->front = table->back = fuco_symbol_chunk_new();
     table->size = 0;
 
-    fuco_symboltable_insert(table, NULL, &null_token, NULL);
+    fuco_symboltable_insert(table, NULL, &null_token, 
+                            NULL, FUCO_SYMBOL_NULL);
+    fuco_symboltable_insert(table, global, &int_token, 
+                            NULL, FUCO_SYMBOL_TYPE_IDENTIFIER);
+    fuco_symboltable_insert(table, global, &float_token, 
+                            NULL, FUCO_SYMBOL_TYPE_IDENTIFIER);
 }
 
 void fuco_symboltable_destruct(fuco_symboltable_t *table) {    
@@ -104,9 +141,11 @@ void fuco_symboltable_write(fuco_symboltable_t *table, FILE *file) {
     while (chunk != NULL) {
         for (size_t i = 0; i < chunk->size; i++) {
             fuco_symbol_t *symbol = &chunk->data[i];
-            fprintf(file, " %*s: %*d (def=%d,val=%d,obj=%ld)\n", (int)max, 
+            fprintf(file, " %*s: %*d %8s (def=%d,val=%d,obj=%ld)\n", 
+                    (int)max,
                     symbol->token->lexeme, fuco_ceil_log(table->size, 10),
-                    symbol->id, symbol->def != NULL,
+                    symbol->id, fuco_symboltype_string(symbol->type),
+                    symbol->def != NULL,
                     symbol->value != NULL, symbol->obj);
         }
 
@@ -117,7 +156,8 @@ void fuco_symboltable_write(fuco_symboltable_t *table, FILE *file) {
 fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table,
                                        fuco_scope_t *scope,
                                        fuco_token_t *token,
-                                       fuco_node_t *def) {
+                                       fuco_node_t *def,
+                                       fuco_symboltype_t type) {
     fuco_symbol_chunk_t *chunk = table->front;
     
     if (chunk->size >= FUCO_SYMBOL_CHUNK_SIZE) {
@@ -128,6 +168,7 @@ fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table,
 
     symbol->token = token;
     symbol->id = table->size;
+    symbol->type = type;
     symbol->def = def;
     symbol->value = NULL;
     symbol->obj = 0;

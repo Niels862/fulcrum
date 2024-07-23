@@ -40,4 +40,6 @@ fuco_node_t *fuco_parse_value(fuco_parser_t *parser);
 
 fuco_node_t *fuco_parse_call_args(fuco_parser_t *parser);
 
+fuco_node_t *fuco_parse_type(fuco_parser_t *parser);
+
 #endif
