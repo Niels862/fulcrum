@@ -96,41 +96,50 @@ void fuco_map_destruct(fuco_map_t *map) {
 
 void fuco_map_write(fuco_map_t *map, FILE *file, fuco_write_t write_key_func, 
                     fuco_write_t write_value_func) {
+    size_t size = 0;
+
     fprintf(file, "{\n");
 
     for (size_t i = 0; i < map->size; i++) {
         fuco_map_entry_t *entry = map->data[i];
 
         while (entry != NULL) {
-            fprintf(file, "  ");
-
-            write_key_func(entry->key, file);
-
             fuco_map_iter_t *iter = &entry->iter;
+
+            if (size) {
+                fprintf(file, ",\n");
+            }
+            fprintf(file, "  ");
+            write_key_func(entry->key, file);
 
             if (FUCO_MAP_IS_SINGLE_ITER(iter)) {
                 fprintf(file, ": ");
                 write_value_func(iter->value, file);
-                fprintf(file, "\n");
             } else {
                 fprintf(file, ": {\n");
 
                 while (iter != NULL) {
                     fprintf(file, "    ");
                     write_value_func(iter->value, file);
-                    fprintf(file, "\n");
+
+                    if (iter->next != NULL) {
+                        fprintf(file, ",\n");
+                    } else {
+                        fprintf(file, "\n");
+                    }
 
                     iter = iter->next;
                 }
 
-                fprintf(file, "  }\n");
+                fprintf(file, "  }");
             }
 
+            size++;
             entry = entry->next;
         }
     }
 
-    fprintf(file, "}\n");
+    fprintf(file, "\n} (%ld entries)\n", size);
 }
 
 void fuco_map_maybe_rehash(fuco_map_t *map) {

@@ -40,8 +40,6 @@ int fuco_compiler_run(fuco_compiler_t *compiler) {
         return 1;
     }
 
-    fuco_node_pretty_write(compiler->root, stderr);
-
     if (fuco_node_resolve_global(compiler->root, &compiler->table, 
                                  &compiler->global)) {
         return 1;
@@ -49,7 +47,7 @@ int fuco_compiler_run(fuco_compiler_t *compiler) {
 
     fuco_symbol_t *entry;
     if ((entry = fuco_scope_lookup_callable(&compiler->global, "main",  
-                                                   NULL, false)) == NULL) {
+                                            NULL, false)) == NULL) {
         fuco_syntax_error(NULL, "entry point '%s' was not defined", "main");
         return 1;
     }
@@ -58,6 +56,8 @@ int fuco_compiler_run(fuco_compiler_t *compiler) {
                                 &compiler->global)) {
         return 1;
     }
+
+    fuco_map_write(&compiler->global.map, stderr, fuco_string_write, fuco_pointer_write);
 
     compiler->ir.label = compiler->table.size;
     fuco_ir_create_startup_object(&compiler->ir, entry->id);
