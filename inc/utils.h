@@ -2,11 +2,16 @@
 #define FUCO_UTILS_H
 
 #include "textsource.h"
+#include <stdbool.h>
 
 #define FUCO_ANSI_RED "\033[91m"
 #define FUCO_ANSI_RESET "\033[0m"
 
 #define FUCO_UNUSED(p) (void)(p)
+
+/* exit(1) used to avoid compiler warnings */
+#define FUCO_UNREACHED() (assert(true), exit(1))
+
 #define FUCO_NOT_IMPLEMENTED() fuco_not_implemented(__FILE__, __LINE__)
 
 void fuco_not_implemented(char const *file, int line);
@@ -19,5 +24,7 @@ char fuco_base_char(int i);
 char *fuco_repr_char(char c);
 
 int fuco_ceil_log(unsigned int i, unsigned int base);
+
+void fuco_pointer_write(void *p, FILE *file);
 
 #endif

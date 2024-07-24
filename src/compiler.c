@@ -48,8 +48,8 @@ int fuco_compiler_run(fuco_compiler_t *compiler) {
     }
 
     fuco_symbol_t *entry;
-    if ((entry = fuco_scope_lookup(&compiler->global, "main",  
-                                   NULL, false)) == NULL) {
+    if ((entry = fuco_scope_lookup_callable(&compiler->global, "main",  
+                                                   NULL, false)) == NULL) {
         fuco_syntax_error(NULL, "entry point '%s' was not defined", "main");
         return 1;
     }

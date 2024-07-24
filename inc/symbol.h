@@ -61,12 +61,19 @@ struct fuco_symboltable_t {
 
 char *fuco_symboltype_string(fuco_symboltype_t type);
 
+bool fuco_symboltype_is_callable(fuco_symboltype_t type);
+
 void fuco_scope_init(fuco_scope_t *scope, fuco_scope_t *prev);
 
 void fuco_scope_destruct(fuco_scope_t *scope);
 
 fuco_symbol_t *fuco_scope_lookup(fuco_scope_t *scope, char *ident, 
                                  fuco_textsource_t *source, bool error);
+
+fuco_symbol_t *fuco_scope_lookup_callable(fuco_scope_t *scope, 
+                                                 char *ident, 
+                                                 fuco_textsource_t *source, 
+                                                 bool error);
 
 fuco_symbol_t *fuco_scope_lookup_token(fuco_scope_t *scope, 
                                        fuco_token_t *token);

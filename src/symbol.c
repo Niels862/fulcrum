@@ -1,6 +1,7 @@
 #include "symbol.h"
 #include "tree.h"
 #include "utils.h"
+#include "strutils.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -20,7 +21,21 @@ char *fuco_symboltype_string(fuco_symboltype_t type) {
             return "func";
     }
 
-    return "(error-type)"; /* TODO unreached*/
+    FUCO_UNREACHED();
+}
+
+bool fuco_symboltype_is_callable(fuco_symboltype_t type) {
+    switch (type) {
+        case FUCO_SYMBOL_NULL:
+        case FUCO_SYMBOL_VARIABLE:
+        case FUCO_SYMBOL_TYPE:
+            return false;
+
+        case FUCO_SYMBOL_FUNCTION:
+            return true;
+    }
+
+    FUCO_UNREACHED();
 }
 
 void fuco_scope_init(fuco_scope_t *scope, fuco_scope_t *prev) {
@@ -35,18 +50,52 @@ void fuco_scope_destruct(fuco_scope_t *scope) {
 
 fuco_symbol_t *fuco_scope_lookup(fuco_scope_t *scope, char *ident, 
                                  fuco_textsource_t *source, bool error) {
-    fuco_symbol_t *symbol = NULL;
+    while (scope != NULL) {
+        fuco_map_iter_t *iter = fuco_map_lookup(&scope->map, ident);
 
-    while (scope != NULL && symbol == NULL) {
-        symbol = fuco_map_lookup(&scope->map, ident);
+        if (iter != NULL) {
+            if (!FUCO_MAP_IS_SINGLE_ITER(iter)) {
+                if (error) {
+                    fuco_syntax_error(source, 
+                                      "'%s' is a callable object", ident);
+                }
+
+                return NULL;
+            } else {
+                return iter->value;
+            }
+        }
+
         scope = scope->prev;
     }
 
-    if (symbol == NULL && error) {
+    if (error) {
         fuco_syntax_error(source, "'%s' was not declared in this scope", ident);
     }
+    
+    return NULL;
+}
 
-    return symbol;
+/* Temporary implementation, will be replaced by overload lookup */
+fuco_symbol_t *fuco_scope_lookup_callable(fuco_scope_t *scope, 
+                                                 char *ident, 
+                                                 fuco_textsource_t *source, 
+                                                 bool error) {    
+    while (scope != NULL) {
+        fuco_map_iter_t *iter = fuco_map_lookup(&scope->map, ident);
+
+        if (iter != NULL) {
+            return iter->value;
+        }
+
+        scope = scope->prev;
+    }
+    
+    if (error) {
+        fuco_syntax_error(source, "lookup failed");
+    }
+
+    return NULL;
 }
 
 fuco_symbol_t *fuco_scope_lookup_token(fuco_scope_t *scope, 
@@ -56,7 +105,16 @@ fuco_symbol_t *fuco_scope_lookup_token(fuco_scope_t *scope,
 
 fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope, 
                                  fuco_token_t *token, fuco_symbol_t *symbol) {
-    if (fuco_map_insert(&scope->map, token->lexeme, symbol)) {
+    bool callable = fuco_symboltype_is_callable(symbol->type);
+    int res;
+
+    if (callable) {
+        res = fuco_map_multi_insert(&scope->map, token->lexeme, symbol);
+    } else {
+        res = fuco_map_insert(&scope->map, token->lexeme, symbol);
+    }
+
+    if (res) {
         fuco_syntax_error(&token->source, 
                           "symbol '%s' already declared in this scope", 
                           token->lexeme);

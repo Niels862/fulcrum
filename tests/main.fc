@@ -9,3 +9,7 @@ def main() -> Int {
 def g() -> Int {
     return f(69, 420);
 }
+
+def g(x: Float) -> Int {
+    return 53;
+}

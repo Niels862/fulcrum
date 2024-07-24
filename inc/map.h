@@ -10,9 +10,9 @@
 
 #define FUCO_MAP_LOAD_FACTOR 0.75
 
-#define FUCO_MAP_SINGLE_ENTRY (struct fuco_map_iter_t *)0x1
+#define FUCO_MAP_SINGLE_ENTRY ((struct fuco_map_iter_t *)0x1)
 
-#define FUCO_MAP_IS_SINGLE_ENTRY(entry) ((uintptr_t)(entry)->iter.next & 0x1)
+#define FUCO_MAP_IS_SINGLE_ITER(iter) ((iter)->next == FUCO_MAP_SINGLE_ENTRY)
 
 typedef uint64_t fuco_hashvalue_t;
 
@@ -58,6 +58,9 @@ void fuco_map_init(fuco_map_t *map,
 
 void fuco_map_destruct(fuco_map_t *map);
 
+void fuco_map_write(fuco_map_t *map, FILE *file, fuco_write_t write_key_func, 
+                    fuco_write_t write_value_func);
+
 void fuco_map_maybe_rehash(fuco_map_t *map);
 
 void fuco_map_rehash(fuco_map_t *map);
@@ -65,9 +68,7 @@ void fuco_map_rehash(fuco_map_t *map);
 fuco_map_entry_t *fuco_map_lookup_entry_by_hash(fuco_map_t *map, void *key, 
                                                 fuco_hashvalue_t hash);
 
-void *fuco_map_lookup(fuco_map_t *map, void *key);
-
-void *fuco_map_multi_lookup(fuco_map_t *map, void *key);
+fuco_map_iter_t *fuco_map_lookup(fuco_map_t *map, void *key);
 
 int fuco_map_insert(fuco_map_t *map, void *key, void *value);
 

@@ -1,7 +1,7 @@
 #include "map.h"
 #include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 
 fuco_hashvalue_t fuco_hash_string(void *data) {
@@ -45,7 +45,7 @@ void fuco_map_entry_destruct(fuco_map_entry_t *entry, fuco_map_t *map) {
         map->value_free_func(entry->iter.value);
     }
 
-    if (!FUCO_MAP_IS_SINGLE_ENTRY(entry)) {
+    if (!FUCO_MAP_IS_SINGLE_ITER(&entry->iter)) {
         fuco_map_iter_t *iter = entry->iter.next;
 
         while (iter != NULL) {
@@ -92,6 +92,45 @@ void fuco_map_destruct(fuco_map_t *map) {
     if (map->data != NULL) {
         free(map->data);
     }
+}
+
+void fuco_map_write(fuco_map_t *map, FILE *file, fuco_write_t write_key_func, 
+                    fuco_write_t write_value_func) {
+    fprintf(file, "{\n");
+
+    for (size_t i = 0; i < map->size; i++) {
+        fuco_map_entry_t *entry = map->data[i];
+
+        while (entry != NULL) {
+            fprintf(file, "  ");
+
+            write_key_func(entry->key, file);
+
+            fuco_map_iter_t *iter = &entry->iter;
+
+            if (FUCO_MAP_IS_SINGLE_ITER(iter)) {
+                fprintf(file, ": ");
+                write_value_func(iter->value, file);
+                fprintf(file, "\n");
+            } else {
+                fprintf(file, ": {\n");
+
+                while (iter != NULL) {
+                    fprintf(file, "    ");
+                    write_value_func(iter->value, file);
+                    fprintf(file, "\n");
+
+                    iter = iter->next;
+                }
+
+                fprintf(file, "  }\n");
+            }
+
+            entry = entry->next;
+        }
+    }
+
+    fprintf(file, "}\n");
 }
 
 void fuco_map_maybe_rehash(fuco_map_t *map) {
@@ -154,7 +193,7 @@ fuco_map_entry_t *fuco_map_lookup_entry_by_hash(fuco_map_t *map, void *key,
     return NULL;
 }
 
-void *fuco_map_lookup(fuco_map_t *map, void *key) {
+fuco_map_iter_t *fuco_map_lookup(fuco_map_t *map, void *key) {
     assert(key != NULL);
 
     if (map->cap == 0) {
@@ -164,24 +203,7 @@ void *fuco_map_lookup(fuco_map_t *map, void *key) {
     fuco_hashvalue_t hash = map->hash_func(key);
     fuco_map_entry_t *entry = fuco_map_lookup_entry_by_hash(map, key, hash);
 
-    if (entry == NULL || !FUCO_MAP_IS_SINGLE_ENTRY(entry)) {
-        return NULL;
-    }
-
-    return entry->iter.value;
-}
-
-void *fuco_map_multi_lookup(fuco_map_t *map, void *key) {
-    assert(key != NULL);
-    
-    if (map->cap == 0) {
-        return NULL;
-    }
-
-    fuco_hashvalue_t hash = map->hash_func(key);
-    fuco_map_entry_t *entry = fuco_map_lookup_entry_by_hash(map, key, hash);
-
-    if (entry == NULL || FUCO_MAP_IS_SINGLE_ENTRY(entry)) {
+    if (entry == NULL) {
         return NULL;
     }
 
@@ -219,7 +241,7 @@ int fuco_map_multi_insert(fuco_map_t *map, void *key, void *value) {
         
         map->size++;
     } else {
-        if (FUCO_MAP_IS_SINGLE_ENTRY(entry)) {
+        if (FUCO_MAP_IS_SINGLE_ITER(&entry->iter)) {
             return 1;
         }
 

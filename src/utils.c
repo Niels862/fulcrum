@@ -98,3 +98,7 @@ int fuco_ceil_log(unsigned int i, unsigned int base) {
 
     return log;
 }
+
+void fuco_pointer_write(void *p, FILE *file) {
+    fprintf(file, "%p", p);
+}

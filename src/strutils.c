@@ -47,3 +47,7 @@ char *fuco_strdup(char *str) {
 
     return new;
 }
+
+void fuco_string_write(void *string, FILE *file) {
+    fputs(string, file);
+}

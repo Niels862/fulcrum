@@ -309,11 +309,16 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
                 return 1;
             }
             
-            fuco_node_resolve_local_propagate(node, table, scope);
+            if (fuco_node_resolve_local_propagate(node, table, scope)) {
+                return 1;
+            }
             break;
 
         case FUCO_NODE_CALL:
-            node->symbol = fuco_scope_lookup_token(scope, node->token);
+            node->symbol = fuco_scope_lookup_callable(scope, 
+                                                      node->token->lexeme, 
+                                                      &node->token->source, 
+                                                      true);
             if (node->symbol == NULL) {
                 return 1;
             }
@@ -323,7 +328,9 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
                 return 1;
             }
 
-            fuco_node_resolve_local_propagate(node, table, scope);
+            if (fuco_node_resolve_local_propagate(node, table, scope)) {
+                return 1;
+            }
 
             break;
 
