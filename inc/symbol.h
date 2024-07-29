@@ -28,15 +28,15 @@ typedef enum {
     FUCO_SYMBOL_FUNCTION
 } fuco_symboltype_t;
 
-typedef struct {
+typedef struct fuco_symbol_t {
     fuco_token_t *token;
     fuco_symbolid_t id;
     fuco_symboltype_t type;
     fuco_node_t *def;
-    /* In inline function generation: actual parameter value */
     void *value;
     /* IR generated object */
     size_t obj;
+    struct fuco_symbol_t *next;
 } fuco_symbol_t;
 
 typedef struct fuco_scope_t {
