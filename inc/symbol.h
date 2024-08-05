@@ -36,7 +36,9 @@ typedef struct fuco_symbol_t {
     void *value;
     /* IR generated object */
     size_t obj;
-    struct fuco_symbol_t *next;
+    /* For FUNCTION: next overloaded FUNCTION
+       For TYPE: first FUNCTION (constructor) */
+    struct fuco_symbol_t *link;
 } fuco_symbol_t;
 
 typedef struct fuco_scope_t {
