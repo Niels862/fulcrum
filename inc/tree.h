@@ -118,6 +118,9 @@ int fuco_node_resolve_local_function(fuco_node_t *node,
                                      fuco_symboltable_t *table, 
                                      fuco_scope_t *scope);
 
+int fuco_node_resolve_call(fuco_node_t *node, fuco_symboltable_t *table, 
+                           fuco_scope_t *scope);
+
 int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table, 
                             fuco_scope_t *scope);
 

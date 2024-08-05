@@ -63,8 +63,6 @@ struct fuco_symboltable_t {
 
 char *fuco_symboltype_string(fuco_symboltype_t type);
 
-bool fuco_symboltype_is_callable(fuco_symboltype_t type);
-
 void fuco_collision_error(fuco_token_t *token);
 
 void fuco_scope_init(fuco_scope_t *scope, fuco_scope_t *prev);

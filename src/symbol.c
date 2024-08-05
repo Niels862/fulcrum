@@ -24,20 +24,6 @@ char *fuco_symboltype_string(fuco_symboltype_t type) {
     FUCO_UNREACHED();
 }
 
-bool fuco_symboltype_is_callable(fuco_symboltype_t type) {
-    switch (type) {
-        case FUCO_SYMBOL_NULL:
-        case FUCO_SYMBOL_VARIABLE:
-        case FUCO_SYMBOL_TYPE:
-            return false;
-
-        case FUCO_SYMBOL_FUNCTION:
-            return true;
-    }
-
-    FUCO_UNREACHED();
-}
-
 void fuco_collision_error(fuco_token_t *token) {
     fuco_syntax_error(&token->source, 
                       "symbol '%s' already declared in this scope", 

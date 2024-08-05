@@ -256,6 +256,8 @@ int fuco_node_resolve_local_propagate(fuco_node_t *node,
 int fuco_node_resolve_local_function(fuco_node_t *node, 
                                      fuco_symboltable_t *table, 
                                      fuco_scope_t *scope) {
+    assert(node->type == FUCO_NODE_FUNCTION);
+    
     int res = 0;
 
     fuco_function_def_t *def = NULL;
@@ -269,6 +271,57 @@ int fuco_node_resolve_local_function(fuco_node_t *node,
     fuco_scope_destruct(&next);
 
     return res;
+}
+
+int fuco_node_resolve_call(fuco_node_t *node, fuco_symboltable_t *table, 
+                           fuco_scope_t *scope) {
+    
+    assert(node->type == FUCO_NODE_CALL);
+    
+    fuco_symbol_t *symbol = fuco_scope_lookup_token(scope, node->token);
+
+    if (symbol == NULL) {
+        return 1;
+    }
+
+    /* TODO message */
+    if (symbol->type != FUCO_SYMBOL_FUNCTION) {
+        fuco_syntax_error(&node->token->source, "expected function");
+        return 1;
+    }
+
+    fuco_node_t *args = node->children[FUCO_LAYOUT_CALL_ARGS];
+
+    while (symbol != NULL) {
+        fuco_node_t *func = symbol->def;
+        fuco_node_t *params = func->children[FUCO_LAYOUT_FUNCTION_PARAMS];
+
+        if (args->count == params->count) {
+            if (node->symbol != NULL) {
+                fuco_syntax_error(&node->token->source, 
+                                  "multiple candidates for call to '%s'", 
+                                  node->token->lexeme);
+                return 1;
+            }
+
+            node->symbol = symbol;
+        }
+
+        symbol = symbol->link;
+    }
+    
+    if (node->symbol == NULL) {
+        fuco_syntax_error(&node->token->source, 
+                          "no matching candidate for call to '%s'", 
+                          node->token->lexeme);
+        return 1;
+    }
+
+    if (fuco_node_resolve_local_propagate(node, table, scope)) {
+        return 1;
+    }
+
+    return 0;
 }
 
 int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table, 
@@ -315,21 +368,9 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
             break;
 
         case FUCO_NODE_CALL:
-            node->symbol = fuco_scope_lookup_token(scope, node->token);
-            
-            if (node->symbol == NULL) {
+            if (fuco_node_resolve_call(node, table, scope)) {
                 return 1;
             }
-
-            if (node->symbol->type != FUCO_SYMBOL_FUNCTION) {
-                fuco_syntax_error(&node->token->source, "expected function");
-                return 1;
-            }
-
-            if (fuco_node_resolve_local_propagate(node, table, scope)) {
-                return 1;
-            }
-
             break;
 
         case FUCO_NODE_VARIABLE:
