@@ -459,6 +459,9 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
             if (fuco_node_resolve_local_propagate(node, table, scope)) {
                 return 1;
             }
+
+            node->datatype = node->children[FUCO_LAYOUT_PARAM_TYPE];
+
             break;
 
         case FUCO_NODE_CALL:
@@ -477,6 +480,8 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
                 fuco_syntax_error(&node->token->source, "expected variable");
                 return 1;
             }
+
+            node->datatype = node->symbol->def->datatype;
 
             break;
 
