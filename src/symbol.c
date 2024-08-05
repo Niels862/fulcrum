@@ -38,6 +38,12 @@ bool fuco_symboltype_is_callable(fuco_symboltype_t type) {
     FUCO_UNREACHED();
 }
 
+void fuco_collision_error(fuco_token_t *token) {
+    fuco_syntax_error(&token->source, 
+                      "symbol '%s' already declared in this scope", 
+                      token->lexeme);
+}
+
 void fuco_scope_init(fuco_scope_t *scope, fuco_scope_t *prev) {
     /* The scope map does not own the identifiers so they are not freed */
     fuco_map_init(&scope->map, fuco_hash_string, fuco_equal_string, NULL, NULL);
@@ -48,54 +54,33 @@ void fuco_scope_destruct(fuco_scope_t *scope) {
     fuco_map_destruct(&scope->map);
 }
 
-fuco_symbol_t *fuco_scope_lookup(fuco_scope_t *scope, char *ident, 
-                                 fuco_textsource_t *source, bool error) {
+fuco_symbol_t *fuco_scope_traverse(fuco_scope_t **pscope, char *ident) {
+    fuco_scope_t *scope = *pscope;
+    
     while (scope != NULL) {
-        fuco_map_iter_t *iter = fuco_map_lookup(&scope->map, ident);
+        void **value = fuco_map_lookup(&scope->map, ident);
 
-        if (iter != NULL) {
-            if (!FUCO_MAP_IS_SINGLE_ITER(iter)) {
-                if (error) {
-                    fuco_syntax_error(source, 
-                                      "'%s' is a callable object", ident);
-                }
-
-                return NULL;
-            } else {
-                return iter->value;
-            }
+        if (value != NULL) {
+            *pscope = scope->prev;
+            return *value;
         }
 
         scope = scope->prev;
     }
 
-    if (error) {
-        fuco_syntax_error(source, "'%s' was not declared in this scope", ident);
-    }
-    
+    *pscope = NULL;
     return NULL;
 }
 
-/* Temporary implementation, will be replaced by overload lookup */
-fuco_symbol_t *fuco_scope_lookup_callable(fuco_scope_t *scope, 
-                                                 char *ident, 
-                                                 fuco_textsource_t *source, 
-                                                 bool error) {    
-    while (scope != NULL) {
-        fuco_map_iter_t *iter = fuco_map_lookup(&scope->map, ident);
+fuco_symbol_t *fuco_scope_lookup(fuco_scope_t *scope, char *ident, 
+                                 fuco_textsource_t *source, bool error) {    
+    fuco_symbol_t *symbol = fuco_scope_traverse(&scope, ident);
 
-        if (iter != NULL) {
-            return iter->value;
-        }
-
-        scope = scope->prev;
+    if (symbol == NULL && error) {
+        fuco_syntax_error(source, "'%s' was not declared in this scope", ident);
     }
     
-    if (error) {
-        fuco_syntax_error(source, "lookup failed");
-    }
-
-    return NULL;
+    return symbol;
 }
 
 fuco_symbol_t *fuco_scope_lookup_token(fuco_scope_t *scope, 
@@ -104,21 +89,30 @@ fuco_symbol_t *fuco_scope_lookup_token(fuco_scope_t *scope,
 }
 
 fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope, 
-                                 fuco_token_t *token, fuco_symbol_t *symbol) {
-    bool callable = fuco_symboltype_is_callable(symbol->type);
-    int res;
+                                 fuco_token_t *token, fuco_symbol_t *symbol) {    
+    void **value = fuco_map_insert(&scope->map, token->lexeme, symbol);
+    
+    if (value != NULL) {
+        fuco_symbol_t *prev_symbol = *value;
 
-    if (callable) {
-        res = fuco_map_multi_insert(&scope->map, token->lexeme, symbol);
-    } else {
-        res = fuco_map_insert(&scope->map, token->lexeme, symbol);
-    }
+        switch (symbol->type) {
+            case FUCO_SYMBOL_NULL:
+                FUCO_UNREACHED();
 
-    if (res) {
-        fuco_syntax_error(&token->source, 
-                          "symbol '%s' already declared in this scope", 
-                          token->lexeme);
-        return NULL;
+            case FUCO_SYMBOL_VARIABLE:
+                fuco_collision_error(token);
+                return NULL;
+
+            case FUCO_SYMBOL_TYPE:
+            case FUCO_SYMBOL_FUNCTION:
+                if (prev_symbol->type == FUCO_SYMBOL_FUNCTION) {
+                    *value = symbol;
+                    symbol->link = prev_symbol;
+                } else {
+                    fuco_collision_error(token);
+                    return NULL;
+                }
+        }
     }
 
     return symbol;

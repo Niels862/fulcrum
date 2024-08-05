@@ -315,10 +315,8 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
             break;
 
         case FUCO_NODE_CALL:
-            node->symbol = fuco_scope_lookup_callable(scope, 
-                                                      node->token->lexeme, 
-                                                      &node->token->source, 
-                                                      true);
+            node->symbol = fuco_scope_lookup_token(scope, node->token);
+            
             if (node->symbol == NULL) {
                 return 1;
             }
