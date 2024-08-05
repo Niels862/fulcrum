@@ -4,6 +4,30 @@
 #include <string.h>
 #include <assert.h>
 
+fuco_token_t null_token = {
+    .lexeme = "(null)", 
+    .source = {
+        .col = 0, .row = 0, .filename = NULL
+    }, 
+    .type = FUCO_TOKEN_EMPTY
+};
+
+fuco_token_t int_token = {
+    .lexeme = "Int",
+    .source = {
+        .col = 0, .row = 0, .filename = NULL
+    },
+    .type = FUCO_TOKEN_IDENTIFIER
+};
+
+fuco_token_t float_token = {
+    .lexeme = "Float",
+    .source = {
+        .col = 0, .row = 0, .filename = NULL
+    },
+    .type = FUCO_TOKEN_IDENTIFIER
+};
+
 fuco_token_descriptor_t const token_descriptors[] = {
     { FUCO_TOKEN_EMPTY, 0, "empty" },
 

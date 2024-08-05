@@ -9,7 +9,11 @@
 
 typedef uint32_t fuco_symbolid_t;
 
-#define FUCO_SYMBOLID_INVALID (fuco_symbolid_t)0
+#define FUCO_SYMID_INVALID (fuco_symbolid_t)0
+
+#define FUCO_SYMID_INT (fuco_symbolid_t)1
+
+#define FUCO_SYMID_FLOAT (fuco_symbolid_t)2
 
 typedef struct {
     fuco_symbolid_t *data;
@@ -59,11 +63,10 @@ struct fuco_symboltable_t {
     fuco_symbol_chunk_t *back;
     fuco_symbol_chunk_t *front;
     size_t size;
+    fuco_node_t *synthetic;
 };
 
 char *fuco_symboltype_string(fuco_symboltype_t type);
-
-fuco_node_t *fuco_symbol_get_type(fuco_symbol_t *symbol);
 
 void fuco_collision_error(fuco_token_t *token);
 
@@ -91,6 +94,11 @@ void fuco_symboltable_init(fuco_symboltable_t *table, fuco_scope_t *global);
 void fuco_symboltable_destruct(fuco_symboltable_t *table);
 
 void fuco_symboltable_write(fuco_symboltable_t *table, FILE *file);
+
+void fuco_symboltable_add_synthetic(fuco_symboltable_t *table, 
+                                    fuco_scope_t *scope,
+                                    size_t *allocated, fuco_token_t *token, 
+                                    fuco_symbolid_t id);
 
 fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table,
                                        fuco_scope_t *scope,

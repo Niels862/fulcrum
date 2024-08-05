@@ -125,39 +125,20 @@ fuco_symbol_chunk_t *fuco_symbol_chunk_new() {
 }
 
 void fuco_symboltable_init(fuco_symboltable_t *table, fuco_scope_t *global) {
-    static fuco_token_t null_token = {
-        .lexeme = "(null)", 
-        .source = {
-            .col = 0, .row = 0, .filename = NULL
-        }, 
-        .type = FUCO_TOKEN_EMPTY
-    };
-
-    static fuco_token_t int_token = {
-        .lexeme = "Int",
-        .source = {
-            .col = 0, .row = 0, .filename = NULL
-        },
-        .type = FUCO_TOKEN_IDENTIFIER
-    };
-
-    static fuco_token_t float_token = {
-        .lexeme = "Float",
-        .source = {
-            .col = 0, .row = 0, .filename = NULL
-        },
-        .type = FUCO_TOKEN_IDENTIFIER
-    };
-
+    size_t allocated;
+    
     table->front = table->back = fuco_symbol_chunk_new();
     table->size = 0;
+    table->synthetic = fuco_node_variadic_new(FUCO_NODE_BODY, &allocated);
 
     fuco_symboltable_insert(table, NULL, &null_token, 
                             NULL, FUCO_SYMBOL_NULL);
-    fuco_symboltable_insert(table, global, &int_token, 
-                            NULL, FUCO_SYMBOL_TYPE);
-    fuco_symboltable_insert(table, global, &float_token, 
-                            NULL, FUCO_SYMBOL_TYPE);
+    
+    fuco_symboltable_add_synthetic(table, global, &allocated, 
+                                   &int_token, FUCO_SYMID_INT);
+
+    fuco_symboltable_add_synthetic(table, global, &allocated, 
+                                   &float_token, FUCO_SYMID_FLOAT);
 }
 
 void fuco_symboltable_destruct(fuco_symboltable_t *table) {    
@@ -166,6 +147,10 @@ void fuco_symboltable_destruct(fuco_symboltable_t *table) {
         fuco_symbol_chunk_t *next = chunk->next;
         free(chunk);
         chunk = next;
+    }
+
+    if (table->synthetic != NULL) {
+        fuco_node_free(table->synthetic);
     }
 }
 
@@ -206,6 +191,21 @@ void fuco_symboltable_write(fuco_symboltable_t *table, FILE *file) {
     }
 }
 
+void fuco_symboltable_add_synthetic(fuco_symboltable_t *table, 
+                                    fuco_scope_t *scope,
+                                    size_t *allocated, fuco_token_t *token, 
+                                    fuco_symbolid_t id) {
+    fuco_node_t *node = fuco_node_new(FUCO_NODE_TYPE_IDENTIFIER);
+
+    node->token = token;
+    node->symbol = fuco_symboltable_insert(table, scope, token, 
+                                           node, FUCO_SYMBOL_TYPE);
+    
+    table->synthetic = fuco_node_add_child(table->synthetic, node, allocated);
+
+    assert(id == node->symbol->id);
+}
+
 fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table,
                                        fuco_scope_t *scope,
                                        fuco_token_t *token,
@@ -225,6 +225,7 @@ fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table,
     symbol->def = def;
     symbol->value = NULL;
     symbol->obj = 0;
+    symbol->link = NULL;
 
     table->size++;
     chunk->size++;

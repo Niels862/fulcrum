@@ -57,8 +57,6 @@ int fuco_compiler_run(fuco_compiler_t *compiler) {
         return 1;
     }
 
-    fuco_map_write(&compiler->global.map, stderr, fuco_string_write, fuco_pointer_write);
-
     compiler->ir.label = compiler->table.size;
     fuco_ir_create_startup_object(&compiler->ir, entry->id);
     fuco_node_generate_ir(compiler->root, &compiler->ir, 0);

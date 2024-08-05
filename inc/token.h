@@ -54,6 +54,12 @@ typedef struct {
     fuco_tokentype_t type;
 } fuco_token_t;
 
+extern fuco_token_t null_token;
+
+extern fuco_token_t int_token;
+
+extern fuco_token_t float_token;
+
 extern fuco_token_descriptor_t const token_descriptors[];
 
 char *fuco_tokentype_string(fuco_tokentype_t type);
