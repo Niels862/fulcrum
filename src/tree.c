@@ -295,6 +295,18 @@ void fuco_node_validate(fuco_node_t *node) {
     }
 }
 
+bool fuco_node_type_match(fuco_node_t *node, fuco_node_t *other) {
+    switch (node->type) {
+        case FUCO_NODE_TYPE_IDENTIFIER:
+            assert(other->type == FUCO_NODE_TYPE_IDENTIFIER);
+
+            return node->symbol->id == other->symbol->id;
+
+        default:
+            FUCO_UNREACHED();
+    }
+}
+
 int fuco_node_resolve_global(fuco_node_t *node, 
                                       fuco_symboltable_t *table, 
                                       fuco_scope_t *scope) {    
@@ -335,9 +347,9 @@ int fuco_node_resolve_global(fuco_node_t *node,
 
 int fuco_node_resolve_local_propagate(fuco_node_t *node, 
                                       fuco_symboltable_t *table, 
-                                      fuco_scope_t *scope) {
+                                      fuco_scope_t *scope, fuco_node_t *ctx) {
     for (size_t i = 0; i < node->count; i++) {
-        if (fuco_node_resolve_local(node->children[i], table, scope)) {
+        if (fuco_node_resolve_local(node->children[i], table, scope, ctx)) {
             return 1;
         }
     }
@@ -358,7 +370,7 @@ int fuco_node_resolve_local_function(fuco_node_t *node,
     fuco_scope_t next;
     fuco_scope_init(&next, scope);
         
-    res = fuco_node_resolve_local_propagate(node, table, &next);
+    res = fuco_node_resolve_local_propagate(node, table, &next, node);
 
     fuco_scope_destruct(&next);
 
@@ -366,7 +378,7 @@ int fuco_node_resolve_local_function(fuco_node_t *node,
 }
 
 int fuco_node_resolve_call(fuco_node_t *node, fuco_symboltable_t *table, 
-                           fuco_scope_t *scope) {
+                           fuco_scope_t *scope, fuco_node_t *ctx) {
     
     assert(node->type == FUCO_NODE_CALL);
     
@@ -409,7 +421,7 @@ int fuco_node_resolve_call(fuco_node_t *node, fuco_symboltable_t *table,
         return 1;
     }
 
-    if (fuco_node_resolve_local_propagate(node, table, scope)) {
+    if (fuco_node_resolve_local_propagate(node, table, scope, ctx)) {
         return 1;
     }
 
@@ -418,18 +430,24 @@ int fuco_node_resolve_call(fuco_node_t *node, fuco_symboltable_t *table,
     return 0;
 }
 
+void fuco_node_resolve_local_id(fuco_node_t *node, fuco_symboltable_t *table, 
+                                fuco_symbolid_t id) {
+    node->datatype = fuco_symboltable_lookup(table, id)->def;
+}
+
 int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table, 
-                            fuco_scope_t *scope) {
+                            fuco_scope_t *scope, fuco_node_t *ctx) {    
+    fuco_node_t *t1, *t2;
+    
     switch (node->type) {
         case FUCO_NODE_EMPTY:
-        case FUCO_NODE_INTEGER:
             break;
 
         case FUCO_NODE_FILEBODY:
         case FUCO_NODE_BODY:
+        case FUCO_NODE_PARAM_LIST:
         case FUCO_NODE_ARG_LIST:
-        case FUCO_NODE_RETURN:
-            if (fuco_node_resolve_local_propagate(node, table, scope)) {
+            if (fuco_node_resolve_local_propagate(node, table, scope, ctx)) {
                 return 1;
             }
             break;
@@ -437,14 +455,6 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
         case FUCO_NODE_FUNCTION:
             if (fuco_node_resolve_local_function(node, table, scope)) {
                 return 1;
-            }
-            break;
-
-        case FUCO_NODE_PARAM_LIST:
-            for (size_t i = 0; i < node->count; i++) {
-                if (fuco_node_resolve_local(node->children[i], table, scope)) {
-                    return 1;
-                }
             }
             break;
 
@@ -456,7 +466,7 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
                 return 1;
             }
             
-            if (fuco_node_resolve_local_propagate(node, table, scope)) {
+            if (fuco_node_resolve_local_propagate(node, table, scope, ctx)) {
                 return 1;
             }
 
@@ -465,7 +475,7 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
             break;
 
         case FUCO_NODE_CALL:
-            if (fuco_node_resolve_call(node, table, scope)) {
+            if (fuco_node_resolve_call(node, table, scope, ctx)) {
                 return 1;
             }
             break;
@@ -483,6 +493,27 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
 
             node->datatype = node->symbol->def->datatype;
 
+            break;
+
+        case FUCO_NODE_INTEGER:
+            fuco_node_resolve_local_id(node, table, FUCO_SYMID_INT);
+            break;
+
+        case FUCO_NODE_RETURN:
+            if (fuco_node_resolve_local_propagate(node, table, scope, ctx)) {
+                return 1;
+            }
+
+            /* TODO temporary until implicit conversions are added */
+            t1 = ctx->children[FUCO_LAYOUT_FUNCTION_RET_TYPE];
+            t2 = node->children[FUCO_LAYOUT_RETURN_VALUE]->datatype;
+
+            /* FIXME ret type is not yet resolved */
+            if (!fuco_node_type_match(t1, t2)) {
+                fuco_syntax_error(&node->token->source, 
+                                  "no suitable conversion");
+                return 1;
+            }
             break;
 
         case FUCO_NODE_TYPE_IDENTIFIER:

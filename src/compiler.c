@@ -53,7 +53,7 @@ int fuco_compiler_run(fuco_compiler_t *compiler) {
     }
 
     if (fuco_node_resolve_local(compiler->root, &compiler->table, 
-                                &compiler->global)) {
+                                &compiler->global, NULL)) {
         return 1;
     }
 

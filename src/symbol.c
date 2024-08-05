@@ -237,3 +237,18 @@ fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table,
 
     return symbol;
 }
+
+fuco_symbol_t *fuco_symboltable_lookup(fuco_symboltable_t *table, 
+                                          fuco_symbolid_t id) {
+    size_t i = id;
+    fuco_symbol_chunk_t *chunk = table->back;
+
+    while (i >= chunk->size && chunk != NULL) {
+        i -= chunk->size;
+        chunk = chunk->next;
+    }
+
+    assert(chunk != NULL);
+
+    return &chunk->data[i];
+}

@@ -109,23 +109,28 @@ void fuco_node_unparse_write(fuco_node_t *node, FILE *file);
 
 void fuco_node_validate(fuco_node_t *node);
 
+bool fuco_node_type_match(fuco_node_t *node, fuco_node_t *other);
+
 int fuco_node_resolve_global(fuco_node_t *node, 
                              fuco_symboltable_t *table, 
                              fuco_scope_t *scope);
 
 int fuco_node_resolve_local_propagate(fuco_node_t *node, 
                                       fuco_symboltable_t *table, 
-                                      fuco_scope_t *scope);
+                                      fuco_scope_t *scope, fuco_node_t *ctx);
 
 int fuco_node_resolve_local_function(fuco_node_t *node, 
                                      fuco_symboltable_t *table, 
                                      fuco_scope_t *scope);
 
 int fuco_node_resolve_call(fuco_node_t *node, fuco_symboltable_t *table, 
-                           fuco_scope_t *scope);
+                           fuco_scope_t *scope, fuco_node_t *ctx);
+
+void fuco_node_resolve_local_id(fuco_node_t *node, fuco_symboltable_t *table, 
+                                fuco_symbolid_t id);
 
 int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table, 
-                            fuco_scope_t *scope);
+                            fuco_scope_t *scope, fuco_node_t *ctx);
 
 void fuco_node_generate_ir_propagate(fuco_node_t *node, fuco_ir_t *ir, 
                                      size_t obj);
