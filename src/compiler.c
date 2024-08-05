@@ -69,6 +69,9 @@ int fuco_compiler_run(fuco_compiler_t *compiler) {
         return 1;
     }
     
+    fuco_node_unparse_write(compiler->root, stderr);
+    fprintf(stderr, "\n");
+
     fuco_node_pretty_write(compiler->root, stderr);
 
     fuco_symboltable_write(&compiler->table, stderr);

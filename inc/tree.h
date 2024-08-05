@@ -68,6 +68,7 @@ struct fuco_node_t {
     fuco_nodetype_t type;
     fuco_token_t *token;
     fuco_symbol_t *symbol;
+    struct fuco_node_t *datatype;
     size_t count;
     struct fuco_node_t *children[];
 };
@@ -103,6 +104,8 @@ void fuco_node_set_child(fuco_node_t *node, fuco_node_t *child,
 void fuco_node_write(fuco_node_t *node, FILE *file);
 
 void fuco_node_pretty_write(fuco_node_t *node, FILE *file);
+
+void fuco_node_unparse_write(fuco_node_t *node, FILE *file);
 
 void fuco_node_validate(fuco_node_t *node);
 

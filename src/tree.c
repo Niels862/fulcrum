@@ -27,6 +27,7 @@ fuco_node_t *fuco_node_base_new(fuco_nodetype_t type, size_t allocated,
     node->type = type;
     node->token = NULL;
     node->symbol = NULL;
+    node->datatype = NULL;
     node->count = count;
 
     if (allocated > 0) {
@@ -179,6 +180,11 @@ void fuco_node_pretty_write(fuco_node_t *node, FILE *file) {
         if (node->symbol != NULL) {
             fprintf(file, " (id=%d)", node->symbol->id);
         }
+
+        if (node->datatype != NULL) {
+            fprintf(file, " :: ");
+            fuco_node_unparse_write(node->datatype, file);
+        }
         
         fprintf(file, "\n");
 
@@ -190,6 +196,92 @@ void fuco_node_pretty_write(fuco_node_t *node, FILE *file) {
         }
 
         depth--;
+    }
+}
+
+void fuco_node_unparse_write(fuco_node_t *node, FILE *file) {
+    fuco_node_t *sub;
+    
+    switch (node->type) {
+        case FUCO_NODE_EMPTY:
+            FUCO_UNREACHED();
+
+        case FUCO_NODE_FILEBODY:
+            for (size_t i = 0; i < node->count; i++) {
+                fuco_node_unparse_write(node->children[i], file);
+                fprintf(file, " ");
+            }
+            break;
+
+        case FUCO_NODE_BODY:
+            fprintf(file, "{ ");
+            for (size_t i = 0; i < node->count; i++) {
+                fuco_node_unparse_write(node->children[i], file);
+                fprintf(file, " ");
+            }
+            fprintf(file, "}");
+            break;
+
+        case FUCO_NODE_FUNCTION:
+            fprintf(file, "def %s", node->token->lexeme);
+
+            sub = node->children[FUCO_LAYOUT_FUNCTION_PARAMS];
+            fuco_node_unparse_write(sub, file);
+
+            fprintf(file, " -> ");
+
+            sub = node->children[FUCO_LAYOUT_FUNCTION_RET_TYPE];
+            fuco_node_unparse_write(sub, file);
+
+            fprintf(file, " ");
+
+            sub = node->children[FUCO_LAYOUT_FUNCTION_BODY];
+            fuco_node_unparse_write(sub, file);
+            break;
+
+        case FUCO_NODE_PARAM_LIST:
+        case FUCO_NODE_ARG_LIST:    
+            fprintf(file, "(");
+            for (size_t i = 0; i < node->count; i++) {
+                if (i > 0) {
+                    fprintf(file, ", ");
+                }
+
+                fuco_node_unparse_write(node->children[i], file);
+            }
+            fprintf(file, ")");
+            break;
+
+        case FUCO_NODE_PARAM:
+            fprintf(file, "%s: ", node->token->lexeme);
+            
+            sub = node->children[FUCO_LAYOUT_PARAM_TYPE];
+            fuco_node_unparse_write(sub, file);
+            break;
+
+        case FUCO_NODE_CALL:
+            fprintf(file, "%s", node->token->lexeme);
+
+            sub = node->children[FUCO_LAYOUT_CALL_ARGS];
+            fuco_node_unparse_write(sub, file);
+            break;
+
+        case FUCO_NODE_VARIABLE:
+        case FUCO_NODE_TYPE_IDENTIFIER:
+            fprintf(file, "%s", node->token->lexeme);
+            break;
+
+        case FUCO_NODE_INTEGER:
+            fprintf(file, "%ld", *(uint64_t *)node->token->data);
+            break;
+
+        case FUCO_NODE_RETURN:
+            fprintf(file, "return ");
+
+            sub = node->children[FUCO_LAYOUT_RETURN_VALUE];
+            fuco_node_unparse_write(sub, file);
+            fprintf(file, ";");
+            break;
     }
 }
 
@@ -320,6 +412,8 @@ int fuco_node_resolve_call(fuco_node_t *node, fuco_symboltable_t *table,
     if (fuco_node_resolve_local_propagate(node, table, scope)) {
         return 1;
     }
+
+    node->datatype = node->symbol->def->children[FUCO_LAYOUT_FUNCTION_RET_TYPE];
 
     return 0;
 }

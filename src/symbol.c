@@ -89,8 +89,18 @@ fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope,
                 fuco_collision_error(token);
                 return NULL;
 
-            case FUCO_SYMBOL_TYPE:
             case FUCO_SYMBOL_FUNCTION:
+                if (prev_symbol->type == FUCO_SYMBOL_TYPE) {
+                    if (prev_symbol->link != NULL) {
+                        symbol->link = prev_symbol->link;
+                    }
+
+                    prev_symbol->link = symbol;
+                    break;
+                }
+
+                __attribute__((fallthrough));
+            case FUCO_SYMBOL_TYPE:
                 if (prev_symbol->type == FUCO_SYMBOL_FUNCTION) {
                     *value = symbol;
                     symbol->link = prev_symbol;
@@ -98,6 +108,7 @@ fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope,
                     fuco_collision_error(token);
                     return NULL;
                 }
+
         }
     }
 
@@ -177,12 +188,18 @@ void fuco_symboltable_write(fuco_symboltable_t *table, FILE *file) {
     while (chunk != NULL) {
         for (size_t i = 0; i < chunk->size; i++) {
             fuco_symbol_t *symbol = &chunk->data[i];
-            fprintf(file, " %*s: %*d %6s (def=%d,val=%d,obj=%ld)\n", 
+            fprintf(file, " %*s: %*d %6s (def=%d,val=%d,obj=%ld)", 
                     (int)max,
                     symbol->token->lexeme, fuco_ceil_log(table->size, 10),
                     symbol->id, fuco_symboltype_string(symbol->type),
                     symbol->def != NULL,
                     symbol->value != NULL, symbol->obj);
+            
+            if (symbol->link != NULL) {
+                fprintf(file, " => %d", symbol->link->id);
+            }
+
+            fprintf(file, "\n");
         }
 
         chunk = chunk->next;
