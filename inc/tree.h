@@ -68,7 +68,10 @@ struct fuco_node_t {
     fuco_nodetype_t type;
     fuco_token_t *token;
     fuco_symbol_t *symbol;
-    struct fuco_node_t *datatype;
+    union {
+        struct fuco_node_t *datatype;
+        fuco_scope_t *scope;
+    } data;
     size_t count;
     struct fuco_node_t *children[];
 };

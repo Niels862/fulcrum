@@ -27,7 +27,7 @@ fuco_node_t *fuco_node_base_new(fuco_nodetype_t type, size_t allocated,
     node->type = type;
     node->token = NULL;
     node->symbol = NULL;
-    node->datatype = NULL;
+    node->data.datatype = NULL;
     node->count = count;
 
     if (allocated > 0) {
@@ -181,9 +181,9 @@ void fuco_node_pretty_write(fuco_node_t *node, FILE *file) {
             fprintf(file, " (id=%d)", node->symbol->id);
         }
 
-        if (node->datatype != NULL) {
+        if (node->data.datatype != NULL) {
             fprintf(file, " :: ");
-            fuco_node_unparse_write(node->datatype, file);
+            fuco_node_unparse_write(node->data.datatype, file);
         }
         
         fprintf(file, "\n");
@@ -425,20 +425,19 @@ int fuco_node_resolve_call(fuco_node_t *node, fuco_symboltable_t *table,
         return 1;
     }
 
-    node->datatype = node->symbol->def->children[FUCO_LAYOUT_FUNCTION_RET_TYPE];
+    fuco_node_t *def = node->symbol->def;
+    node->data.datatype = def->children[FUCO_LAYOUT_FUNCTION_RET_TYPE];
 
     return 0;
 }
 
 void fuco_node_resolve_local_id(fuco_node_t *node, fuco_symboltable_t *table, 
                                 fuco_symbolid_t id) {
-    node->datatype = fuco_symboltable_lookup(table, id)->def;
+    node->data.datatype = fuco_symboltable_lookup(table, id)->def;
 }
 
 int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table, 
-                            fuco_scope_t *scope, fuco_node_t *ctx) {    
-    fuco_node_t *t1, *t2;
-    
+                            fuco_scope_t *scope, fuco_node_t *ctx) {        
     switch (node->type) {
         case FUCO_NODE_EMPTY:
             break;
@@ -470,7 +469,7 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
                 return 1;
             }
 
-            node->datatype = node->children[FUCO_LAYOUT_PARAM_TYPE];
+            node->data.datatype = node->children[FUCO_LAYOUT_PARAM_TYPE];
 
             break;
 
@@ -491,7 +490,7 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
                 return 1;
             }
 
-            node->datatype = node->symbol->def->datatype;
+            node->data.datatype = node->symbol->def->data.datatype;
 
             break;
 
@@ -504,16 +503,8 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
                 return 1;
             }
 
-            /* TODO temporary until implicit conversions are added */
-            t1 = ctx->children[FUCO_LAYOUT_FUNCTION_RET_TYPE];
-            t2 = node->children[FUCO_LAYOUT_RETURN_VALUE]->datatype;
+            /* TODO type checks and conversions */
 
-            /* FIXME ret type is not yet resolved */
-            if (!fuco_node_type_match(t1, t2)) {
-                fuco_syntax_error(&node->token->source, 
-                                  "no suitable conversion");
-                return 1;
-            }
             break;
 
         case FUCO_NODE_TYPE_IDENTIFIER:
