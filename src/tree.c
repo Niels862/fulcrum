@@ -94,6 +94,7 @@ fuco_node_t *fuco_node_set_count(fuco_node_t *node, size_t count) {
 
 void fuco_node_free(fuco_node_t *node) {
     switch (node->type) {
+        case FUCO_NODE_FILEBODY:
         case FUCO_NODE_FUNCTION:
             fuco_scope_destruct(node->data.scope);
             free(node->data.scope);
