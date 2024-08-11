@@ -6,8 +6,7 @@
 void fuco_compiler_init(fuco_compiler_t *compiler, char *filename) {
     fuco_lexer_init(&compiler->lexer, filename);
     fuco_parser_init(&compiler->parser);
-    fuco_scope_init(&compiler->global, NULL);
-    fuco_symboltable_init(&compiler->table, &compiler->global);
+    fuco_symboltable_init(&compiler->table);
     fuco_ir_init(&compiler->ir);
     fuco_bytecode_init(&compiler->bytecode);
     compiler->root = NULL;
@@ -17,7 +16,6 @@ void fuco_compiler_init(fuco_compiler_t *compiler, char *filename) {
 void fuco_compiler_destruct(fuco_compiler_t *compiler) {
     fuco_lexer_destruct(&compiler->lexer);
     fuco_symboltable_destruct(&compiler->table);
-    fuco_scope_destruct(&compiler->global);
     fuco_ir_destruct(&compiler->ir);
     fuco_bytecode_destruct(&compiler->bytecode);
 
@@ -40,20 +38,23 @@ int fuco_compiler_run(fuco_compiler_t *compiler) {
         return 1;
     }
 
-    if (fuco_node_resolve_global(compiler->root, &compiler->table, 
-                                 &compiler->global)) {
+    fuco_node_setup_scopes(compiler->root, NULL);
+
+    fuco_scope_t *global = fuco_node_get_scope(compiler->root, NULL);
+
+    fuco_symboltable_setup(&compiler->table, global);
+
+    if (fuco_node_resolve_global(compiler->root, &compiler->table, NULL)) {
+        return 1;
+    }
+
+    if (fuco_node_resolve_local(compiler->root, &compiler->table, NULL, NULL)) {
         return 1;
     }
 
     fuco_symbol_t *entry;
-    if ((entry = fuco_scope_lookup(&compiler->global, "main",
-                                   NULL, false)) == NULL) {
+    if ((entry = fuco_scope_lookup(global, "main", NULL, false)) == NULL) {
         fuco_syntax_error(NULL, "entry point '%s' was not defined", "main");
-        return 1;
-    }
-
-    if (fuco_node_resolve_local(compiler->root, &compiler->table, 
-                                &compiler->global, NULL)) {
         return 1;
     }
 

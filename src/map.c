@@ -83,7 +83,7 @@ void fuco_map_write(fuco_map_t *map, FILE *file, fuco_write_t write_key_func,
 
     fprintf(file, "{\n");
 
-    for (size_t i = 0; i < map->size; i++) {
+    for (size_t i = 0; i < map->cap; i++) {
         fuco_map_entry_t *entry = map->data[i];
 
         while (entry != NULL) {
@@ -100,6 +100,7 @@ void fuco_map_write(fuco_map_t *map, FILE *file, fuco_write_t write_key_func,
         }
     }
 
+    assert(size == map->size);
     fprintf(file, "\n} (%ld entries)\n", size);
 }
 

@@ -10,7 +10,6 @@
 typedef struct {
     fuco_lexer_t lexer;    
     fuco_parser_t parser;
-    fuco_scope_t global;
     fuco_symboltable_t table;
     fuco_ir_t ir;
     fuco_bytecode_t bytecode;

@@ -63,7 +63,10 @@ struct fuco_symboltable_t {
     fuco_symbol_chunk_t *back;
     fuco_symbol_chunk_t *front;
     size_t size;
-    fuco_node_t *synthetic;
+    struct {
+        fuco_node_t *root;
+        size_t allocated;
+    } synthetic;
 };
 
 char *fuco_symboltype_string(fuco_symboltype_t type);
@@ -89,15 +92,16 @@ fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope,
 
 fuco_symbol_chunk_t *fuco_symbol_chunk_new();
 
-void fuco_symboltable_init(fuco_symboltable_t *table, fuco_scope_t *global);
+void fuco_symboltable_init(fuco_symboltable_t *table);
 
 void fuco_symboltable_destruct(fuco_symboltable_t *table);
 
 void fuco_symboltable_write(fuco_symboltable_t *table, FILE *file);
 
+void fuco_symboltable_setup(fuco_symboltable_t *table, fuco_scope_t *global);
+
 void fuco_symboltable_add_synthetic(fuco_symboltable_t *table, 
-                                    fuco_scope_t *scope,
-                                    size_t *allocated, fuco_token_t *token, 
+                                    fuco_scope_t *scope, fuco_token_t *token, 
                                     fuco_symbolid_t id);
 
 fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table,
