@@ -2,6 +2,7 @@
 #define FUCO_UTILS_H
 
 #include "textsource.h"
+#include <stdlib.h>
 #include <stdbool.h>
 
 #define FUCO_ANSI_RED "\033[91m"
@@ -10,11 +11,14 @@
 #define FUCO_UNUSED(p) (void)(p)
 
 /* exit(1) used to avoid compiler warnings */
-#define FUCO_UNREACHED() (assert(true), exit(1))
+#define FUCO_UNREACHED() \
+        fuco_fatal_error(__FILE__, __LINE__, "executed unreachable section")
 
-#define FUCO_NOT_IMPLEMENTED() fuco_not_implemented(__FILE__, __LINE__)
+#define FUCO_NOT_IMPLEMENTED() \
+        fuco_fatal_error(__FILE__, __LINE__, "not implemented")
 
-void fuco_not_implemented(char const *file, int line);
+void fuco_fatal_error(char const *file, int line, 
+                      char const *msg) __attribute__((noreturn));
 
 void fuco_syntax_error(fuco_textsource_t *source, char const *format, ...);
 

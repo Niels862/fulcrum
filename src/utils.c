@@ -5,9 +5,9 @@
 #include <assert.h>
 #include <stdarg.h>
 
-void fuco_not_implemented(char const *file, int line) {
-    fprintf(stderr, "%s:%d: not implemented\n", file, line);
-    exit(1);
+void fuco_fatal_error(char const *file, int line, char const *msg) {
+    fprintf(stderr, "%s:%d: %s\n", file, line, msg);
+    abort();
 }
 
 void fuco_syntax_error(fuco_textsource_t *source, char const *format, ...) {

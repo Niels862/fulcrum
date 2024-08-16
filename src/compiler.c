@@ -44,7 +44,11 @@ int fuco_compiler_run(fuco_compiler_t *compiler) {
 
     fuco_symboltable_setup(&compiler->table, global);
 
-    if (fuco_node_resolve_global(compiler->root, &compiler->table, NULL)) {
+    if (fuco_node_resolve_datatypes(compiler->root, &compiler->table, NULL)) {
+        return 1;
+    }
+
+    if (fuco_node_resolve_functions(compiler->root, &compiler->table, NULL)) {
         return 1;
     }
 
