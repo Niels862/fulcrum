@@ -76,6 +76,13 @@ struct fuco_node_t {
     struct fuco_node_t *children[];
 };
 
+typedef enum {
+    FUCO_TYPEMATCH_NOMATCH, 
+    FUCO_TYPEMATCH_MATCH,
+
+    FUCO_TYPEMATCH_N /* amount of options for type matches */
+} fuco_typematch_t;
+
 extern fuco_node_descriptor_t node_descriptors[];
 
 fuco_node_t *fuco_node_base_new(fuco_nodetype_t type, size_t allocated, 
@@ -114,7 +121,7 @@ void fuco_node_validate(fuco_node_t *node);
 
 bool fuco_node_has_type(fuco_node_t *node);
 
-bool fuco_node_type_match(fuco_node_t *node, fuco_node_t *other);
+fuco_typematch_t fuco_node_type_match(fuco_node_t *node, fuco_node_t *other);
 
 void fuco_node_setup_scopes(fuco_node_t *node, fuco_scope_t *scope);
 
@@ -123,7 +130,7 @@ fuco_scope_t *fuco_node_get_scope(fuco_node_t *node, fuco_scope_t *outer);
 int fuco_node_resolve_datatypes(fuco_node_t *node, fuco_symboltable_t *table, 
                                 fuco_scope_t *outer);
 
-int fuco_node_resolve_types(fuco_node_t *node, fuco_symboltable_t *table, 
+int fuco_node_resolve_type(fuco_node_t *node, fuco_symboltable_t *table, 
                             fuco_scope_t *outer);
 
 int fuco_node_resolve_functions(fuco_node_t *node, fuco_symboltable_t *table, 

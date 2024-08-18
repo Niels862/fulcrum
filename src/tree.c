@@ -96,8 +96,10 @@ void fuco_node_free(fuco_node_t *node) {
     switch (node->type) {
         case FUCO_NODE_FILEBODY:
         case FUCO_NODE_FUNCTION:
-            fuco_scope_destruct(node->data.scope);
-            free(node->data.scope);
+            if (node->data.scope != NULL) {
+                fuco_scope_destruct(node->data.scope);
+                free(node->data.scope);
+            }
             break;
 
         default:
@@ -333,12 +335,16 @@ bool fuco_node_has_type(fuco_node_t *node) {
     FUCO_UNREACHED();
 }
 
-bool fuco_node_type_match(fuco_node_t *node, fuco_node_t *other) {
+fuco_typematch_t fuco_node_type_match(fuco_node_t *node, fuco_node_t *other) {
     switch (node->type) {
         case FUCO_NODE_TYPE_IDENTIFIER:
             assert(other->type == FUCO_NODE_TYPE_IDENTIFIER);
 
-            return node->symbol->id == other->symbol->id;
+            if (node->symbol->id == other->symbol->id) {
+                return FUCO_TYPEMATCH_MATCH;
+            } else {
+                return FUCO_TYPEMATCH_NOMATCH;
+            }
 
         default:
             FUCO_UNREACHED();
@@ -402,7 +408,7 @@ int fuco_node_resolve_datatypes(fuco_node_t *node, fuco_symboltable_t *table,
     return 0;
 }
 
-int fuco_node_resolve_types(fuco_node_t *node, fuco_symboltable_t *table, 
+int fuco_node_resolve_type(fuco_node_t *node, fuco_symboltable_t *table, 
                             fuco_scope_t *outer) {
     /* Types should not have nested scopes, tested in assertion */
     fuco_scope_t *scope = fuco_node_get_scope(node, outer);
@@ -433,7 +439,7 @@ int fuco_node_resolve_types(fuco_node_t *node, fuco_symboltable_t *table,
 int fuco_node_resolve_functions(fuco_node_t *node, fuco_symboltable_t *table, 
                                 fuco_scope_t *outer) {
     fuco_scope_t *scope = fuco_node_get_scope(node, outer);
-    fuco_node_t *params, *type;
+    fuco_node_t *params, *type, *rettype;
 
     switch (node->type) {
         case FUCO_NODE_FUNCTION:
@@ -448,6 +454,10 @@ int fuco_node_resolve_functions(fuco_node_t *node, fuco_symboltable_t *table,
                 return 1;
             }
 
+            rettype = node->children[FUCO_LAYOUT_FUNCTION_RET_TYPE];
+            if (fuco_node_resolve_type(rettype, table, outer)) {
+                return 1;
+            }
             break;
 
         case FUCO_NODE_PARAM:
@@ -459,7 +469,7 @@ int fuco_node_resolve_functions(fuco_node_t *node, fuco_symboltable_t *table,
             }
             
             type = node->children[FUCO_LAYOUT_PARAM_TYPE];
-            if (fuco_node_resolve_types(type, table, scope)) {
+            if (fuco_node_resolve_type(type, table, scope)) {
                 return 1;
             }
 
@@ -508,10 +518,39 @@ int fuco_node_resolve_call(fuco_node_t *node, fuco_symboltable_t *table,
     
     assert(node->type == FUCO_NODE_CALL);
     
+    if (fuco_node_resolve_local_propagate(node, table, scope, ctx)) {
+        return 1;
+    }
+
+    /* FUTURE: enable subscopes to extend overloads instead of only 
+       considering most recent overloads */
     fuco_symbol_t *symbol = fuco_scope_lookup_token(scope, node->token);
 
     if (symbol == NULL) {
         return 1;
+    }
+
+    switch (symbol->type) {
+        case FUCO_SYMBOL_FUNCTION:
+            break;
+
+        case FUCO_SYMBOL_TYPE:
+            symbol = symbol->link;
+
+            if (symbol == NULL) {
+                fuco_syntax_error(&node->token->source, 
+                                  "no conversions present for '%s'", 
+                                  node->token->lexeme);
+                return 1;
+            }
+            break;
+
+        case FUCO_SYMBOL_NULL:
+            FUCO_UNREACHED();
+
+        case FUCO_SYMBOL_VARIABLE:
+            /* FUTURE: calling variables / indirect functions */
+            FUCO_NOT_IMPLEMENTED();
     }
 
     /* TODO message */
@@ -520,34 +559,72 @@ int fuco_node_resolve_call(fuco_node_t *node, fuco_symboltable_t *table,
         return 1;
     }
 
+    fuco_symbol_t *candidates[FUCO_TYPEMATCH_N];
+    bool multiple[FUCO_TYPEMATCH_N];
+    for (size_t i = 0; i < FUCO_TYPEMATCH_N; i++) {
+        candidates[i] = NULL;
+        multiple[i] = false;
+    }
+
     fuco_node_t *args = node->children[FUCO_LAYOUT_CALL_ARGS];
 
     while (symbol != NULL) {
         fuco_node_t *func = symbol->def;
         fuco_node_t *params = func->children[FUCO_LAYOUT_FUNCTION_PARAMS];
+        fuco_typematch_t match = FUCO_TYPEMATCH_MATCH, arg_match;
+
+        fuco_node_t *arg_type, *param, *param_type;
 
         if (args->count == params->count) {
-            if (node->symbol != NULL) {
-                fuco_syntax_error(&node->token->source, 
-                                  "multiple candidates for call to '%s'", 
-                                  node->token->lexeme);
-                return 1;
+            for (size_t i = 0; i < args->count; i++) {
+                arg_type = args->children[i]->data.datatype;
+                param = params->children[i];
+                param_type = param->children[FUCO_LAYOUT_PARAM_TYPE];
+
+                assert(arg_type != NULL);
+                assert(param_type != NULL);
+
+                arg_match = fuco_node_type_match(arg_type, param_type);
+                
+                match = FUCO_MIN(match, arg_match);
+
+                /* early termination if not a match */
+                if (match == FUCO_TYPEMATCH_NOMATCH) {
+                    break;
+                }
             }
 
-            node->symbol = symbol;
+            if (candidates[match] != NULL) {
+                multiple[match] = true;
+            }
+
+            candidates[match] = symbol;
         }
 
         symbol = symbol->link;
     }
     
+    /* searches for best matching ('highest') overload */
+    for (size_t i = FUCO_TYPEMATCH_N; i > FUCO_TYPEMATCH_NOMATCH + 1; i--) {
+        size_t idx = i - 1;
+        
+        if (candidates[idx] != NULL) {
+            if (multiple[idx]) {
+                fuco_syntax_error(&node->token->source, 
+                                  "multiple candidates for call to '%s'", 
+                                  node->token->lexeme);
+                return 1;
+            } else {
+                node->symbol = candidates[idx];
+                break;
+            }
+        }
+    }
+
     if (node->symbol == NULL) {
         fuco_syntax_error(&node->token->source, 
                           "no matching candidate for call to '%s'", 
                           node->token->lexeme);
-        return 1;
-    }
-
-    if (fuco_node_resolve_local_propagate(node, table, scope, ctx)) {
         return 1;
     }
 

@@ -1,4 +1,8 @@
-def f(x: Int, y: Int) -> Int {
+def f(x: Float, y: Int) -> Int {
+    return x;
+}
+
+def Float(x: Int) -> Float {
     return x;
 }
 
@@ -7,7 +11,7 @@ def main() -> Int {
 }
 
 def g() -> Int {
-    return f(69, 420);
+    return f(Float(69), 420);
 }
 
 def g(x: Int) -> Int {
