@@ -9,13 +9,20 @@ typedef uint64_t fuco_instr_t;
 typedef uint32_t fuco_pointer_t;
 
 typedef enum {
-    FUCO_OPCODE_NOP = 0,
+    FUCO_OPCODE_NOP,
     FUCO_OPCODE_CALL,
     FUCO_OPCODE_RETQ,
     FUCO_OPCODE_PUSHQ,
     FUCO_OPCODE_LOADQ,
     FUCO_OPCODE_RLOADQ,
-    FUCO_OPCODE_EXIT
+    FUCO_OPCODE_IADD,
+    FUCO_OPCODE_ISUB,
+    FUCO_OPCODE_IMUL,
+    FUCO_OPCODE_IDIV,
+    FUCO_OPCODE_IMOD,
+    FUCO_OPCODE_EXIT,
+
+    FUCO_OPCODES_N
 } fuco_opcode_t;
 
 #define FUCO_GET_OPCODE(instr) ((instr) & 0xFFFF)
@@ -37,9 +44,8 @@ typedef enum {
 
 typedef struct {
     fuco_opcode_t opcode;
-    char *mnemonic;
-    fuco_instr_layout_t layout;
-} fuco_instr_descriptor_t;
+    char *string;
+} fuco_mnemonic_t;
 
 #define FUCO_BYTECODE_INIT_SIZE 1024
 
@@ -49,9 +55,11 @@ typedef struct {
     size_t cap;
 } fuco_bytecode_t;
 
-extern fuco_instr_descriptor_t instr_descriptors[];
-
 void fuco_instr_write(fuco_instr_t instr, FILE *file);
+
+char *fuco_opcode_get_mnemonic(fuco_opcode_t opcode);
+
+fuco_instr_layout_t fuco_opcode_get_layout(fuco_opcode_t opcode);
 
 void fuco_bytecode_init(fuco_bytecode_t *bytecode);
 

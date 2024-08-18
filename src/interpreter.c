@@ -43,7 +43,9 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
 
     uint64_t retaddr, retbp;
     uint64_t retq;
-    int64_t exit_code = -1; /* TODO should be i32 when conversions work */
+    int64_t exit_code = -1;
+    
+    uint64_t x1, x2, y;
 
     bool running = true;
 
@@ -94,15 +96,54 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
                 fuco_program_push(&program, &immq, sizeof(uint64_t));
                 break;
 
+            case FUCO_OPCODE_IADD:
+                fuco_program_pop(&program, &x2, sizeof(x2));
+                fuco_program_pop(&program, &x1, sizeof(x1));
+                y = x1 + x2;
+                fuco_program_push(&program, &y, sizeof(retq));
+                break;
+
+            case FUCO_OPCODE_ISUB:
+                fuco_program_pop(&program, &x2, sizeof(x2));
+                fuco_program_pop(&program, &x1, sizeof(x1));
+                y = x1 - x2;
+                fuco_program_push(&program, &y, sizeof(retq));
+                break;
+
+            case FUCO_OPCODE_IMUL:
+                fuco_program_pop(&program, &x2, sizeof(x2));
+                fuco_program_pop(&program, &x1, sizeof(x1));
+                y = x1 * x2;
+                fuco_program_push(&program, &y, sizeof(retq));
+                break;
+
+            case FUCO_OPCODE_IDIV: /* TODO: 0 div */
+                fuco_program_pop(&program, &x2, sizeof(x2));
+                fuco_program_pop(&program, &x1, sizeof(x1));
+                y = x1 / x2;
+                fuco_program_push(&program, &y, sizeof(retq));
+                break;
+
+            case FUCO_OPCODE_IMOD: /* TODO: arithmetic exceptions */
+                fuco_program_pop(&program, &x2, sizeof(x2));
+                fuco_program_pop(&program, &x1, sizeof(x1));
+                y = x1 % x2;
+                fuco_program_push(&program, &y, sizeof(retq));
+                break;
+
             case FUCO_OPCODE_EXIT:
                 fuco_program_pop(&program, &exit_code, sizeof(exit_code));
                 running = false;
                 break;
 
+            case FUCO_OPCODES_N:
+                break;
+#if 0
             default:
                 fprintf(stderr, "Unhandled instruction at %ld: " 
                         FUCO_INSTR_FORMAT "\n", program.ip, instr);
                 return exit_code; /* TODO fix */
+#endif
         }
 
         program.ip++;

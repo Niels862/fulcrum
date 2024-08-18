@@ -6,7 +6,7 @@
 
 void fuco_ir_unit_write(fuco_ir_unit_t *unit, FILE *file) {
     if (unit->attrs & FUCO_IR_INSTR) {
-        fprintf(file, "  %s", instr_descriptors[unit->opcode].mnemonic);
+        fprintf(file, "  %s", fuco_opcode_get_mnemonic(unit->opcode));
         
         if (unit->attrs & FUCO_IR_INCLUDES_DATA) {
             if (unit->attrs & FUCO_IR_REFERENCES_LABEL) {
@@ -108,7 +108,7 @@ fuco_ir_unit_t *fuco_ir_add_unit(fuco_ir_t *ir, size_t obj,
 }
 
 void fuco_ir_add_instr(fuco_ir_t *ir, size_t obj, fuco_opcode_t opcode) {
-    assert(instr_descriptors[opcode].layout == FUCO_INSTR_LAYOUT_NO_IMM);
+    assert(fuco_opcode_get_layout(opcode) == FUCO_INSTR_LAYOUT_NO_IMM);
     
     fuco_ir_add_unit(ir, obj, opcode, FUCO_IR_INSTR);
 }
@@ -122,7 +122,7 @@ void fuco_ir_add_label(fuco_ir_t *ir, size_t obj, fuco_ir_label_t label) {
 
 void fuco_ir_add_instr_imm48(fuco_ir_t *ir, size_t obj, fuco_opcode_t opcode, 
                              uint64_t data) {
-    assert(instr_descriptors[opcode].layout == FUCO_INSTR_LAYOUT_IMM48);
+    assert(fuco_opcode_get_layout(opcode) == FUCO_INSTR_LAYOUT_IMM48);
 
     fuco_ir_unit_t *unit = fuco_ir_add_unit(ir, obj, opcode, 
                                             FUCO_IR_INSTR); 
@@ -134,7 +134,7 @@ void fuco_ir_add_instr_imm48(fuco_ir_t *ir, size_t obj, fuco_opcode_t opcode,
 void fuco_ir_add_instr_imm48_label(fuco_ir_t *ir, size_t obj, 
                                    fuco_opcode_t opcode, 
                                    fuco_ir_label_t label) {
-    assert(instr_descriptors[opcode].layout == FUCO_INSTR_LAYOUT_IMM48);
+    assert(fuco_opcode_get_layout(opcode) == FUCO_INSTR_LAYOUT_IMM48);
 
     fuco_ir_unit_t *unit = fuco_ir_add_unit(ir, obj, opcode, 
                                             FUCO_IR_INSTR); 
@@ -211,7 +211,7 @@ void fuco_ir_assemble(fuco_ir_t *ir, fuco_bytecode_t *bytecode) {
                     imm = 0;
                 }
 
-                switch (instr_descriptors[unit->opcode].layout) {
+                switch (fuco_opcode_get_layout(unit->opcode)) {
                     case FUCO_INSTR_LAYOUT_NO_IMM:
                         break;
 

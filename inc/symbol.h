@@ -111,6 +111,9 @@ fuco_symbol_t *fuco_symboltable_insert(fuco_symboltable_t *table,
                                        fuco_symboltype_t type);
 
 fuco_symbol_t *fuco_symboltable_lookup(fuco_symboltable_t *table, 
-                                          fuco_symbolid_t id);
+                                       fuco_symbolid_t id);
+
+fuco_node_t *fuco_symboltable_get_type(fuco_symboltable_t *table, 
+                                       fuco_symbolid_t id);
 
 #endif

@@ -253,3 +253,13 @@ fuco_symbol_t *fuco_symboltable_lookup(fuco_symboltable_t *table,
 
     return &chunk->data[i];
 }
+
+fuco_node_t *fuco_symboltable_get_type(fuco_symboltable_t *table, 
+                                       fuco_symbolid_t id) {
+    fuco_symbol_t *symbol = fuco_symboltable_lookup(table, id);
+
+    assert(symbol->type == FUCO_SYMBOL_TYPE);
+    assert(symbol->def != NULL);
+
+    return symbol->def;
+}

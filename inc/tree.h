@@ -13,6 +13,7 @@ typedef enum {
     FUCO_NODE_PARAM_LIST,
     FUCO_NODE_PARAM,
     FUCO_NODE_CALL,
+    FUCO_NODE_INSTR,
     FUCO_NODE_ARG_LIST,
     FUCO_NODE_VARIABLE,
     FUCO_NODE_INTEGER,
@@ -42,6 +43,9 @@ typedef enum {
     FUCO_LAYOUT_CALL_ARGS = 0,
     FUCO_LAYOUT_CALL_N,
 
+    FUCO_LAYOUT_INSTR_ARGS = 0,
+    FUCO_LAYOUT_INSTR_N,
+
     FUCO_LAYOUT_VARIABLE_N = 0,
 
     FUCO_LAYOUT_INTEGER_N = 0,
@@ -64,6 +68,14 @@ typedef struct {
     char *label;
 } fuco_node_descriptor_t;
 
+typedef struct __attribute__((packed)) {
+    fuco_opcode_t opcode : 16;
+    size_t count : 8;
+    fuco_symbolid_t in1 : 8;
+    fuco_symbolid_t in2 : 8;
+    fuco_symbolid_t ret : 8;
+} fuco_node_instr_t;
+
 struct fuco_node_t {
     fuco_nodetype_t type;
     fuco_token_t *token;
@@ -71,6 +83,7 @@ struct fuco_node_t {
     union {
         struct fuco_node_t *datatype;
         fuco_scope_t *scope;
+        fuco_node_instr_t instr;
     } data;
     size_t count;
     struct fuco_node_t *children[];

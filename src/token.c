@@ -1,4 +1,5 @@
 #include "token.h"
+#include "utils.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -52,6 +53,7 @@ fuco_token_descriptor_t const token_descriptors[] = {
     { FUCO_TOKEN_COLON, FUCO_TOKENTYPE_IS_SEPARATOR, ":" },
 
     { FUCO_TOKEN_ARROW, FUCO_TOKENTYPE_IS_OPERATOR, "->" },
+    { FUCO_TOKEN_PERCENT, FUCO_TOKENTYPE_IS_OPERATOR, "%" },
 
     { FUCO_TOKEN_END_OF_FILE, 0, "end of file" },
 
@@ -120,7 +122,7 @@ void fuco_token_write(fuco_token_t *token, FILE *file) {
                 break;
 
             default:
-                abort();
+                FUCO_UNREACHED();
         }
     }
 }

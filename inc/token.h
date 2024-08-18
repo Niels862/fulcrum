@@ -29,6 +29,7 @@ typedef enum {
     FUCO_TOKEN_COLON,
 
     FUCO_TOKEN_ARROW,
+    FUCO_TOKEN_PERCENT,
 
     FUCO_TOKEN_END_OF_FILE,
     FUCO_TOKEN_END_OF_SOURCE /* Final token in tokenlist */
