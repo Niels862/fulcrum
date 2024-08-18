@@ -5,6 +5,32 @@
 
 void fuco_parser_init(fuco_parser_t *parser) {
     parser->tstream = NULL;
+    fuco_map_init(&parser->instrs, fuco_hash_string, fuco_equal_string, 
+                  NULL, NULL);
+}
+
+void fuco_parser_destruct(fuco_parser_t *parser) {
+    fuco_map_destruct(&parser->instrs);
+}
+
+void fuco_parser_setup_instrs(fuco_parser_t *parser) {
+    static fuco_node_instr_t instrs[] = {
+        { .opcode = FUCO_OPCODE_IADD },
+        { .opcode = FUCO_OPCODE_ISUB },
+        { .opcode = FUCO_OPCODE_IMUL },
+        { .opcode = FUCO_OPCODE_IDIV },
+        { .opcode = FUCO_OPCODE_IMOD },
+    };
+
+    for (size_t i = 0; i < sizeof(instrs) / sizeof(*instrs); i++) {
+        instrs[i].in1 = instrs[i].in2 = instrs[i].ret = FUCO_SYMID_INT;
+        instrs->count = 2;
+
+        char *mnemonic = fuco_opcode_get_mnemonic(instrs[i].opcode);
+        void **result = fuco_map_insert(&parser->instrs, mnemonic, &instrs[i]);
+
+        assert(result == NULL);
+    }
 }
 
 void fuco_parser_advance(fuco_parser_t *parser) {
@@ -51,6 +77,30 @@ bool fuco_parser_expect(fuco_parser_t *parser, fuco_tokentype_t type,
     fuco_parser_advance(parser);
 
     return true;
+}
+
+int fuco_parser_lookup_instr(fuco_parser_t *parser, fuco_node_t *node) {
+    assert(parser->tstream->type == FUCO_TOKEN_IDENTIFIER);
+    assert(node->type == FUCO_NODE_INSTR);
+
+    char *mnemonic = parser->tstream->lexeme;
+    void **result = fuco_map_lookup(&parser->instrs, mnemonic);
+
+    if (result == NULL) {
+        fuco_syntax_error(&parser->tstream->source, 
+                          "unrecognized instruction: '%s'", mnemonic);
+        return 1;
+    }
+
+    fuco_node_instr_t *mapped_instr = *result;
+
+    assert(mapped_instr != NULL);
+
+    node->instr = *mapped_instr;
+
+    printf("(%d)\n", node->instr.opcode);
+
+    return 0;
 }
 
 bool fuco_parser_check(fuco_parser_t *parser, fuco_tokentype_t type) {
@@ -244,7 +294,7 @@ fuco_node_t *fuco_parse_value(fuco_parser_t *parser) {
             fuco_parser_advance(parser);
 
             if (fuco_parser_check(parser, FUCO_TOKEN_BRACKET_OPEN)) {
-                fuco_node_t *args = fuco_parse_call_args(parser);
+                fuco_node_t *args = fuco_parse_args(parser);
 
                 if (args == NULL) {
                     fuco_node_free(node);
@@ -255,7 +305,29 @@ fuco_node_t *fuco_parse_value(fuco_parser_t *parser) {
 
                 fuco_node_set_child(node, args, FUCO_LAYOUT_CALL_ARGS);
             }
+            break;
 
+        case FUCO_TOKEN_PERCENT:
+            fuco_parser_advance(parser);
+
+            node = fuco_node_new(FUCO_NODE_INSTR);
+
+            if (fuco_parser_lookup_instr(parser, node)) {
+                fuco_node_free(node);
+                return NULL;
+            }
+
+            fuco_parser_move(parser, node);
+            fuco_parser_advance(parser);
+
+            fuco_node_t *args = fuco_parse_args(parser);
+
+            if (args == NULL) {
+                fuco_node_free(node);
+                return NULL;
+            }
+
+            fuco_node_set_child(node, args, FUCO_LAYOUT_INSTR_ARGS);
             break;
 
         default:
@@ -268,7 +340,7 @@ fuco_node_t *fuco_parse_value(fuco_parser_t *parser) {
     return node;
 }
 
-fuco_node_t *fuco_parse_call_args(fuco_parser_t *parser) {
+fuco_node_t *fuco_parse_args(fuco_parser_t *parser) {
     size_t allocated;
     fuco_node_t *node = fuco_node_variadic_new(FUCO_NODE_ARG_LIST, &allocated);
     fuco_node_t *arg;

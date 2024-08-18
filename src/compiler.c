@@ -15,6 +15,7 @@ void fuco_compiler_init(fuco_compiler_t *compiler, char *filename) {
 
 void fuco_compiler_destruct(fuco_compiler_t *compiler) {
     fuco_lexer_destruct(&compiler->lexer);
+    fuco_parser_destruct(&compiler->parser);
     fuco_symboltable_destruct(&compiler->table);
     fuco_ir_destruct(&compiler->ir);
     fuco_bytecode_destruct(&compiler->bytecode);
@@ -32,6 +33,7 @@ int fuco_compiler_run(fuco_compiler_t *compiler) {
     }
     
     compiler->parser.tstream = tstream;
+    fuco_parser_setup_instrs(&compiler->parser);
 
     compiler->root = fuco_parse_filebody(&compiler->parser);
     if (compiler->root == NULL) {

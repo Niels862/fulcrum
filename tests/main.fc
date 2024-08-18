@@ -3,11 +3,11 @@ def f(x: Int, y: Int) -> Int {
 }
 
 def main() -> Int {
-    return g(); 
+    return %iadd(g(), %isub(%imul(2, 14), 1)); 
 }
 
 def g() -> Int {
-    return f(69, 420);
+    return f(42, 12);
 }
 
 def g(x: Int) -> Int {

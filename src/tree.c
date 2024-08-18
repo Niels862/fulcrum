@@ -13,6 +13,7 @@ fuco_node_descriptor_t node_descriptors[] = {
     { FUCO_NODE_PARAM_LIST, 0, FUCO_LAYOUT_VARIADIC, "param-list" },
     { FUCO_NODE_PARAM, 0, FUCO_LAYOUT_PARAM_N, "param" },
     { FUCO_NODE_CALL, 0, FUCO_LAYOUT_CALL_N, "call" },
+    { FUCO_NODE_INSTR, 0, FUCO_LAYOUT_INSTR_N, "instr" },
     { FUCO_NODE_ARG_LIST, 0, FUCO_LAYOUT_VARIADIC, "arg-list" },
     { FUCO_NODE_VARIABLE, 0, FUCO_LAYOUT_VARIABLE_N, "variable" },
     { FUCO_NODE_INTEGER, 0, FUCO_LAYOUT_INTEGER_N, "integer" },
@@ -137,6 +138,7 @@ void fuco_node_set_child(fuco_node_t *node, fuco_node_t *child,
     assert((size_t)index < node->count);
     assert(node_descriptors[node->type].layout != FUCO_LAYOUT_VARIADIC);
     assert(node->children[index] == NULL);
+
     fuco_node_validate(child);
 
     node->children[index] = child;
@@ -679,12 +681,12 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
             break;
 
         case FUCO_NODE_INSTR:
-            if (fuco_node_resolve_call(node, table, scope, ctx)) {
+            if (fuco_node_resolve_local_propagate(node, table, scope, ctx)) {
                 return 1;
             }
 
             /* TODO: type resolution thingies */
-            type = fuco_symboltable_get_type(table, node->data.instr.ret);
+            type = fuco_symboltable_get_type(table, node->instr.ret);
             node->data.datatype = type;
             break;
 
@@ -777,11 +779,10 @@ void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir,
             break;
 
         case FUCO_NODE_INSTR:
-            next = node->children[FUCO_LAYOUT_CALL_ARGS];
+            next = node->children[FUCO_LAYOUT_INSTR_ARGS];
             fuco_node_generate_ir(next, ir, obj);
 
-            fuco_ir_add_instr_imm48_label(ir, obj, node->data.instr.opcode, 
-                                          node->symbol->id);
+            fuco_ir_add_instr(ir, obj, node->instr.opcode);
             break;
 
         case FUCO_NODE_ARG_LIST:

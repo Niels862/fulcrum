@@ -79,12 +79,13 @@ typedef struct __attribute__((packed)) {
 struct fuco_node_t {
     fuco_nodetype_t type;
     fuco_token_t *token;
+    /* TODO: refactor to {..., union {symbol, scope, instr}, datatype, ...} */
     fuco_symbol_t *symbol;
     union {
         struct fuco_node_t *datatype;
         fuco_scope_t *scope;
-        fuco_node_instr_t instr;
     } data;
+    fuco_node_instr_t instr;
     size_t count;
     struct fuco_node_t *children[];
 };

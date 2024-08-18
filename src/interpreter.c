@@ -97,38 +97,38 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
                 break;
 
             case FUCO_OPCODE_IADD:
-                fuco_program_pop(&program, &x2, sizeof(x2));
                 fuco_program_pop(&program, &x1, sizeof(x1));
+                fuco_program_pop(&program, &x2, sizeof(x2));
                 y = x1 + x2;
-                fuco_program_push(&program, &y, sizeof(retq));
+                fuco_program_push(&program, &y, sizeof(y));
                 break;
 
             case FUCO_OPCODE_ISUB:
-                fuco_program_pop(&program, &x2, sizeof(x2));
                 fuco_program_pop(&program, &x1, sizeof(x1));
+                fuco_program_pop(&program, &x2, sizeof(x2));
                 y = x1 - x2;
-                fuco_program_push(&program, &y, sizeof(retq));
+                fuco_program_push(&program, &y, sizeof(y));
                 break;
 
             case FUCO_OPCODE_IMUL:
-                fuco_program_pop(&program, &x2, sizeof(x2));
                 fuco_program_pop(&program, &x1, sizeof(x1));
+                fuco_program_pop(&program, &x2, sizeof(x2));
                 y = x1 * x2;
-                fuco_program_push(&program, &y, sizeof(retq));
+                fuco_program_push(&program, &y, sizeof(y));
                 break;
 
             case FUCO_OPCODE_IDIV: /* TODO: 0 div */
-                fuco_program_pop(&program, &x2, sizeof(x2));
                 fuco_program_pop(&program, &x1, sizeof(x1));
+                fuco_program_pop(&program, &x2, sizeof(x2));
                 y = x1 / x2;
-                fuco_program_push(&program, &y, sizeof(retq));
+                fuco_program_push(&program, &y, sizeof(y));
                 break;
 
             case FUCO_OPCODE_IMOD: /* TODO: arithmetic exceptions */
-                fuco_program_pop(&program, &x2, sizeof(x2));
                 fuco_program_pop(&program, &x1, sizeof(x1));
+                fuco_program_pop(&program, &x2, sizeof(x2));
                 y = x1 % x2;
-                fuco_program_push(&program, &y, sizeof(retq));
+                fuco_program_push(&program, &y, sizeof(y));
                 break;
 
             case FUCO_OPCODE_EXIT:
