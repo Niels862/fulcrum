@@ -3,6 +3,15 @@
 #include <stdlib.h>
 #include <assert.h>
 
+fuco_operator_specification_t fuco_operator_specs[] = {
+    { .associativity = FUCO_ASSOCIATIVE_LEFT, 
+      { FUCO_TOKEN_PLUS, FUCO_TOKEN_MINUS } 
+    },
+    { .associativity = FUCO_ASSOCIATIVE_LEFT, 
+      { FUCO_TOKEN_ASTERISK, FUCO_TOKEN_SLASH, FUCO_TOKEN_PERCENT } 
+    }
+};
+
 void fuco_parser_init(fuco_parser_t *parser) {
     parser->tstream = NULL;
     fuco_map_init(&parser->instrs, fuco_hash_string, fuco_equal_string, 
@@ -33,10 +42,14 @@ void fuco_parser_setup_instrs(fuco_parser_t *parser) {
     }
 }
 
-void fuco_parser_advance(fuco_parser_t *parser) {
+fuco_token_t *fuco_parser_advance(fuco_parser_t *parser) {
+    fuco_token_t *last = parser->tstream;
+
     if (parser->tstream->type != FUCO_TOKEN_END_OF_SOURCE) {
         parser->tstream++;
     }
+
+    return last;
 }
 
 void fuco_parser_move(fuco_parser_t *parser, fuco_node_t *node) {
@@ -287,6 +300,59 @@ fuco_node_t *fuco_parse_return(fuco_parser_t *parser) {
 }
 
 fuco_node_t *fuco_parse_expression(fuco_parser_t *parser) {
+    return fuco_parse_operator(parser, 0);
+}
+
+fuco_node_t *fuco_parse_operator(fuco_parser_t *parser, size_t level) {
+    if (level >= FUCO_ARRAY_SIZE(fuco_operator_specs)) {
+        return fuco_parse_value(parser);
+    }
+
+    if (fuco_operator_specs[level].associativity == FUCO_ASSOCIATIVE_LEFT) {
+        return fuco_parse_operator_left(parser, level);
+    }
+
+    return fuco_parse_operator_right(parser, level);
+}
+
+fuco_node_t *fuco_parse_operator_left(fuco_parser_t *parser, size_t level) {
+    fuco_node_t *left, *right;
+
+    if ((left = fuco_parse_operator(parser, level + 1)) == NULL) {
+        return NULL;
+    }
+
+    fuco_operator_specification_t *spec = &fuco_operator_specs[level];
+    
+    while (true) {
+        fuco_token_t *operator = NULL;
+
+        for (size_t i = 0; i < FUCO_MAX_OPERATORS_PER_LEVEL; i++) {
+            if (fuco_parser_check(parser, spec->operators[i])) {
+                operator = fuco_parser_advance(parser);
+                break;
+            }
+        }
+
+        if (operator != NULL) {
+            if ((right = fuco_parse_operator(parser, level + 1)) == NULL) {
+                fuco_node_free(left);
+                return NULL;
+            }
+            
+            left = fuco_node_call_new(2, left, right);
+            left->token = operator;
+        } else {
+            return left;
+        }
+    }
+}
+
+fuco_node_t *fuco_parse_operator_right(fuco_parser_t *parser, size_t level) {
+    FUCO_UNUSED(level);
+
+    FUCO_NOT_IMPLEMENTED();
+
     return fuco_parse_value(parser);
 }
 

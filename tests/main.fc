@@ -1,19 +1,27 @@
 def [ + ](x: Int, y: Int) -> Int {
+    return add(x, y);
+}
+
+def add(x: Int, y: Int) -> Int {
     return %iadd(x, y);
 }
 
-def f(x: Int, y: Int) -> Int {
-    return x;
+def [ - ](x: Int, y: Int) -> Int {
+    return %isub(x, y);
+}
+
+def [ * ](x: Int, y: Int) -> Int {
+    return %imul(x, y);
+}
+
+def [ / ](x: Int, y: Int) -> Int {
+    return %idiv(x, y);
+}
+
+def [ % ](x: Int, y: Int) -> Int {
+    return %imod(x, y);
 }
 
 def main() -> Int {
-    return %iadd(g(), %isub(%imul(2, 14), 1)); 
-}
-
-def g() -> Int {
-    return f(42, 12);
-}
-
-def g(x: Int) -> Int {
-    return 53;
+    return 16 / 2 + 3;
 }

@@ -50,7 +50,6 @@ char *fuco_opcode_get_mnemonic(fuco_opcode_t opcode) {
 fuco_instr_layout_t fuco_opcode_get_layout(fuco_opcode_t opcode) {
     switch (opcode) {
         case FUCO_OPCODE_NOP:
-        case FUCO_OPCODE_RETQ:
         case FUCO_OPCODE_IADD:
         case FUCO_OPCODE_ISUB:
         case FUCO_OPCODE_IMUL:
@@ -60,6 +59,7 @@ fuco_instr_layout_t fuco_opcode_get_layout(fuco_opcode_t opcode) {
             return FUCO_INSTR_LAYOUT_NO_IMM;
 
         case FUCO_OPCODE_CALL:
+        case FUCO_OPCODE_RETQ:
         case FUCO_OPCODE_PUSHQ:
         case FUCO_OPCODE_LOADQ:
         case FUCO_OPCODE_RLOADQ:

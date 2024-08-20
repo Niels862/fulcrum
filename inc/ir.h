@@ -38,6 +38,7 @@ typedef struct {
     size_t size;
     size_t cap;
     fuco_node_t *def;
+    fuco_ir_label_t paramsize_label;
 } fuco_ir_object_t;
 
 #define FUCO_IR_OBJECTS_INIT_SIZE 16
@@ -62,6 +63,8 @@ void fuco_ir_init(fuco_ir_t *ir);
 void fuco_ir_destruct(fuco_ir_t *ir);
 
 void fuco_ir_write(fuco_ir_t *ir, FILE *file);
+
+fuco_ir_label_t fuco_ir_next_label(fuco_ir_t *ir);
 
 size_t fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label, 
                           fuco_node_t *def);

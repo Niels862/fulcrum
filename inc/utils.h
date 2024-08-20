@@ -7,6 +7,8 @@
 
 #define FUCO_MIN(x, y) (((x) < (y)) ? (x) : (y))
 
+#define FUCO_ARRAY_SIZE(arr) (sizeof(arr) / sizeof(*arr))
+
 #define FUCO_ANSI_RED "\033[91m"
 #define FUCO_ANSI_RESET "\033[0m"
 

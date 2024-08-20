@@ -3,6 +3,7 @@
 #include "instruction.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <assert.h>
 
 fuco_node_descriptor_t node_descriptors[] = {
@@ -52,6 +53,26 @@ fuco_node_t *fuco_node_variadic_new(fuco_nodetype_t type, size_t *allocated) {
     *allocated = FUCO_VARIADIC_NODE_INIT_SIZE;
 
     return fuco_node_base_new(type, *allocated, 0);
+}
+
+fuco_node_t *fuco_node_call_new(size_t args_n, ...) {
+    fuco_node_t *node = fuco_node_new(FUCO_NODE_CALL);
+
+    size_t allocated;
+    fuco_node_t *sub = fuco_node_variadic_new(FUCO_NODE_ARG_LIST, &allocated);
+
+    va_list args;
+    va_start(args, args_n);
+
+    for (size_t i = 0; i < args_n; i++) {
+        sub = fuco_node_add_child(sub, va_arg(args, fuco_node_t *), &allocated);
+    }
+
+    va_end(args);
+
+    fuco_node_set_child(node, sub, FUCO_LAYOUT_CALL_ARGS);
+
+    return node;
 }
 
 fuco_node_t *fuco_node_transform(fuco_node_t *node, fuco_nodetype_t type) {
@@ -765,8 +786,8 @@ void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir,
         case FUCO_NODE_FUNCTION:
             node->symbol->obj = fuco_ir_add_object(ir, node->symbol->id, 
                                                    node);
+
             next = node->children[FUCO_LAYOUT_FUNCTION_BODY];
-            
             fuco_node_generate_ir(next, ir, node->symbol->obj);
             break;
 
@@ -804,20 +825,24 @@ void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir,
 
         case FUCO_NODE_RETURN:
             fuco_node_generate_ir_propagate(node, ir, obj);
-            fuco_ir_add_instr(ir, obj, FUCO_OPCODE_RETQ);
+            fuco_ir_add_instr_imm48_label(ir, obj, FUCO_OPCODE_RETQ, 
+                                          ir->objects[obj].paramsize_label);
             break;
     }
 }
 
-void fuco_node_setup_offsets(fuco_node_t *node, uint64_t *defs) {
-    int64_t offset = -3 * sizeof(uint64_t);
+ /* FIXME improve */
+size_t fuco_node_setup_offsets(fuco_node_t *node, uint64_t *defs) {
+    int64_t offset = 0;
 
     fuco_node_t *params = node->children[FUCO_LAYOUT_FUNCTION_PARAMS];
 
     for (size_t i = 0; i < params->count; i++) {
         fuco_node_t *param = params->children[i];
 
-        defs[param->symbol->id] = offset; /* TODO safer */
-        offset -= 8;
+        defs[param->symbol->id] = -3 * sizeof(uint64_t) - offset;
+        offset += 8;
     }
+
+    return offset;
 }

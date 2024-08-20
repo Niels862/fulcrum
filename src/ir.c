@@ -26,6 +26,7 @@ void fuco_ir_object_init(fuco_ir_object_t *object, fuco_node_t *def) {
     object->units = malloc(object->cap * sizeof(fuco_ir_unit_t));
     object->size = 0;
     object->def = def;
+    object->paramsize_label = 0;
 }
 
 void fuco_ir_object_destruct(fuco_ir_object_t *object) {
@@ -70,6 +71,14 @@ void fuco_ir_write(fuco_ir_t *ir, FILE *file) {
     }
 }
 
+fuco_ir_label_t fuco_ir_next_label(fuco_ir_t *ir) {
+    fuco_ir_label_t label = ir->label;
+    
+    ir->label++;
+
+    return label;
+}
+
 size_t fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label, 
                           fuco_node_t *def) {
     if (ir->size >= ir->cap) {
@@ -82,6 +91,7 @@ size_t fuco_ir_add_object(fuco_ir_t *ir, fuco_ir_label_t label,
 
     fuco_ir_object_init(&ir->objects[obj], def);
     fuco_ir_add_label(ir, obj, label);
+    ir->objects[obj].paramsize_label = fuco_ir_next_label(ir);
 
     ir->size++;
 
@@ -162,14 +172,17 @@ void fuco_ir_assemble(fuco_ir_t *ir, fuco_bytecode_t *bytecode) {
     }
 
     for (size_t i = 0; i < ir->size; i++) {
-        fuco_node_t *def = ir->objects[i].def;
-        if (def != NULL) {
-            fuco_node_setup_offsets(def, defs);
+        fuco_ir_object_t *obj = &ir->objects[i];
+
+        if (obj->def != NULL) {
+            size_t paramsize = fuco_node_setup_offsets(obj->def, defs);
+            printf("set (%ld) to %ld\n", ir->objects[i].paramsize_label, paramsize);
+            defs[obj->paramsize_label] = paramsize;
         }
     }
 
     /* First pass: define labels */
-    size_t p = 0;
+    size_t jump_location = 0;
     for (size_t i = 0; i < ir->size; i++) {
         fuco_ir_object_t *object = &ir->objects[i];
 
@@ -177,12 +190,12 @@ void fuco_ir_assemble(fuco_ir_t *ir, fuco_bytecode_t *bytecode) {
             fuco_ir_unit_t *unit = &object->units[j];
 
             if (unit->attrs & FUCO_IR_INSTR) {
-                p++;
+                jump_location++;
             } else {
                 assert(unit->imm.label < ir->label);
                 assert(defs[unit->imm.label] == FUCO_LABEL_DEF_INVALID);
 
-                defs[unit->imm.label] = p;
+                defs[unit->imm.label] = jump_location;
             }
         }
     }

@@ -106,6 +106,8 @@ fuco_node_t *fuco_node_new(fuco_nodetype_t type);
 
 fuco_node_t *fuco_node_variadic_new(fuco_nodetype_t type, size_t *allocated);
 
+fuco_node_t *fuco_node_call_new(size_t args_n, ...);
+
 /* Transforms non-variadic node to (other) non-variadic node */
 fuco_node_t *fuco_node_transform(fuco_node_t *node, fuco_nodetype_t type);
 
@@ -173,6 +175,7 @@ void fuco_node_generate_ir_propagate(fuco_node_t *node, fuco_ir_t *ir,
 void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir, 
                            size_t obj);
 
-void fuco_node_setup_offsets(fuco_node_t *node, uint64_t *defs);
+/* Returns size of parameters of node */
+size_t fuco_node_setup_offsets(fuco_node_t *node, uint64_t *defs);
 
 #endif

@@ -122,6 +122,7 @@ void fuco_token_destruct(fuco_token_t *token) {
     if (token->data != NULL) {
         free(token->data);
     }
+    
     token->type = FUCO_TOKEN_EMPTY;
     token->lexeme = NULL;
     token->data = NULL;

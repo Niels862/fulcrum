@@ -77,6 +77,7 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
                 program.sp = program.bp;
                 fuco_program_pop(&program, &program.bp, sizeof(program.bp));
                 fuco_program_pop(&program, &program.ip, sizeof(program.ip));
+                program.sp -= imm48;
                 fuco_program_push(&program, &retq, sizeof(retq));
                 break;
 
