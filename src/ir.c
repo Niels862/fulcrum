@@ -176,7 +176,6 @@ void fuco_ir_assemble(fuco_ir_t *ir, fuco_bytecode_t *bytecode) {
 
         if (obj->def != NULL) {
             size_t paramsize = fuco_node_setup_offsets(obj->def, defs);
-            printf("set (%ld) to %ld\n", ir->objects[i].paramsize_label, paramsize);
             defs[obj->paramsize_label] = paramsize;
         }
     }
