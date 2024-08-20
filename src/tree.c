@@ -243,7 +243,7 @@ void fuco_node_unparse_write(fuco_node_t *node, FILE *file) {
             break;
 
         case FUCO_NODE_FUNCTION:
-            fprintf(file, "def %s", node->token->lexeme);
+            fprintf(file, "def %s", fuco_token_string(node->token));
 
             sub = node->children[FUCO_LAYOUT_FUNCTION_PARAMS];
             fuco_node_unparse_write(sub, file);
@@ -273,7 +273,7 @@ void fuco_node_unparse_write(fuco_node_t *node, FILE *file) {
             break;
 
         case FUCO_NODE_PARAM:
-            fprintf(file, "%s: ", node->token->lexeme);
+            fprintf(file, "%s: ", fuco_token_string(node->token));
             
             sub = node->children[FUCO_LAYOUT_PARAM_TYPE];
             fuco_node_unparse_write(sub, file);
@@ -285,7 +285,7 @@ void fuco_node_unparse_write(fuco_node_t *node, FILE *file) {
                 fprintf(file, "%%");
             }
 
-            fprintf(file, "%s", node->token->lexeme);
+            fprintf(file, "%s", fuco_token_string(node->token));
 
             sub = node->children[FUCO_LAYOUT_CALL_ARGS];
             fuco_node_unparse_write(sub, file);
@@ -293,7 +293,7 @@ void fuco_node_unparse_write(fuco_node_t *node, FILE *file) {
 
         case FUCO_NODE_VARIABLE:
         case FUCO_NODE_TYPE_IDENTIFIER:
-            fprintf(file, "%s", node->token->lexeme);
+            fprintf(file, "%s", fuco_token_string(node->token));
             break;
 
         case FUCO_NODE_INTEGER:
@@ -548,7 +548,7 @@ int fuco_node_resolve_call(fuco_node_t *node, fuco_symboltable_t *table,
             if (symbol == NULL) {
                 fuco_syntax_error(&node->token->source, 
                                   "no conversions present for '%s'", 
-                                  node->token->lexeme);
+                                  fuco_token_string(node->token));
                 return 1;
             }
             break;
@@ -620,7 +620,7 @@ int fuco_node_resolve_call(fuco_node_t *node, fuco_symboltable_t *table,
             if (multiple[idx]) {
                 fuco_syntax_error(&node->token->source, 
                                   "multiple candidates for call to '%s'", 
-                                  node->token->lexeme);
+                                  fuco_token_string(node->token));
                 return 1;
             } else {
                 node->symbol = candidates[idx];
@@ -632,7 +632,7 @@ int fuco_node_resolve_call(fuco_node_t *node, fuco_symboltable_t *table,
     if (node->symbol == NULL) {
         fuco_syntax_error(&node->token->source, 
                           "no matching candidate for call to '%s'", 
-                          node->token->lexeme);
+                          fuco_token_string(node->token));
         return 1;
     }
 

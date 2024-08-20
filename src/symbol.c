@@ -27,7 +27,7 @@ char *fuco_symboltype_string(fuco_symboltype_t type) {
 void fuco_collision_error(fuco_token_t *token) {
     fuco_syntax_error(&token->source, 
                       "symbol '%s' already declared in this scope", 
-                      token->lexeme);
+                      fuco_token_string(token));
 }
 
 void fuco_scope_init(fuco_scope_t *scope, fuco_scope_t *prev) {
@@ -71,12 +71,14 @@ fuco_symbol_t *fuco_scope_lookup(fuco_scope_t *scope, char *ident,
 
 fuco_symbol_t *fuco_scope_lookup_token(fuco_scope_t *scope, 
                                        fuco_token_t *token) {
-    return fuco_scope_lookup(scope, token->lexeme, &token->source, true);
+    return fuco_scope_lookup(scope, fuco_token_string(token), 
+                             &token->source, true);
 }
 
 fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope, 
                                  fuco_token_t *token, fuco_symbol_t *symbol) {        
-    void **value = fuco_map_insert(&scope->map, token->lexeme, symbol);
+    void **value = fuco_map_insert(&scope->map, 
+                                   fuco_token_string(token), symbol);
     
     if (value != NULL) {
         fuco_symbol_t *prev_symbol = *value;
@@ -149,7 +151,7 @@ void fuco_symboltable_write(fuco_symboltable_t *table, FILE *file) {
     fuco_symbol_chunk_t *chunk = table->back;
     while (chunk != NULL) {
         for (size_t i = 0; i < chunk->size; i++) {
-            size_t len = strlen(chunk->data[i].token->lexeme);
+            size_t len = strlen(fuco_token_string(chunk->data[i].token));
             if (len > max) {
                 max = len;
             }
@@ -163,8 +165,8 @@ void fuco_symboltable_write(fuco_symboltable_t *table, FILE *file) {
         for (size_t i = 0; i < chunk->size; i++) {
             fuco_symbol_t *symbol = &chunk->data[i];
             fprintf(file, " %*s: %*d %6s (def=%d,val=%d,obj=%ld)", 
-                    (int)max,
-                    symbol->token->lexeme, fuco_ceil_log(table->size, 10),
+                    (int)max, fuco_token_string(symbol->token), 
+                    fuco_ceil_log(table->size, 10),
                     symbol->id, fuco_symboltype_string(symbol->type),
                     symbol->def != NULL,
                     symbol->value != NULL, symbol->obj);

@@ -1,3 +1,7 @@
+def [ + ](x: Int, y: Int) -> Int {
+    return %iadd(x, y);
+}
+
 def f(x: Int, y: Int) -> Int {
     return x;
 }

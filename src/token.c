@@ -69,6 +69,10 @@ fuco_token_descriptor_t const token_descriptors[] = {
     { FUCO_TOKEN_COLON, FUCO_TOKENTYPE_IS_SEPARATOR, ":" },
 
     { FUCO_TOKEN_ARROW, FUCO_TOKENTYPE_IS_OPERATOR, "->" },
+    { FUCO_TOKEN_PLUS, FUCO_TOKENTYPE_IS_OPERATOR, "+" },
+    { FUCO_TOKEN_MINUS, FUCO_TOKENTYPE_IS_OPERATOR, "-" },
+    { FUCO_TOKEN_ASTERISK, FUCO_TOKENTYPE_IS_OPERATOR, "*" },
+    { FUCO_TOKEN_SLASH, FUCO_TOKENTYPE_IS_OPERATOR, "/" },
     { FUCO_TOKEN_PERCENT, FUCO_TOKENTYPE_IS_OPERATOR, "%" },
 
     { FUCO_TOKEN_END_OF_FILE, 0, "end of file" },
@@ -144,16 +148,18 @@ void fuco_token_write(fuco_token_t *token, FILE *file) {
 }
 
 char *fuco_token_string(fuco_token_t *token) {
+    if (token_descriptors[token->type].attr & FUCO_TOKENTYPE_HAS_LEXEME) {
+        return token->lexeme;
+    }   
+    return fuco_tokentype_string(token->type);
+}
+
+char *fuco_token_static_string(fuco_token_t *token) {
     static char *strs[16];
     static size_t idx = 0;
 
     char **str = &strs[idx];
-
-    if (token_descriptors[token->type].attr & FUCO_TOKENTYPE_HAS_LEXEME) {
-        *str = token->lexeme;
-    } else {
-        *str = fuco_tokentype_string(token->type);
-    }
+    *str = fuco_token_string(token);
 
     idx = (idx + 1) % 16;
 

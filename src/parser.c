@@ -65,7 +65,7 @@ bool fuco_parser_expect(fuco_parser_t *parser, fuco_tokentype_t type,
     if (parser->tstream->type != type) {
         fuco_syntax_error(&parser->tstream->source, "expected %s, but got %s", 
                           fuco_tokentype_string(type), 
-                          fuco_token_string(parser->tstream));
+                          fuco_token_static_string(parser->tstream));
 
         return false;
     }
@@ -83,7 +83,7 @@ int fuco_parser_lookup_instr(fuco_parser_t *parser, fuco_node_t *node) {
     assert(parser->tstream->type == FUCO_TOKEN_IDENTIFIER);
     assert(node->type == FUCO_NODE_INSTR);
 
-    char *mnemonic = parser->tstream->lexeme;
+    char *mnemonic =  fuco_token_string(parser->tstream);
     void **result = fuco_map_lookup(&parser->instrs, mnemonic);
 
     if (result == NULL) {
@@ -135,12 +135,24 @@ fuco_node_t *fuco_parse_function_declaration(fuco_parser_t *parser) {
 
     fuco_node_t *node = fuco_node_new(FUCO_NODE_FUNCTION);
     fuco_node_t *params = NULL, *body = NULL, *ret_type = NULL;
+    bool success = true;
 
-    if (!fuco_parser_expect(parser, FUCO_TOKEN_IDENTIFIER, node)
-        || (params = fuco_parse_param_list(parser)) == NULL
-        || !fuco_parser_expect(parser, FUCO_TOKEN_ARROW, NULL)
-        || (ret_type = fuco_parse_type(parser)) == NULL
-        || (body = fuco_parse_braced_block(parser)) == NULL) {
+    if (fuco_parser_accept(parser, FUCO_TOKEN_SQBRACKET_OPEN, NULL)) {
+        fuco_parser_move(parser, node);
+        fuco_parser_advance(parser);
+
+        success = fuco_parser_expect(parser, FUCO_TOKEN_SQBRACKET_CLOSE, NULL);
+    } else {
+        success = fuco_parser_expect(parser, FUCO_TOKEN_IDENTIFIER, node);
+    }
+
+    success = success 
+              && (params = fuco_parse_param_list(parser)) != NULL
+              && fuco_parser_expect(parser, FUCO_TOKEN_ARROW, NULL)
+              && (ret_type = fuco_parse_type(parser)) != NULL
+              && (body = fuco_parse_braced_block(parser)) != NULL;
+
+    if (!success) {
         fuco_node_free(node);
 
         if (params != NULL) {
