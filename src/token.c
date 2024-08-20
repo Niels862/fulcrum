@@ -29,6 +29,22 @@ fuco_token_t float_token = {
     .type = FUCO_TOKEN_IDENTIFIER
 };
 
+fuco_token_t bool_token = {
+    .lexeme = "Bool",
+    .source = {
+        .col = 0, .row = 0, .filename = NULL
+    },
+    .type = FUCO_TOKEN_IDENTIFIER
+};
+
+fuco_token_t none_token = {
+    .lexeme = "None",
+    .source = {
+        .col = 0, .row = 0, .filename = NULL
+    },
+    .type = FUCO_TOKEN_IDENTIFIER
+};
+
 fuco_token_descriptor_t const token_descriptors[] = {
     { FUCO_TOKEN_EMPTY, 0, "empty" },
 

@@ -188,6 +188,12 @@ void fuco_symboltable_setup(fuco_symboltable_t *table, fuco_scope_t *global) {
 
     fuco_symboltable_add_synthetic(table, global, &float_token, 
                                    FUCO_SYMID_FLOAT);
+
+    fuco_symboltable_add_synthetic(table, global, &bool_token, 
+                                   FUCO_SYMID_BOOL);
+
+    fuco_symboltable_add_synthetic(table, global, &none_token, 
+                                   FUCO_SYMID_NONE);
 }
 
 void fuco_symboltable_add_synthetic(fuco_symboltable_t *table, 

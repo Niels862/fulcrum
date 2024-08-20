@@ -15,6 +15,10 @@ typedef uint32_t fuco_symbolid_t;
 
 #define FUCO_SYMID_FLOAT (fuco_symbolid_t)2
 
+#define FUCO_SYMID_BOOL (fuco_symbolid_t)3
+
+#define FUCO_SYMID_NONE (fuco_symbolid_t)4
+
 typedef struct {
     fuco_symbolid_t *data;
     size_t size;
