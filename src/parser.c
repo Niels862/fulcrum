@@ -111,8 +111,6 @@ int fuco_parser_lookup_instr(fuco_parser_t *parser, fuco_node_t *node) {
 
     node->instr = *mapped_instr;
 
-    printf("(%d)\n", node->instr.opcode);
-
     return 0;
 }
 
@@ -406,6 +404,19 @@ fuco_node_t *fuco_parse_value(fuco_parser_t *parser) {
             }
 
             fuco_node_set_child(node, args, FUCO_LAYOUT_INSTR_ARGS);
+            break;
+
+        case FUCO_TOKEN_BRACKET_OPEN:
+            fuco_parser_advance(parser);
+
+            if ((node = fuco_parse_expression(parser)) == NULL) {
+                return NULL;
+            }
+
+            if (!fuco_parser_expect(parser, FUCO_TOKEN_BRACKET_CLOSE, NULL)) {
+                fuco_node_free(node);
+                return NULL;
+            }
             break;
 
         default:
