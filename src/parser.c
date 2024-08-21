@@ -148,6 +148,9 @@ fuco_node_t *fuco_parse_function_declaration(fuco_parser_t *parser) {
     fuco_node_t *params = NULL, *body = NULL, *ret_type = NULL;
     bool success = true;
 
+    bool inlined = fuco_parser_accept(parser, FUCO_TOKEN_INLINE, NULL);
+    FUCO_UNUSED(inlined);
+
     if (fuco_parser_accept(parser, FUCO_TOKEN_SQBRACKET_OPEN, NULL)) {
         fuco_parser_move(parser, node);
         fuco_parser_advance(parser);

@@ -55,6 +55,7 @@ fuco_token_descriptor_t const token_descriptors[] = {
     { FUCO_TOKEN_OPERATOR, FUCO_TOKENTYPE_HAS_LEXEME, "operator" },
 
     { FUCO_TOKEN_DEF, FUCO_TOKENTYPE_IS_KEYWORD, "def" },
+    { FUCO_TOKEN_INLINE, FUCO_TOKENTYPE_IS_KEYWORD, "inline" },
     { FUCO_TOKEN_RETURN, FUCO_TOKENTYPE_IS_KEYWORD, "return" },
 
     { FUCO_TOKEN_BRACKET_OPEN, FUCO_TOKENTYPE_IS_SEPARATOR, "(" },

@@ -1,20 +1,20 @@
-def [ + ](x: Int, y: Int) -> Int {
+def inline [ + ](x: Int, y: Int) -> Int {
     return %iadd(x, y);
 }
 
-def [ - ](x: Int, y: Int) -> Int {
+def inline [ - ](x: Int, y: Int) -> Int {
     return %isub(x, y);
 }
 
-def [ * ](x: Int, y: Int) -> Int {
+def inline [ * ](x: Int, y: Int) -> Int {
     return %imul(x, y);
 }
 
-def [ / ](x: Int, y: Int) -> Int {
+def inline [ / ](x: Int, y: Int) -> Int {
     return %idiv(x, y);
 }
 
-def [ % ](x: Int, y: Int) -> Int {
+def inline [ % ](x: Int, y: Int) -> Int {
     return %imod(x, y);
 }
 
