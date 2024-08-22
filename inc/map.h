@@ -33,10 +33,6 @@ typedef struct {
     fuco_map_entry_t **data;
 } fuco_map_t;
 
-fuco_hashvalue_t fuco_hash_string(void *data);
-
-bool fuco_equal_string(void *left, void *right);
-
 fuco_map_entry_t *fuco_map_entry_new(void *key, void *value, 
                                      fuco_hashvalue_t hash, 
                                      fuco_map_entry_t *next);

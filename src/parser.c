@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "utils.h"
+#include "strutils.h"
 #include <stdlib.h>
 #include <assert.h>
 
@@ -14,7 +15,7 @@ fuco_operator_specification_t fuco_operator_specs[] = {
 
 void fuco_parser_init(fuco_parser_t *parser) {
     parser->tstream = NULL;
-    fuco_map_init(&parser->instrs, fuco_hash_string, fuco_equal_string, 
+    fuco_map_init(&parser->instrs, fuco_string_hash, fuco_string_equal, 
                   NULL, NULL);
 }
 

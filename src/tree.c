@@ -1,5 +1,6 @@
 #include "tree.h"
 #include "utils.h"
+#include "strutils.h"
 #include "instruction.h"
 #include <stdlib.h>
 #include <string.h>
@@ -378,6 +379,24 @@ fuco_typematch_t fuco_node_type_match(fuco_node_t *node, fuco_node_t *other) {
         default:
             FUCO_UNREACHED();
     }
+}
+
+/* TODO: better hash function. Use mixing */
+fuco_hashvalue_t fuco_node_hash(void *data) {
+    fuco_node_t *node = data;
+
+    fuco_hashvalue_t hash = (node->symbol == NULL ? 0 : node->symbol->id)
+                            ^ node->type;
+
+    for (size_t i = 0; i < node->count; i++) {
+        hash ^= fuco_node_hash(node->children[i]);
+    }
+
+    return hash;
+}
+
+bool fuco_node_type_equal(void *node, void *other) {
+    return fuco_node_type_match(node, other) == FUCO_TYPEMATCH_MATCH;
 }
 
 void fuco_node_setup_scopes(fuco_node_t *node, fuco_scope_t *scope) {

@@ -4,24 +4,6 @@
 #include <string.h>
 #include <assert.h>
 
-fuco_hashvalue_t fuco_hash_string(void *data) {
-    char *str = data;
-
-    fuco_hashvalue_t hash = 5381;
-    int c;
-
-    while ((c = *str) != '\0') {
-        hash = ((hash << 5) + hash) + c;
-        str++;
-    }
-
-    return hash;
-}
-
-bool fuco_equal_string(void *left, void *right) {
-    return strcmp(left, right) == 0;
-}
-
 fuco_map_entry_t *fuco_map_entry_new(void *key, void *value, 
                                      fuco_hashvalue_t hash, 
                                      fuco_map_entry_t *next) {

@@ -31,20 +31,24 @@ void fuco_collision_error(fuco_token_t *token) {
 }
 
 void fuco_scope_init(fuco_scope_t *scope, fuco_scope_t *prev) {
-    /* The scope map does not own the identifiers so they are not freed */
-    fuco_map_init(&scope->map, fuco_hash_string, fuco_equal_string, NULL, NULL);
+    /* The maps do not own the identifiers so they are not freed */
+    fuco_map_init(&scope->names, fuco_string_hash, 
+                  fuco_string_equal, NULL, NULL);
+    fuco_map_init(&scope->conversions, fuco_string_hash, 
+                  fuco_string_equal, NULL, NULL);
     scope->prev = prev;
 }
 
 void fuco_scope_destruct(fuco_scope_t *scope) {
-    fuco_map_destruct(&scope->map);
+    fuco_map_destruct(&scope->names);
+    fuco_map_destruct(&scope->conversions);
 }
 
 fuco_symbol_t *fuco_scope_traverse(fuco_scope_t **pscope, char *ident) {
     fuco_scope_t *scope = *pscope;
     
     while (scope != NULL) {
-        void **value = fuco_map_lookup(&scope->map, ident);
+        void **value = fuco_map_lookup(&scope->names, ident);
 
         if (value != NULL) {
             *pscope = scope->prev;
@@ -77,7 +81,7 @@ fuco_symbol_t *fuco_scope_lookup_token(fuco_scope_t *scope,
 
 fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope, 
                                  fuco_token_t *token, fuco_symbol_t *symbol) {        
-    void **value = fuco_map_insert(&scope->map, 
+    void **value = fuco_map_insert(&scope->names, 
                                    fuco_token_string(token), symbol);
     
     if (value != NULL) {

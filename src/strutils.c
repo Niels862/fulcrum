@@ -3,6 +3,24 @@
 #include <stdlib.h>
 #include <string.h>
 
+fuco_hashvalue_t fuco_string_hash(void *data) {
+    char *str = data;
+
+    fuco_hashvalue_t hash = 5381;
+    int c;
+
+    while ((c = *str) != '\0') {
+        hash = ((hash << 5) + hash) + c;
+        str++;
+    }
+
+    return hash;
+}
+
+bool fuco_string_equal(void *left, void *right) {
+    return strcmp(left, right) == 0;
+}
+
 void fuco_strbuf_init(fuco_strbuf_t *buf) {
     buf->data = malloc(FUCO_STRBUF_INIT_SIZE);
     buf->len = 0;
