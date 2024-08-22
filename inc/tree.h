@@ -21,10 +21,6 @@ typedef enum {
     FUCO_NODE_TYPE_IDENTIFIER,
 } fuco_nodetype_t;
 
-typedef enum {
-    _
-} fuco_node_attr_t;
-
 /* Defines position and counts of child nodes. Each type starts with 
    FUCO_... = 0 and ends with FUCO_..._N to denote count. */
 typedef enum {
@@ -61,13 +57,6 @@ typedef enum {
 #define FUCO_NODE_SIZE(n) \
         sizeof(fuco_node_t) + (n) * sizeof(fuco_node_t *)
 
-typedef struct {
-    fuco_nodetype_t type;
-    fuco_node_attr_t attr;
-    fuco_node_layout_t layout;
-    char *label;
-} fuco_node_descriptor_t;
-
 typedef struct __attribute__((packed)) {
     fuco_opcode_t opcode : 16;
     size_t count : 8;
@@ -97,7 +86,9 @@ typedef enum {
     FUCO_TYPEMATCH_N /* amount of options for type matches */
 } fuco_typematch_t;
 
-extern fuco_node_descriptor_t node_descriptors[];
+fuco_node_layout_t fuco_nodetype_get_layout(fuco_nodetype_t type);
+
+char *fuco_nodetype_get_label(fuco_nodetype_t type);
 
 fuco_node_t *fuco_node_base_new(fuco_nodetype_t type, size_t allocated, 
                                 size_t count);

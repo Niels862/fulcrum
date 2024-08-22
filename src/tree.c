@@ -7,21 +7,95 @@
 #include <stdarg.h>
 #include <assert.h>
 
-fuco_node_descriptor_t node_descriptors[] = {
-    { FUCO_NODE_EMPTY, 0, FUCO_LAYOUT_EMPTY_N, "empty" },
-    { FUCO_NODE_FILEBODY, 0, FUCO_LAYOUT_VARIADIC, "filebody" },
-    { FUCO_NODE_BODY, 0, FUCO_LAYOUT_VARIADIC, "body" },
-    { FUCO_NODE_FUNCTION, 0, FUCO_LAYOUT_FUNCTION_N, "function" },
-    { FUCO_NODE_PARAM_LIST, 0, FUCO_LAYOUT_VARIADIC, "param-list" },
-    { FUCO_NODE_PARAM, 0, FUCO_LAYOUT_PARAM_N, "param" },
-    { FUCO_NODE_CALL, 0, FUCO_LAYOUT_CALL_N, "call" },
-    { FUCO_NODE_INSTR, 0, FUCO_LAYOUT_INSTR_N, "instr" },
-    { FUCO_NODE_ARG_LIST, 0, FUCO_LAYOUT_VARIADIC, "arg-list" },
-    { FUCO_NODE_VARIABLE, 0, FUCO_LAYOUT_VARIABLE_N, "variable" },
-    { FUCO_NODE_INTEGER, 0, FUCO_LAYOUT_INTEGER_N, "integer" },
-    { FUCO_NODE_RETURN, 0, FUCO_LAYOUT_RETURN_N, "return" },
-    { FUCO_NODE_TYPE_IDENTIFIER, 0, FUCO_LAYOUT_TYPE_IDENTIFIER_N, "type-id" },
-};
+fuco_node_layout_t fuco_nodetype_get_layout(fuco_nodetype_t type) {
+    switch (type) {
+        case FUCO_NODE_EMPTY:
+            return FUCO_LAYOUT_EMPTY_N;
+        
+        case FUCO_NODE_FILEBODY:
+            return FUCO_LAYOUT_VARIADIC;
+
+        case FUCO_NODE_BODY:
+            return FUCO_LAYOUT_VARIADIC;
+
+        case FUCO_NODE_FUNCTION:
+            return FUCO_LAYOUT_FUNCTION_N;
+
+        case FUCO_NODE_PARAM_LIST:
+            return FUCO_LAYOUT_VARIADIC;
+        
+        case FUCO_NODE_PARAM:
+            return FUCO_LAYOUT_PARAM_N;
+
+        case FUCO_NODE_CALL:
+            return FUCO_LAYOUT_CALL_N;
+
+        case FUCO_NODE_INSTR:
+            return FUCO_LAYOUT_INSTR_N;
+
+        case FUCO_NODE_ARG_LIST:
+            return FUCO_LAYOUT_VARIADIC;
+
+        case FUCO_NODE_VARIABLE:
+            return FUCO_LAYOUT_VARIABLE_N;
+
+        case FUCO_NODE_INTEGER:
+            return FUCO_LAYOUT_INTEGER_N;
+
+        case FUCO_NODE_RETURN:
+            return FUCO_LAYOUT_RETURN_N;
+
+        case FUCO_NODE_TYPE_IDENTIFIER: 
+            return FUCO_LAYOUT_TYPE_IDENTIFIER_N;
+    }
+
+    FUCO_UNREACHED();
+}
+
+char *fuco_nodetype_get_label(fuco_nodetype_t type) {
+    switch (type) {
+        case FUCO_NODE_EMPTY:
+            return "empty";
+        
+        case FUCO_NODE_FILEBODY:
+            return "filebody";
+
+        case FUCO_NODE_BODY:
+            return "body";
+
+        case FUCO_NODE_FUNCTION:
+            return "function";
+
+        case FUCO_NODE_PARAM_LIST:
+            return "param-list";
+        
+        case FUCO_NODE_PARAM:
+            return "param";
+
+        case FUCO_NODE_CALL:
+            return "call";
+
+        case FUCO_NODE_INSTR:
+            return "instr";
+
+        case FUCO_NODE_ARG_LIST:
+            return "arg-list";
+
+        case FUCO_NODE_VARIABLE:
+            return "variable";
+
+        case FUCO_NODE_INTEGER:
+            return "integer";
+
+        case FUCO_NODE_RETURN:
+            return "return";
+
+        case FUCO_NODE_TYPE_IDENTIFIER: 
+            return "type-identifier";
+    }
+
+    FUCO_UNREACHED();
+}
 
 fuco_node_t *fuco_node_base_new(fuco_nodetype_t type, size_t allocated, 
                                 size_t count) {
@@ -41,15 +115,15 @@ fuco_node_t *fuco_node_base_new(fuco_nodetype_t type, size_t allocated,
 }
 
 fuco_node_t *fuco_node_new(fuco_nodetype_t type) {
-    assert(node_descriptors[type].layout != FUCO_LAYOUT_VARIADIC);
+    assert(fuco_nodetype_get_layout(type) != FUCO_LAYOUT_VARIADIC);
 
-    size_t count = node_descriptors[type].layout;
+    size_t count = fuco_nodetype_get_layout(type);
 
     return fuco_node_base_new(type, count, count);
 }
 
 fuco_node_t *fuco_node_variadic_new(fuco_nodetype_t type, size_t *allocated) {
-    assert(node_descriptors[type].layout == FUCO_LAYOUT_VARIADIC);
+    assert(fuco_nodetype_get_layout(type) == FUCO_LAYOUT_VARIADIC);
 
     *allocated = FUCO_VARIADIC_NODE_INIT_SIZE;
 
@@ -77,18 +151,18 @@ fuco_node_t *fuco_node_call_new(size_t args_n, ...) {
 }
 
 fuco_node_t *fuco_node_transform(fuco_node_t *node, fuco_nodetype_t type) {
-    assert(node_descriptors[node->type].layout != FUCO_LAYOUT_VARIADIC);
-    assert(node_descriptors[type].layout != FUCO_LAYOUT_VARIADIC);
+    assert(fuco_nodetype_get_layout(node->type) != FUCO_LAYOUT_VARIADIC);
+    assert(fuco_nodetype_get_layout(type) != FUCO_LAYOUT_VARIADIC);
 
     node->type = type;
 
-    return fuco_node_set_count(node, node_descriptors[type].layout);
+    return fuco_node_set_count(node, fuco_nodetype_get_layout(type));
 }
 
 fuco_node_t *fuco_node_variadic_transform(fuco_node_t *node, 
                                           fuco_nodetype_t type, 
                                           size_t *allocated) {
-    assert(node_descriptors[type].layout == FUCO_LAYOUT_VARIADIC);
+    assert(fuco_nodetype_get_layout(type) == FUCO_LAYOUT_VARIADIC);
     
     if (node->count > FUCO_VARIADIC_NODE_INIT_SIZE) {
         *allocated = node->count;
@@ -140,7 +214,7 @@ void fuco_node_free(fuco_node_t *node) {
 
 fuco_node_t *fuco_node_add_child(fuco_node_t *node, fuco_node_t *child, 
                                  size_t *allocated) {    
-    assert(node_descriptors[node->type].layout == FUCO_LAYOUT_VARIADIC);
+    assert(fuco_nodetype_get_layout(node->type) == FUCO_LAYOUT_VARIADIC);
     fuco_node_validate(child);
 
     if (node->count >= *allocated) {
@@ -158,7 +232,7 @@ fuco_node_t *fuco_node_add_child(fuco_node_t *node, fuco_node_t *child,
 void fuco_node_set_child(fuco_node_t *node, fuco_node_t *child, 
                          fuco_node_layout_t index) {
     assert((size_t)index < node->count);
-    assert(node_descriptors[node->type].layout != FUCO_LAYOUT_VARIADIC);
+    assert(fuco_nodetype_get_layout(node->type) != FUCO_LAYOUT_VARIADIC);
     assert(node->children[index] == NULL);
 
     fuco_node_validate(child);
@@ -204,7 +278,7 @@ void fuco_node_pretty_write(fuco_node_t *node, FILE *file) {
     if (node == NULL) {
         fprintf(stderr, "(null)\n");
     } else {
-        char *label = node_descriptors[node->type].label;
+        char *label = fuco_nodetype_get_label(node->type);
         if (*label != '\0') {
             fprintf(file, "%s", label);
         }
@@ -334,8 +408,8 @@ void fuco_node_unparse_write(fuco_node_t *node, FILE *file) {
 
 void fuco_node_validate(fuco_node_t *node) {
     assert(node != NULL);
-    assert(node_descriptors[node->type].layout == FUCO_LAYOUT_VARIADIC 
-           || (size_t)node_descriptors[node->type].layout == node->count);
+    assert(fuco_nodetype_get_layout(node->type) == FUCO_LAYOUT_VARIADIC 
+           || (size_t)fuco_nodetype_get_layout(node->type) == node->count);
         
     for (size_t i = 0; i < node->count; i++) {
         assert(node->children[i] != NULL);
