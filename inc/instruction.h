@@ -1,6 +1,7 @@
 #ifndef FUCO_INSTRUCTION_H
 #define FUCO_INSTRUCTION_H
 
+#include "defs.h"
 #include <stdio.h>
 #include <stdint.h>
 
@@ -60,6 +61,14 @@ void fuco_instr_write(fuco_instr_t instr, FILE *file);
 char *fuco_opcode_get_mnemonic(fuco_opcode_t opcode);
 
 fuco_instr_layout_t fuco_opcode_get_layout(fuco_opcode_t opcode);
+
+size_t fuco_opcode_get_arity(fuco_opcode_t opcode);
+
+fuco_node_t *fuco_opcode_get_argtype(fuco_opcode_t opcode, 
+                                     fuco_symboltable_t *table, size_t arg);
+
+fuco_node_t *fuco_opcode_get_rettype(fuco_opcode_t opcode, 
+                                     fuco_symboltable_t *table);
 
 void fuco_bytecode_init(fuco_bytecode_t *bytecode);
 

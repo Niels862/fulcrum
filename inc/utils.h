@@ -14,7 +14,6 @@
 
 #define FUCO_UNUSED(p) (void)(p)
 
-/* exit(1) used to avoid compiler warnings */
 #define FUCO_UNREACHED() \
         fuco_fatal_error(__FILE__, __LINE__, "executed unreachable section")
 

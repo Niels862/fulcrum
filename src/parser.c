@@ -24,19 +24,16 @@ void fuco_parser_destruct(fuco_parser_t *parser) {
 }
 
 void fuco_parser_setup_instrs(fuco_parser_t *parser) {
-    static fuco_node_instr_t instrs[] = {
-        { .opcode = FUCO_OPCODE_IADD },
-        { .opcode = FUCO_OPCODE_ISUB },
-        { .opcode = FUCO_OPCODE_IMUL },
-        { .opcode = FUCO_OPCODE_IDIV },
-        { .opcode = FUCO_OPCODE_IMOD },
+    static fuco_opcode_t instrs[] = {
+        FUCO_OPCODE_IADD,
+        FUCO_OPCODE_ISUB,
+        FUCO_OPCODE_IMUL,
+        FUCO_OPCODE_IDIV,
+        FUCO_OPCODE_IMOD
     };
 
     for (size_t i = 0; i < sizeof(instrs) / sizeof(*instrs); i++) {
-        instrs[i].in1 = instrs[i].in2 = instrs[i].ret = FUCO_SYMID_INT;
-        instrs->count = 2;
-
-        char *mnemonic = fuco_opcode_get_mnemonic(instrs[i].opcode);
+        char *mnemonic = fuco_opcode_get_mnemonic(instrs[i]);
         void **result = fuco_map_insert(&parser->instrs, mnemonic, &instrs[i]);
 
         assert(result == NULL);
@@ -106,11 +103,11 @@ int fuco_parser_lookup_instr(fuco_parser_t *parser, fuco_node_t *node) {
         return 1;
     }
 
-    fuco_node_instr_t *mapped_instr = *result;
+    fuco_opcode_t *mapped_instr = *result;
 
     assert(mapped_instr != NULL);
 
-    node->instr = *mapped_instr;
+    node->opcode = *mapped_instr;
 
     return 0;
 }

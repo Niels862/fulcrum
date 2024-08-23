@@ -1,6 +1,8 @@
 #include "instruction.h"
+#include "symbol.h"
 #include "utils.h"
 #include <stdlib.h>
+#include <assert.h>
 
 char *fuco_opcode_get_mnemonic(fuco_opcode_t opcode) {
     switch (opcode) {
@@ -71,6 +73,59 @@ fuco_instr_layout_t fuco_opcode_get_layout(fuco_opcode_t opcode) {
 
     FUCO_UNREACHED();
 }
+
+size_t fuco_opcode_get_arity(fuco_opcode_t opcode) {
+    switch (opcode) {
+        case FUCO_OPCODE_IADD:
+        case FUCO_OPCODE_ISUB:
+        case FUCO_OPCODE_IMUL:
+        case FUCO_OPCODE_IDIV:
+        case FUCO_OPCODE_IMOD:
+            return 2;
+
+        default:
+            break;
+    }
+
+    FUCO_UNREACHED();
+}
+
+fuco_node_t *fuco_opcode_get_argtype(fuco_opcode_t opcode, 
+                                     fuco_symboltable_t *table, size_t arg) {
+    assert(arg < fuco_opcode_get_arity(opcode));
+    
+    switch (opcode) {
+        case FUCO_OPCODE_IADD:
+        case FUCO_OPCODE_ISUB:
+        case FUCO_OPCODE_IMUL:
+        case FUCO_OPCODE_IDIV:
+        case FUCO_OPCODE_IMOD:            
+            return fuco_symboltable_get_type(table, FUCO_SYMID_INT);
+
+        default:
+            break;
+    }
+
+    FUCO_UNREACHED();
+}
+
+fuco_node_t *fuco_opcode_get_rettype(fuco_opcode_t opcode, 
+                                     fuco_symboltable_t *table) {    
+    switch (opcode) {
+        case FUCO_OPCODE_IADD:
+        case FUCO_OPCODE_ISUB:
+        case FUCO_OPCODE_IMUL:
+        case FUCO_OPCODE_IDIV:
+        case FUCO_OPCODE_IMOD:
+            return fuco_symboltable_get_type(table, FUCO_SYMID_INT);
+
+        default:
+            break;
+    }
+
+    FUCO_UNREACHED();
+}
+
 
 void fuco_instr_write(fuco_instr_t instr, FILE *file) {
     fuco_opcode_t opcode = FUCO_GET_OPCODE(instr);

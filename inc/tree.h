@@ -57,14 +57,6 @@ typedef enum {
 #define FUCO_NODE_SIZE(n) \
         sizeof(fuco_node_t) + (n) * sizeof(fuco_node_t *)
 
-typedef struct __attribute__((packed)) {
-    fuco_opcode_t opcode : 16;
-    size_t count : 8;
-    fuco_symbolid_t in1 : 8;
-    fuco_symbolid_t in2 : 8;
-    fuco_symbolid_t ret : 8;
-} fuco_node_instr_t;
-
 struct fuco_node_t {
     fuco_nodetype_t type;
     fuco_token_t *token;
@@ -74,7 +66,7 @@ struct fuco_node_t {
         struct fuco_node_t *datatype;
         fuco_scope_t *scope;
     } data;
-    fuco_node_instr_t instr;
+    fuco_opcode_t opcode;
     size_t count;
     struct fuco_node_t *children[];
 };
@@ -155,11 +147,8 @@ int fuco_node_resolve_local_function(fuco_node_t *node,
                                      fuco_symboltable_t *table, 
                                      fuco_scope_t *scope);
 
-int fuco_node_resolve_call(fuco_node_t *node, fuco_symboltable_t *table, 
-                           fuco_scope_t *scope, fuco_node_t *ctx);
-
-void fuco_node_resolve_local_id(fuco_node_t *node, fuco_symboltable_t *table, 
-                                fuco_symbolid_t id);
+int fuco_node_resolve_local_call(fuco_node_t *node, fuco_symboltable_t *table, 
+                                 fuco_scope_t *scope, fuco_node_t *ctx);
 
 int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table, 
                             fuco_scope_t *outer, fuco_node_t *ctx);

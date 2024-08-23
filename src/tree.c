@@ -635,8 +635,8 @@ int fuco_node_resolve_local_function(fuco_node_t *node,
     return fuco_node_resolve_local_propagate(next, table, scope, node);
 }
 
-int fuco_node_resolve_call(fuco_node_t *node, fuco_symboltable_t *table, 
-                           fuco_scope_t *scope, fuco_node_t *ctx) {
+int fuco_node_resolve_local_call(fuco_node_t *node, fuco_symboltable_t *table, 
+                                 fuco_scope_t *scope, fuco_node_t *ctx) {
     
     assert(node->type == FUCO_NODE_CALL);
     
@@ -756,9 +756,34 @@ int fuco_node_resolve_call(fuco_node_t *node, fuco_symboltable_t *table,
     return 0;
 }
 
-void fuco_node_resolve_local_id(fuco_node_t *node, fuco_symboltable_t *table, 
-                                fuco_symbolid_t id) {
-    node->data.datatype = fuco_symboltable_lookup(table, id)->def;
+int fuco_node_resolve_instr(fuco_node_t *node, fuco_symboltable_t *table,
+                            fuco_scope_t *scope, fuco_node_t *ctx) {
+    assert(node->type == FUCO_NODE_INSTR);
+    assert(node->opcode != FUCO_OPCODE_NOP);
+
+    if (fuco_node_resolve_local_propagate(node, table, scope, ctx)) {
+        return 1;
+    }
+
+    fuco_node_t *args = node->children[FUCO_LAYOUT_INSTR_ARGS];
+
+    size_t arity = fuco_opcode_get_arity(node->opcode);
+    for (size_t i = 0; i < arity; i++) {
+        fuco_node_t *type = fuco_opcode_get_argtype(node->opcode, table, i);
+        fuco_node_t *argtype = args->children[i]->data.datatype;
+
+        printf("%p %p\n", (void *)type, (void *)argtype);
+
+        fuco_typematch_t match = fuco_node_type_match(argtype, type);
+        if (match != FUCO_TYPEMATCH_MATCH) {
+            /* TODO */
+            fuco_syntax_error(&node->token->source, "no");
+        }
+    }
+
+    node->data.datatype = fuco_opcode_get_rettype(node->opcode, table);;
+
+    return 0;
 }
 
 int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table, 
@@ -789,19 +814,15 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
             break;
 
         case FUCO_NODE_CALL:
-            if (fuco_node_resolve_call(node, table, scope, ctx)) {
+            if (fuco_node_resolve_local_call(node, table, scope, ctx)) {
                 return 1;
             }
             break;
 
         case FUCO_NODE_INSTR:
-            if (fuco_node_resolve_local_propagate(node, table, scope, ctx)) {
+            if (fuco_node_resolve_instr(node, table, scope, ctx)) {
                 return 1;
             }
-
-            /* TODO: type resolution thingies */
-            type = fuco_symboltable_get_type(table, node->instr.ret);
-            node->data.datatype = type;
             break;
 
         case FUCO_NODE_VARIABLE:
@@ -819,7 +840,8 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
             break;
 
         case FUCO_NODE_INTEGER:
-            fuco_node_resolve_local_id(node, table, FUCO_SYMID_INT);
+            node->data.datatype = fuco_symboltable_get_type(table, 
+                                                            FUCO_SYMID_INT);
             break;
 
         case FUCO_NODE_RETURN:
@@ -896,7 +918,7 @@ void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir,
             next = node->children[FUCO_LAYOUT_INSTR_ARGS];
             fuco_node_generate_ir(next, ir, obj);
 
-            fuco_ir_add_instr(ir, obj, node->instr.opcode);
+            fuco_ir_add_instr(ir, obj, node->opcode);
             break;
 
         case FUCO_NODE_ARG_LIST:
