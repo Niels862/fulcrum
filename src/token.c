@@ -269,8 +269,6 @@ char *fuco_token_string(fuco_token_t *token) {
         return token->lexeme;
     }   
 
-    printf("%d\n", token->type);
-
     assert(token->lexeme == NULL);
 
     return fuco_tokentype_string(token->type);
