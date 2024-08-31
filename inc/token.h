@@ -6,9 +6,19 @@
 #include <stdbool.h>
 
 typedef enum {
-    FUCO_TOKEN_EMPTY,
+    FUCO_TOKENKIND_SYNTHETIC,
+    FUCO_TOKENKIND_LITERAL,
+    FUCO_TOKENKIND_KEYWORD,
+    FUCO_TOKENKIND_SEPARATOR,
+    FUCO_TOKENKIND_OPERATOR
+} fuco_tokenkind_t;
 
+typedef enum {
+    FUCO_TOKEN_NULL,
+    FUCO_TOKEN_EMPTY,
     FUCO_TOKEN_START_OF_SOURCE,
+    FUCO_TOKEN_END_OF_FILE,
+    FUCO_TOKEN_END_OF_SOURCE, /* Final token in tokenlist */
 
     FUCO_TOKEN_INTEGER,
     FUCO_TOKEN_IDENTIFIER,
@@ -17,6 +27,13 @@ typedef enum {
     FUCO_TOKEN_DEF,
     FUCO_TOKEN_INLINE,
     FUCO_TOKEN_RETURN,
+    FUCO_TOKEN_CONVERT,
+    FUCO_TOKEN_WHILE,
+    FUCO_TOKEN_FOR,
+    FUCO_TOKEN_IF,
+    FUCO_TOKEN_ELSE,
+    FUCO_TOKEN_LET,
+    FUCO_TOKEN_CONST,
 
     FUCO_TOKEN_BRACKET_OPEN,
     FUCO_TOKEN_BRACKET_CLOSE,
@@ -36,22 +53,8 @@ typedef enum {
     FUCO_TOKEN_SLASH,
     FUCO_TOKEN_PERCENT,
 
-    FUCO_TOKEN_END_OF_FILE,
-    FUCO_TOKEN_END_OF_SOURCE /* Final token in tokenlist */
+    FUCO_N_TOKENTYPES
 } fuco_tokentype_t;
-
-typedef enum {
-    FUCO_TOKENTYPE_IS_KEYWORD = 0x1,
-    FUCO_TOKENTYPE_IS_SEPARATOR = 0x2,
-    FUCO_TOKENTYPE_IS_OPERATOR = 0x4,
-    FUCO_TOKENTYPE_HAS_LEXEME = 0x8
-} fuco_token_attr_t;
-
-typedef struct {
-    fuco_tokentype_t type;
-    fuco_token_attr_t attr;
-    char *string;
-} fuco_token_descriptor_t;
 
 typedef struct {
     char *lexeme;
@@ -70,16 +73,12 @@ extern fuco_token_t bool_token;
 
 extern fuco_token_t none_token;
 
-extern fuco_token_descriptor_t const token_descriptors[];
+fuco_tokenkind_t fuco_tokentype_kind(fuco_tokentype_t type);
 
 char *fuco_tokentype_string(fuco_tokentype_t type);
 
-bool fuco_tokentype_has_attr(fuco_tokentype_t type, fuco_token_attr_t attr);
-
-size_t fuco_n_tokentypes();
-
-fuco_tokentype_t fuco_tokentype_lookup_string(char *string, 
-                                              fuco_token_attr_t attr_mask);
+fuco_tokentype_t fuco_tokentype_lookup_string(char *lexeme, 
+                                              fuco_tokenkind_t kind);
 
 void fuco_token_init(fuco_token_t *token);
 

@@ -156,6 +156,7 @@ void fuco_symboltable_write(fuco_symboltable_t *table, FILE *file) {
     while (chunk != NULL) {
         for (size_t i = 0; i < chunk->size; i++) {
             size_t len = strlen(fuco_token_string(chunk->data[i].token));
+
             if (len > max) {
                 max = len;
             }

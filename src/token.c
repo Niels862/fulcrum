@@ -6,11 +6,11 @@
 #include <assert.h>
 
 fuco_token_t null_token = {
-    .lexeme = "(null)", 
+    .lexeme = NULL, 
     .source = {
         .col = 0, .row = 0, .filename = NULL
     }, 
-    .type = FUCO_TOKEN_EMPTY
+    .type = FUCO_TOKEN_NULL
 };
 
 fuco_token_t int_token = {
@@ -45,63 +45,176 @@ fuco_token_t none_token = {
     .type = FUCO_TOKEN_IDENTIFIER
 };
 
-fuco_token_descriptor_t const token_descriptors[] = {
-    { FUCO_TOKEN_EMPTY, 0, "empty" },
+fuco_tokenkind_t fuco_tokentype_kind(fuco_tokentype_t type) {
+    switch (type) {
+        case FUCO_TOKEN_NULL:
+        case FUCO_TOKEN_EMPTY:
+        case FUCO_TOKEN_START_OF_SOURCE:
+        case FUCO_TOKEN_END_OF_FILE:
+        case FUCO_TOKEN_END_OF_SOURCE:
+            return FUCO_TOKENKIND_SYNTHETIC;
 
-    { FUCO_TOKEN_START_OF_SOURCE, 0, "start of source" },
+        case FUCO_TOKEN_INTEGER:
+        case FUCO_TOKEN_IDENTIFIER:
+        case FUCO_TOKEN_OPERATOR:
+            return FUCO_TOKENKIND_LITERAL;
 
-    { FUCO_TOKEN_INTEGER, FUCO_TOKENTYPE_HAS_LEXEME, "integer" },
-    { FUCO_TOKEN_IDENTIFIER, FUCO_TOKENTYPE_HAS_LEXEME, "identifier" },
-    { FUCO_TOKEN_OPERATOR, FUCO_TOKENTYPE_HAS_LEXEME, "operator" },
+        case FUCO_TOKEN_DEF:
+        case FUCO_TOKEN_INLINE:
+        case FUCO_TOKEN_RETURN:
+        case FUCO_TOKEN_CONVERT:
+        case FUCO_TOKEN_WHILE:
+        case FUCO_TOKEN_FOR:
+        case FUCO_TOKEN_IF:
+        case FUCO_TOKEN_ELSE:
+        case FUCO_TOKEN_LET:
+        case FUCO_TOKEN_CONST:
+            return FUCO_TOKENKIND_KEYWORD;
 
-    { FUCO_TOKEN_DEF, FUCO_TOKENTYPE_IS_KEYWORD, "def" },
-    { FUCO_TOKEN_INLINE, FUCO_TOKENTYPE_IS_KEYWORD, "inline" },
-    { FUCO_TOKEN_RETURN, FUCO_TOKENTYPE_IS_KEYWORD, "return" },
+        case FUCO_TOKEN_BRACKET_OPEN:
+        case FUCO_TOKEN_BRACKET_CLOSE:
+        case FUCO_TOKEN_BRACE_OPEN:
+        case FUCO_TOKEN_BRACE_CLOSE:
+        case FUCO_TOKEN_SQBRACKET_OPEN:
+        case FUCO_TOKEN_SQBRACKET_CLOSE:
+        case FUCO_TOKEN_DOT:
+        case FUCO_TOKEN_COMMA:
+        case FUCO_TOKEN_SEMICOLON:
+        case FUCO_TOKEN_COLON:
+            return FUCO_TOKENKIND_SEPARATOR;
 
-    { FUCO_TOKEN_BRACKET_OPEN, FUCO_TOKENTYPE_IS_SEPARATOR, "(" },
-    { FUCO_TOKEN_BRACKET_CLOSE, FUCO_TOKENTYPE_IS_SEPARATOR, ")" },
-    { FUCO_TOKEN_BRACE_OPEN, FUCO_TOKENTYPE_IS_SEPARATOR, "{" },
-    { FUCO_TOKEN_BRACE_CLOSE, FUCO_TOKENTYPE_IS_SEPARATOR, "}" },
-    { FUCO_TOKEN_SQBRACKET_OPEN, FUCO_TOKENTYPE_IS_SEPARATOR, "[" },
-    { FUCO_TOKEN_SQBRACKET_CLOSE, FUCO_TOKENTYPE_IS_SEPARATOR, "]" },
-    { FUCO_TOKEN_DOT, FUCO_TOKENTYPE_IS_SEPARATOR, "." },
-    { FUCO_TOKEN_COMMA, FUCO_TOKENTYPE_IS_SEPARATOR, "," },
-    { FUCO_TOKEN_SEMICOLON, FUCO_TOKENTYPE_IS_SEPARATOR, ";" },
-    { FUCO_TOKEN_COLON, FUCO_TOKENTYPE_IS_SEPARATOR, ":" },
+        case FUCO_TOKEN_ARROW:
+        case FUCO_TOKEN_PLUS:
+        case FUCO_TOKEN_MINUS:
+        case FUCO_TOKEN_ASTERISK:
+        case FUCO_TOKEN_SLASH:
+        case FUCO_TOKEN_PERCENT:
+            return FUCO_TOKENKIND_OPERATOR;
 
-    { FUCO_TOKEN_ARROW, FUCO_TOKENTYPE_IS_OPERATOR, "->" },
-    { FUCO_TOKEN_PLUS, FUCO_TOKENTYPE_IS_OPERATOR, "+" },
-    { FUCO_TOKEN_MINUS, FUCO_TOKENTYPE_IS_OPERATOR, "-" },
-    { FUCO_TOKEN_ASTERISK, FUCO_TOKENTYPE_IS_OPERATOR, "*" },
-    { FUCO_TOKEN_SLASH, FUCO_TOKENTYPE_IS_OPERATOR, "/" },
-    { FUCO_TOKEN_PERCENT, FUCO_TOKENTYPE_IS_OPERATOR, "%" },
+        default:
+            break;
+    }
 
-    { FUCO_TOKEN_END_OF_FILE, 0, "end of file" },
-
-    { FUCO_TOKEN_END_OF_SOURCE, 0, "end of source" }
-};
-
-#define FUCO_N_TOKENTYPES sizeof(token_descriptors) / sizeof(*token_descriptors)
+    FUCO_UNREACHED();
+}
 
 char *fuco_tokentype_string(fuco_tokentype_t type) {
-    assert(type < FUCO_N_TOKENTYPES);
+    switch (type) {
+        case FUCO_TOKEN_NULL:
+            return "(null)";
 
-    return token_descriptors[type].string;
+        case FUCO_TOKEN_EMPTY:
+            return "(empty)";
+
+        case FUCO_TOKEN_START_OF_SOURCE:
+            return "(start of source)";
+
+        case FUCO_TOKEN_END_OF_FILE:
+            return "(end of file)";
+
+        case FUCO_TOKEN_END_OF_SOURCE:
+            return "(end of source)";
+
+        case FUCO_TOKEN_INTEGER:
+            return "(integer)";
+
+        case FUCO_TOKEN_IDENTIFIER:
+            return "(identifier)";
+        
+        case FUCO_TOKEN_OPERATOR:
+            return "(operator)";
+
+        case FUCO_TOKEN_DEF:
+            return "def";
+
+        case FUCO_TOKEN_INLINE:
+            return "inline";
+
+        case FUCO_TOKEN_RETURN:
+            return "return";
+
+        case FUCO_TOKEN_CONVERT:
+            return "convert";
+
+        case FUCO_TOKEN_WHILE:
+            return "while";
+
+        case FUCO_TOKEN_FOR:
+            return "for";
+
+        case FUCO_TOKEN_IF:
+            return "if";
+
+        case FUCO_TOKEN_ELSE:
+            return "else";
+
+        case FUCO_TOKEN_LET:
+            return "let";
+
+        case FUCO_TOKEN_CONST:
+            return "const";
+
+        case FUCO_TOKEN_BRACKET_OPEN:
+            return "(";
+
+        case FUCO_TOKEN_BRACKET_CLOSE:
+            return ")";
+
+        case FUCO_TOKEN_BRACE_OPEN:
+            return "{";
+
+        case FUCO_TOKEN_BRACE_CLOSE:
+            return "}";
+
+        case FUCO_TOKEN_SQBRACKET_OPEN:
+            return "[";
+
+        case FUCO_TOKEN_SQBRACKET_CLOSE:
+            return "]";
+
+        case FUCO_TOKEN_DOT:
+            return ".";
+
+        case FUCO_TOKEN_COMMA:
+            return ",";
+
+        case FUCO_TOKEN_SEMICOLON:
+            return ";";
+
+        case FUCO_TOKEN_COLON:
+            return ":";
+
+        case FUCO_TOKEN_ARROW:
+            return "->";
+
+        case FUCO_TOKEN_PLUS:
+            return "+";
+
+        case FUCO_TOKEN_MINUS:
+            return "-";
+
+        case FUCO_TOKEN_ASTERISK:
+            return "*";
+
+        case FUCO_TOKEN_SLASH:
+            return "/";
+
+        case FUCO_TOKEN_PERCENT:
+            return "%"; 
+
+        default:
+            break;
+    }
+
+    FUCO_UNREACHED();
 }
 
-bool fuco_tokentype_has_attr(fuco_tokentype_t type, fuco_token_attr_t attr) {
-    return token_descriptors[type].attr & attr;
-}
-
-size_t fuco_n_tokentypes() {
-    return FUCO_N_TOKENTYPES;
-}
-
-fuco_tokentype_t fuco_tokentype_lookup_string(char *string, 
-                                              fuco_token_attr_t attr_mask) {
+fuco_tokentype_t fuco_tokentype_lookup_string(char *lexeme, 
+                                              fuco_tokenkind_t kind) {
     for (size_t i = 0; i < FUCO_N_TOKENTYPES; i++) {
-        if ((token_descriptors[i].attr & attr_mask) == attr_mask
-            && strcmp(token_descriptors[i].string, string) == 0) {
+        char *str = fuco_tokentype_string(i);
+
+        if (fuco_tokentype_kind(i) == kind && strcmp(str, lexeme) == 0) {
             return i;
         }
     }
@@ -149,10 +262,17 @@ void fuco_token_write(fuco_token_t *token, FILE *file) {
     }
 }
 
-char *fuco_token_string(fuco_token_t *token) {
-    if (token_descriptors[token->type].attr & FUCO_TOKENTYPE_HAS_LEXEME) {
+char *fuco_token_string(fuco_token_t *token) {    
+    if (fuco_tokentype_kind(token->type) == FUCO_TOKENKIND_LITERAL) {
+        assert(token->lexeme != NULL);
+
         return token->lexeme;
     }   
+
+    printf("%d\n", token->type);
+
+    assert(token->lexeme == NULL);
+
     return fuco_tokentype_string(token->type);
 }
 

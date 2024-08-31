@@ -1,4 +1,4 @@
-def inline convert(x: Int) -> Int {
+def inline f(x: Int) -> Int {
     return 0;
 }
 

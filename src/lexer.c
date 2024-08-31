@@ -146,9 +146,6 @@ void fuco_lexer_skip_nontokens(fuco_lexer_t *lexer) {
 }
 
 void fuco_lexer_append_token(fuco_lexer_t *lexer, fuco_tokentype_t type, char *lexeme, void *data) {
-    assert((token_descriptors[type].attr & FUCO_TOKENTYPE_HAS_LEXEME) == 0 
-           || lexeme != NULL);
-    
     fuco_token_t *token = fuco_tokenlist_append(&lexer->list);
     
     token->type = type;
@@ -183,7 +180,7 @@ fuco_tstream_t fuco_lexer_lex(fuco_lexer_t *lexer) {
             } while (fuco_is_identifier_continue(lexer->c));
 
             type = fuco_tokentype_lookup_string(lexer->strbuf.data, 
-                                                FUCO_TOKENTYPE_IS_KEYWORD);
+                                                FUCO_TOKENKIND_KEYWORD);
 
             if (type == FUCO_TOKEN_EMPTY) {
                 type = FUCO_TOKEN_IDENTIFIER;
@@ -214,7 +211,7 @@ fuco_tstream_t fuco_lexer_lex(fuco_lexer_t *lexer) {
             } while (fuco_is_operator(lexer->c));
 
             type = fuco_tokentype_lookup_string(lexer->strbuf.data, 
-                                                FUCO_TOKENTYPE_IS_OPERATOR);
+                                                FUCO_TOKENKIND_OPERATOR);
             
             if (type == FUCO_TOKEN_EMPTY) {
                 fuco_syntax_error(&lexer->start, "invalid operator: '%s'", 
@@ -239,7 +236,7 @@ fuco_tstream_t fuco_lexer_lex(fuco_lexer_t *lexer) {
             fuco_lexer_next_char(lexer);
 
             type = fuco_tokentype_lookup_string(lexer->strbuf.data, 
-                                                FUCO_TOKENTYPE_IS_SEPARATOR);
+                                                FUCO_TOKENKIND_SEPARATOR);
 
             if (type == FUCO_TOKEN_EMPTY) {
                 fuco_syntax_error(&lexer->start, "invalid character: '%s'", 
