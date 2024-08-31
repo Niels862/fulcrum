@@ -15,6 +15,16 @@ void fuco_program_push(fuco_program_t *program, void *data, size_t size) {
     program->sp += size;
 }
 
+uint64_t fuco_program_qpop(fuco_program_t *program) {
+    program->sp -= sizeof(uint64_t);
+    return *(uint64_t *)(program->stack + program->sp);
+}
+
+void fuco_program_qpush(fuco_program_t *program, uint64_t data) {
+    *(uint64_t *)(program->stack + program->sp) = data;
+    program->sp += sizeof(uint64_t);
+}
+
 void fuco_program_init(fuco_program_t *program, fuco_instr_t *instrs, 
                        size_t stack_size) {
     program->ip = program->sp = program->bp = 0;
@@ -45,7 +55,7 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
     uint64_t retq;
     int64_t exit_code = -1;
     
-    uint64_t x1, x2, y;
+    uint64_t x1, x2;
 
     bool running = true;
 
@@ -66,74 +76,67 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
                 break;
 
             case FUCO_OPCODE_CALL:
-                fuco_program_push(&program, &program.ip, sizeof(program.ip));
-                fuco_program_push(&program, &program.bp, sizeof(program.bp));
+                fuco_program_qpush(&program, program.ip);
+                fuco_program_qpush(&program, program.bp);
                 program.bp = program.sp;
                 program.ip = imm48 - 1;
                 break;
 
             case FUCO_OPCODE_RETQ:
-                fuco_program_pop(&program, &retq, sizeof(retq));
+                retq = fuco_program_qpop(&program);
                 program.sp = program.bp;
-                fuco_program_pop(&program, &program.bp, sizeof(program.bp));
-                fuco_program_pop(&program, &program.ip, sizeof(program.ip));
+                program.bp = fuco_program_qpop(&program);
+                program.ip = fuco_program_qpop(&program);
                 program.sp -= imm48;
-                fuco_program_push(&program, &retq, sizeof(retq));
+                fuco_program_qpush(&program, retq);
                 break;
 
             case FUCO_OPCODE_PUSHQ:
-                fuco_program_push(&program, &immq, sizeof(uint64_t));
+                fuco_program_qpush(&program, immq);
                 break;
 
             case FUCO_OPCODE_LOADQ:
-                memcpy(&immq, (void *)(program.stack + simm48), 
-                       sizeof(uint64_t));
-                fuco_program_push(&program, &immq, sizeof(uint64_t));
+                immq = *(uint64_t *)(program.stack + simm48);
+                fuco_program_qpush(&program, immq);
                 break;
 
             case FUCO_OPCODE_RLOADQ:
-                memcpy(&immq, (void *)(program.stack + program.bp + simm48), 
-                       sizeof(uint64_t));
-                fuco_program_push(&program, &immq, sizeof(uint64_t));
+                immq = *(uint64_t *)(program.stack + program.bp + simm48);
+                fuco_program_qpush(&program, immq);
                 break;
 
             case FUCO_OPCODE_IADD:
-                fuco_program_pop(&program, &x1, sizeof(x1));
-                fuco_program_pop(&program, &x2, sizeof(x2));
-                y = x1 + x2;
-                fuco_program_push(&program, &y, sizeof(y));
+                x1 = fuco_program_qpop(&program);
+                x2 = fuco_program_qpop(&program);
+                fuco_program_qpush(&program, x1 + x2);
                 break;
 
             case FUCO_OPCODE_ISUB:
-                fuco_program_pop(&program, &x1, sizeof(x1));
-                fuco_program_pop(&program, &x2, sizeof(x2));
-                y = x1 - x2;
-                fuco_program_push(&program, &y, sizeof(y));
+                x1 = fuco_program_qpop(&program);
+                x2 = fuco_program_qpop(&program);
+                fuco_program_qpush(&program, x1 - x2);
                 break;
 
             case FUCO_OPCODE_IMUL:
-                fuco_program_pop(&program, &x1, sizeof(x1));
-                fuco_program_pop(&program, &x2, sizeof(x2));
-                y = x1 * x2;
-                fuco_program_push(&program, &y, sizeof(y));
+                x1 = fuco_program_qpop(&program);
+                x2 = fuco_program_qpop(&program);
+                fuco_program_qpush(&program, x1 * x2);
                 break;
 
             case FUCO_OPCODE_IDIV: /* TODO: 0 div */
-                fuco_program_pop(&program, &x1, sizeof(x1));
-                fuco_program_pop(&program, &x2, sizeof(x2));
-                y = x1 / x2;
-                fuco_program_push(&program, &y, sizeof(y));
+                x1 = fuco_program_qpop(&program);
+                x2 = fuco_program_qpop(&program);
+                fuco_program_qpush(&program, x1 / x2);
                 break;
 
             case FUCO_OPCODE_IMOD: /* TODO: arithmetic exceptions */
-                fuco_program_pop(&program, &x1, sizeof(x1));
-                fuco_program_pop(&program, &x2, sizeof(x2));
-                y = x1 % x2;
-                fuco_program_push(&program, &y, sizeof(y));
+                x1 = fuco_program_qpop(&program);
+                x2 = fuco_program_qpop(&program);
+                fuco_program_qpush(&program, x1 % x2);
                 break;
 
             case FUCO_OPCODE_EXIT:
-                fuco_program_pop(&program, &exit_code, sizeof(exit_code));
+                exit_code = fuco_program_qpop(&program);
                 running = false;
                 break;
 

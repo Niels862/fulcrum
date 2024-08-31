@@ -1,7 +1,3 @@
-def inline convert(x: Int) -> Int {
-    return 0;
-}
-
 def inline [ + ](x: Int, y: Int) -> Int {
     return %iadd(x, y);
 }

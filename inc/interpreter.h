@@ -17,6 +17,10 @@ void fuco_program_pop(fuco_program_t *program, void *data, size_t size);
 
 void fuco_program_push(fuco_program_t *program, void *data, size_t size);
 
+uint64_t fuco_program_qpop(fuco_program_t *program);
+
+void fuco_program_qpush(fuco_program_t *program, uint64_t data);
+
 void fuco_program_init(fuco_program_t *program, fuco_instr_t *instrs, 
                        size_t stack_size);
 
