@@ -130,13 +130,13 @@ void fuco_node_setup_scopes(fuco_node_t *node, fuco_scope_t *scope);
 
 fuco_scope_t *fuco_node_get_scope(fuco_node_t *node, fuco_scope_t *outer);
 
-int fuco_node_resolve_datatypes(fuco_node_t *node, fuco_symboltable_t *table, 
+int fuco_node_gather_datatypes(fuco_node_t *node, fuco_symboltable_t *table, 
                                 fuco_scope_t *outer);
 
 int fuco_node_resolve_type(fuco_node_t *node, fuco_symboltable_t *table, 
-                            fuco_scope_t *outer);
+                           fuco_scope_t *outer);
 
-int fuco_node_resolve_functions(fuco_node_t *node, fuco_symboltable_t *table, 
+int fuco_node_gather_functions(fuco_node_t *node, fuco_symboltable_t *table, 
                                 fuco_scope_t *outer);
 
 int fuco_node_resolve_local_propagate(fuco_node_t *node, 

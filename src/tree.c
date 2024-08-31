@@ -512,7 +512,7 @@ fuco_scope_t *fuco_node_get_scope(fuco_node_t *node, fuco_scope_t *outer) {
     return scope;
 }
 
-int fuco_node_resolve_datatypes(fuco_node_t *node, fuco_symboltable_t *table, 
+int fuco_node_gather_datatypes(fuco_node_t *node, fuco_symboltable_t *table, 
                                 fuco_scope_t *outer) {
     fuco_scope_t *scope = fuco_node_get_scope(node, outer);
 
@@ -522,7 +522,7 @@ int fuco_node_resolve_datatypes(fuco_node_t *node, fuco_symboltable_t *table,
     }
 
     for (size_t i = 0; i < node->count; i++) {
-        if (fuco_node_resolve_datatypes(node->children[i], table, scope)) {
+        if (fuco_node_gather_datatypes(node->children[i], table, scope)) {
             return 1;
         }
     }
@@ -558,7 +558,7 @@ int fuco_node_resolve_type(fuco_node_t *node, fuco_symboltable_t *table,
     return 0;
 }
 
-int fuco_node_resolve_functions(fuco_node_t *node, fuco_symboltable_t *table, 
+int fuco_node_gather_functions(fuco_node_t *node, fuco_symboltable_t *table, 
                                 fuco_scope_t *outer) {
     fuco_scope_t *scope = fuco_node_get_scope(node, outer);
     fuco_node_t *params, *type, *rettype;
@@ -572,7 +572,7 @@ int fuco_node_resolve_functions(fuco_node_t *node, fuco_symboltable_t *table,
             }
 
             params = node->children[FUCO_LAYOUT_FUNCTION_PARAMS];
-            if (fuco_node_resolve_functions(params, table, scope)) {
+            if (fuco_node_gather_functions(params, table, scope)) {
                 return 1;
             }
 
@@ -600,7 +600,7 @@ int fuco_node_resolve_functions(fuco_node_t *node, fuco_symboltable_t *table,
             
         default:     
             for (size_t i = 0; i < node->count; i++) {
-                if (fuco_node_resolve_functions(node->children[i], 
+                if (fuco_node_gather_functions(node->children[i], 
                                                 table, scope)) {
                     return 1;
                 }
@@ -610,6 +610,22 @@ int fuco_node_resolve_functions(fuco_node_t *node, fuco_symboltable_t *table,
 
     return 0;
 }
+
+int fuco_node_coerce_type(fuco_node_t **pnode, fuco_node_t *type, 
+                          fuco_scope_t *scope) {
+    FUCO_UNUSED(scope);
+    
+    fuco_node_t *node = *pnode;
+    assert(node->data.datatype != NULL);
+
+    fuco_typematch_t match = fuco_node_type_match(node->data.datatype, type);
+    if (match != FUCO_TYPEMATCH_MATCH) {
+        return 1;
+    }
+
+    return 0;
+}
+
 
 int fuco_node_resolve_local_propagate(fuco_node_t *node, 
                                       fuco_symboltable_t *table, 
@@ -770,14 +786,9 @@ int fuco_node_resolve_instr(fuco_node_t *node, fuco_symboltable_t *table,
     size_t arity = fuco_opcode_get_arity(node->opcode);
     for (size_t i = 0; i < arity; i++) {
         fuco_node_t *type = fuco_opcode_get_argtype(node->opcode, table, i);
-        fuco_node_t *argtype = args->children[i]->data.datatype;
 
-        printf("%p %p\n", (void *)type, (void *)argtype);
-
-        fuco_typematch_t match = fuco_node_type_match(argtype, type);
-        if (match != FUCO_TYPEMATCH_MATCH) {
-            /* TODO */
-            fuco_syntax_error(&node->token->source, "no");
+        if (fuco_node_coerce_type(&args->children[i], type, scope)) {
+            return 1;
         }
     }
 
@@ -790,8 +801,7 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
                             fuco_scope_t *outer, fuco_node_t *ctx) {        
     fuco_scope_t *scope = fuco_node_get_scope(node, outer);
     
-    fuco_node_t *rettype, *type;
-    fuco_typematch_t match;
+    fuco_node_t *type;
 
     switch (node->type) {
         case FUCO_NODE_EMPTY:
@@ -849,12 +859,9 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
                 return 1;
             }
 
-            type = node->children[FUCO_LAYOUT_RETURN_VALUE]->data.datatype;
-            rettype = ctx->children[FUCO_LAYOUT_FUNCTION_RET_TYPE];
-
-            match = fuco_node_type_match(type, rettype);
-            if (match != FUCO_TYPEMATCH_MATCH) {
-                fuco_syntax_error(&node->token->source, "type mismatch");
+            type = ctx->children[FUCO_LAYOUT_FUNCTION_RET_TYPE];
+            if (fuco_node_coerce_type(&node->children[FUCO_LAYOUT_RETURN_VALUE], 
+                                      type, scope)) {
                 return 1;
             }
             break;
