@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <stddef.h>
 
 void fuco_program_pop(fuco_program_t *program, void *data, size_t size) {
@@ -57,11 +58,13 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
     
     uint64_t x1, x2;
 
+    uint64_t instr_count = 0;
     bool running = true;
 
     FUCO_UNUSED(retaddr), FUCO_UNUSED(retbp);
 
     fprintf(stderr, "Start of execution...\n");
+    clock_t start = clock();
 
     while (running) {
         fuco_instr_t instr = program.instrs[program.ip];
@@ -151,8 +154,14 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
         }
 
         program.ip++;
+        instr_count++;
     }
 
+    clock_t end = clock();    
+    double time = (double)(end - start) / CLOCKS_PER_SEC;
+
+    fprintf(stderr, "Executed %ld instructions in %f seconds\n", 
+            instr_count, time);
     fprintf(stderr, "Program finished with exit code %ld\n", exit_code);
 
     fuco_program_destruct(&program);
