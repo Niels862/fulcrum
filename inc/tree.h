@@ -139,6 +139,9 @@ int fuco_node_resolve_type(fuco_node_t *node, fuco_symboltable_t *table,
 int fuco_node_gather_functions(fuco_node_t *node, fuco_symboltable_t *table, 
                                 fuco_scope_t *outer);
 
+int fuco_node_coerce_type(fuco_node_t **pnode, fuco_node_t *type, 
+                          fuco_scope_t *scope);
+
 int fuco_node_resolve_local_propagate(fuco_node_t *node, 
                                       fuco_symboltable_t *table, 
                                       fuco_scope_t *scope, fuco_node_t *ctx);
