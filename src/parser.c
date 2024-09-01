@@ -279,6 +279,10 @@ fuco_node_t *fuco_parse_body_statement(fuco_parser_t *parser) {
             break;
 
         default:
+            fuco_syntax_error(&parser->tstream->source, 
+                              "expected statement, but got %s", 
+                              fuco_token_static_string(parser->tstream));
+
             node = NULL;
             break;
     }
