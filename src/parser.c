@@ -270,6 +270,14 @@ fuco_node_t *fuco_parse_body_statement(fuco_parser_t *parser) {
             node = fuco_parse_return(parser);
             break;
 
+        case FUCO_TOKEN_IF:
+            node = fuco_parse_if_else(parser);
+            break;
+
+        case FUCO_TOKEN_WHILE:
+            node = fuco_parse_while(parser);
+            break;
+
         default:
             node = NULL;
             break;
@@ -295,6 +303,69 @@ fuco_node_t *fuco_parse_return(fuco_parser_t *parser) {
         return NULL;
     }
     
+    return node;
+}
+
+fuco_node_t *fuco_parse_if_else(fuco_parser_t *parser) {
+    fuco_node_t *node = fuco_node_new(FUCO_NODE_IF_ELSE);
+    fuco_node_t *cond = NULL, *true_body = NULL, *false_body = NULL;
+    
+    bool success = fuco_parser_expect(parser, FUCO_TOKEN_IF, node)
+                   && (cond = fuco_parse_expression(parser)) != NULL
+                   && (true_body = fuco_parse_braced_block(parser)) != NULL;
+    
+    if (success) {
+        if (fuco_parser_accept(parser, FUCO_TOKEN_ELSE, NULL)) {
+            success = (false_body = fuco_parse_braced_block(parser)) != NULL;
+        } else {
+            false_body = &fuco_node_empty;
+        }
+    }
+
+    if (!success) {
+        fuco_node_free(node);
+
+        if (cond != NULL) {
+            fuco_node_free(node);
+        }
+
+        if (true_body != NULL) {
+            fuco_node_free(true_body);
+        }
+
+        return NULL;
+    }
+
+    fuco_node_set_child(node, cond, FUCO_LAYOUT_IF_ELSE_COND);
+    fuco_node_set_child(node, true_body, FUCO_LAYOUT_IF_ELSE_TRUE_BODY);
+    fuco_node_set_child(node, false_body, FUCO_LAYOUT_IF_ELSE_FALSE_BODY);
+
+    return node;
+}
+
+fuco_node_t *fuco_parse_while(fuco_parser_t *parser) {
+    fuco_node_t *node = fuco_node_new(FUCO_NODE_WHILE);
+    fuco_node_t *cond = NULL, *body = NULL;
+
+    if (!fuco_parser_expect(parser, FUCO_TOKEN_WHILE, node)
+        || (cond = fuco_parse_expression(parser)) == NULL
+        || (body = fuco_parse_braced_block(parser)) == NULL) {
+        fuco_node_free(node);
+
+        if (cond != NULL) {
+            fuco_node_free(node);
+        }
+
+        if (body != NULL) {
+            fuco_node_free(node);
+        }
+
+        return NULL;
+    }
+
+    fuco_node_set_child(node, cond, FUCO_LAYOUT_WHILE_COND);
+    fuco_node_set_child(node, body, FUCO_LAYOUT_WHILE_BODY);
+
     return node;
 }
 

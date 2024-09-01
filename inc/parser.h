@@ -55,6 +55,10 @@ fuco_node_t *fuco_parse_body_statement(fuco_parser_t *parser);
 
 fuco_node_t *fuco_parse_return(fuco_parser_t *parser);
 
+fuco_node_t *fuco_parse_if_else(fuco_parser_t *parser);
+
+fuco_node_t *fuco_parse_while(fuco_parser_t *parser);
+
 fuco_node_t *fuco_parse_expression(fuco_parser_t *parser);
 
 fuco_node_t *fuco_parse_operator(fuco_parser_t *parser, size_t level);

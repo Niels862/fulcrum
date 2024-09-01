@@ -18,6 +18,8 @@ typedef enum {
     FUCO_NODE_VARIABLE,
     FUCO_NODE_INTEGER,
     FUCO_NODE_RETURN,
+    FUCO_NODE_IF_ELSE,
+    FUCO_NODE_WHILE,
     FUCO_NODE_TYPE_IDENTIFIER,
 } fuco_nodetype_t;
 
@@ -49,6 +51,15 @@ typedef enum {
     FUCO_LAYOUT_RETURN_VALUE = 0,
     FUCO_LAYOUT_RETURN_N,
 
+    FUCO_LAYOUT_IF_ELSE_COND = 0,
+    FUCO_LAYOUT_IF_ELSE_TRUE_BODY,
+    FUCO_LAYOUT_IF_ELSE_FALSE_BODY,
+    FUCO_LAYOUT_IF_ELSE_N,
+
+    FUCO_LAYOUT_WHILE_COND = 0,
+    FUCO_LAYOUT_WHILE_BODY,
+    FUCO_LAYOUT_WHILE_N,
+
     FUCO_LAYOUT_TYPE_IDENTIFIER_N = 0
 } fuco_node_layout_t;
 
@@ -77,6 +88,8 @@ typedef enum {
 
     FUCO_TYPEMATCH_N /* amount of options for type matches */
 } fuco_typematch_t;
+
+extern fuco_node_t fuco_node_empty;
 
 fuco_node_layout_t fuco_nodetype_get_layout(fuco_nodetype_t type);
 

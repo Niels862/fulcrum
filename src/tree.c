@@ -7,6 +7,13 @@
 #include <stdarg.h>
 #include <assert.h>
 
+fuco_node_t fuco_node_empty = {
+    .type = FUCO_NODE_EMPTY,
+    .token = NULL,
+    .symbol = NULL,
+    .count = 0
+};
+
 fuco_node_layout_t fuco_nodetype_get_layout(fuco_nodetype_t type) {
     switch (type) {
         case FUCO_NODE_EMPTY:
@@ -44,6 +51,12 @@ fuco_node_layout_t fuco_nodetype_get_layout(fuco_nodetype_t type) {
 
         case FUCO_NODE_RETURN:
             return FUCO_LAYOUT_RETURN_N;
+
+        case FUCO_NODE_IF_ELSE:
+            return FUCO_LAYOUT_IF_ELSE_N;
+
+        case FUCO_NODE_WHILE:
+            return FUCO_LAYOUT_WHILE_N;
 
         case FUCO_NODE_TYPE_IDENTIFIER: 
             return FUCO_LAYOUT_TYPE_IDENTIFIER_N;
@@ -89,6 +102,12 @@ char *fuco_nodetype_get_label(fuco_nodetype_t type) {
 
         case FUCO_NODE_RETURN:
             return "return";
+
+        case FUCO_NODE_IF_ELSE:
+            return "if-else";
+
+        case FUCO_NODE_WHILE:
+            return "while";
 
         case FUCO_NODE_TYPE_IDENTIFIER: 
             return "type-identifier";
@@ -192,7 +211,7 @@ fuco_node_t *fuco_node_set_count(fuco_node_t *node, size_t count) {
 void fuco_node_free(fuco_node_t *node) {
     switch (node->type) {
         case FUCO_NODE_FILEBODY:
-        case FUCO_NODE_FUNCTION:
+        case FUCO_NODE_FUNCTION: /* TODO: scoped body? */
             if (node->data.scope != NULL) {
                 fuco_scope_destruct(node->data.scope);
                 free(node->data.scope);
@@ -209,7 +228,9 @@ void fuco_node_free(fuco_node_t *node) {
         }
     }
 
-    free(node);
+    if (node != &fuco_node_empty) {
+        free(node);
+    }
 }
 
 fuco_node_t *fuco_node_add_child(fuco_node_t *node, fuco_node_t *child, 
@@ -403,6 +424,34 @@ void fuco_node_unparse_write(fuco_node_t *node, FILE *file) {
             fuco_node_unparse_write(sub, file);
             fprintf(file, ";");
             break;
+
+        case FUCO_NODE_IF_ELSE:
+            fprintf(file, "if ");
+
+            sub = node->children[FUCO_LAYOUT_IF_ELSE_COND];
+            fuco_node_unparse_write(sub, file);
+            fprintf(file, " ");
+
+            sub = node->children[FUCO_LAYOUT_IF_ELSE_TRUE_BODY];
+            fuco_node_unparse_write(sub, file);
+            
+            sub = node->children[FUCO_LAYOUT_IF_ELSE_FALSE_BODY];
+            if (sub->type != FUCO_NODE_EMPTY) {
+                fprintf(file, " else ");
+                fuco_node_unparse_write(sub, file);
+            }
+            break;
+
+        case FUCO_NODE_WHILE:
+            fprintf(file, "while ");
+
+            sub = node->children[FUCO_LAYOUT_WHILE_COND];
+            fuco_node_unparse_write(sub, file);
+            fprintf(file, " ");
+            
+            sub = node->children[FUCO_LAYOUT_WHILE_BODY];
+            fuco_node_unparse_write(sub, file);
+            break;
     }
 }
 
@@ -426,6 +475,8 @@ bool fuco_node_has_type(fuco_node_t *node) {
         case FUCO_NODE_PARAM:
         case FUCO_NODE_ARG_LIST:
         case FUCO_NODE_RETURN:
+        case FUCO_NODE_IF_ELSE:
+        case FUCO_NODE_WHILE:
         case FUCO_NODE_TYPE_IDENTIFIER:
             return false;
 
@@ -866,6 +917,14 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
             }
             break;
 
+        case FUCO_NODE_IF_ELSE:
+            /* TODO */
+            break;
+
+        case FUCO_NODE_WHILE:
+            /* TODO */
+            break;
+
         case FUCO_NODE_TYPE_IDENTIFIER:
             node->symbol = fuco_scope_lookup_token(scope, node->token);
             if (node->symbol == NULL) {
@@ -949,6 +1008,14 @@ void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir,
             fuco_node_generate_ir_propagate(node, ir, obj);
             fuco_ir_add_instr_imm48_label(ir, obj, FUCO_OPCODE_RETQ, 
                                           ir->objects[obj].paramsize_label);
+            break;
+
+        case FUCO_NODE_IF_ELSE:
+            /* TODO */
+            break;
+
+        case FUCO_NODE_WHILE:
+            /* TODO */
             break;
     }
 }

@@ -19,5 +19,21 @@ def inline [ % ](x: Int, y: Int) -> Int {
 }
 
 def main() -> Int {
+    while 1 {
+        return 5;
+    }
+
+    if 5 + 3 {
+        return 2;
+    }
+
+    if 0 {
+        return 7;
+    } else {
+        while 0 {
+            return 4;
+        }
+    }
+
     return 16 / 2 + 3;
 }
