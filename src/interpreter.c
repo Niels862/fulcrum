@@ -225,8 +225,9 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
     clock_t end = clock();    
     double time = (double)(end - start) / CLOCKS_PER_SEC;
 
-    fprintf(stderr, "Executed %ld instructions in %f seconds\n", 
-            instr_count, time);
+    fprintf(stderr, "Executed %ld instructions in %f seconds"
+            " at %lld instructions per second\n",
+            instr_count, time, (long long)(instr_count / time));
     fprintf(stderr, "Program finished with exit code %ld\n", exit_code);
 
     fuco_program_destruct(&program);

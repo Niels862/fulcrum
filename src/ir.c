@@ -104,7 +104,8 @@ fuco_ir_unit_t *fuco_ir_add_unit(fuco_ir_t *ir, size_t obj,
     
     if (object->size >= object->cap) {
         object->cap *= 2;
-        object->units = malloc(object->cap * sizeof(fuco_ir_unit_t));
+        object->units = realloc(object->units, 
+                                object->cap * sizeof(fuco_ir_unit_t));
     }
 
     fuco_ir_unit_t *unit = &object->units[object->size];
