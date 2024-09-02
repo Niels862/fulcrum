@@ -166,18 +166,9 @@ fuco_node_t *fuco_parse_function_declaration(fuco_parser_t *parser) {
 
     if (!success) {
         fuco_node_free(node);
-
-        if (params != NULL) {
-            fuco_node_free(params);
-        }
-
-        if (body != NULL) {
-            fuco_node_free(body);
-        }
-
-        if (ret_type != NULL) {
-            fuco_node_free(ret_type);
-        }
+        fuco_node_free(params);
+        fuco_node_free(body);
+        fuco_node_free(ret_type);
 
         return NULL;
     }
@@ -328,14 +319,8 @@ fuco_node_t *fuco_parse_if_else(fuco_parser_t *parser) {
 
     if (!success) {
         fuco_node_free(node);
-
-        if (cond != NULL) {
-            fuco_node_free(node);
-        }
-
-        if (true_body != NULL) {
-            fuco_node_free(true_body);
-        }
+        fuco_node_free(node);
+        fuco_node_free(true_body);
 
         return NULL;
     }
@@ -355,14 +340,8 @@ fuco_node_t *fuco_parse_while(fuco_parser_t *parser) {
         || (cond = fuco_parse_expression(parser)) == NULL
         || (body = fuco_parse_braced_block(parser)) == NULL) {
         fuco_node_free(node);
-
-        if (cond != NULL) {
-            fuco_node_free(node);
-        }
-
-        if (body != NULL) {
-            fuco_node_free(node);
-        }
+        fuco_node_free(node);
+        fuco_node_free(node);
 
         return NULL;
     }
