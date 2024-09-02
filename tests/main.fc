@@ -43,7 +43,7 @@ def inline [ >= ](x: Int, y: Int) -> Int {
 }
 
 def main() -> Int {
-    while 1 {
+    if 0 {
         return 42;
     }
 

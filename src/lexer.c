@@ -240,7 +240,7 @@ fuco_tstream_t fuco_lexer_lex(fuco_lexer_t *lexer) {
 
             if (type == FUCO_TOKEN_EMPTY) {
                 fuco_syntax_error(&lexer->start, "invalid character: '%s'", 
-                                  fuco_repr_char(lexer->c));
+                                  fuco_repr_char(lexer->strbuf.data[0]));
                 return NULL;
             }
 
