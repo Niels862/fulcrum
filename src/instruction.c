@@ -12,17 +12,26 @@ char *fuco_opcode_get_mnemonic(fuco_opcode_t opcode) {
         case FUCO_OPCODE_CALL:
             return "call";
 
-        case FUCO_OPCODE_RETQ:
-            return "retq";
+        case FUCO_OPCODE_QRET:
+            return "qret";
 
-        case FUCO_OPCODE_PUSHQ:
-            return "pushq";
+        case FUCO_OPCODE_QPUSH:
+            return "qpush";
 
-        case FUCO_OPCODE_LOADQ:
-            return "loadq";
+        case FUCO_OPCODE_QLOAD:
+            return "qload";
 
-        case FUCO_OPCODE_RLOADQ:
-            return "rloadq";
+        case FUCO_OPCODE_QRLOAD:
+            return "qrload";
+
+        case FUCO_OPCODE_JUMP:
+            return "jump";
+
+        case FUCO_OPCODE_BRTRUE:
+            return "brtrue";
+
+        case FUCO_OPCODE_BRFALSE:
+            return "brfalse";
 
         case FUCO_OPCODE_IADD:
             return "iadd";
@@ -85,10 +94,13 @@ fuco_instr_layout_t fuco_opcode_get_layout(fuco_opcode_t opcode) {
             return FUCO_INSTR_LAYOUT_NO_IMM;
 
         case FUCO_OPCODE_CALL:
-        case FUCO_OPCODE_RETQ:
-        case FUCO_OPCODE_PUSHQ:
-        case FUCO_OPCODE_LOADQ:
-        case FUCO_OPCODE_RLOADQ:
+        case FUCO_OPCODE_QRET:
+        case FUCO_OPCODE_QPUSH:
+        case FUCO_OPCODE_QLOAD:
+        case FUCO_OPCODE_QRLOAD:
+        case FUCO_OPCODE_JUMP:
+        case FUCO_OPCODE_BRTRUE:
+        case FUCO_OPCODE_BRFALSE:
             return FUCO_INSTR_LAYOUT_IMM48;
 
         case FUCO_OPCODES_N:

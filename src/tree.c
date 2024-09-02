@@ -999,18 +999,18 @@ void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir,
             break;
 
         case FUCO_NODE_VARIABLE:
-            fuco_ir_add_instr_imm48_label(ir, obj, FUCO_OPCODE_RLOADQ, 
+            fuco_ir_add_instr_imm48_label(ir, obj, FUCO_OPCODE_QRLOAD, 
                                           node->symbol->id);
             break;
 
         case FUCO_NODE_INTEGER:
-            fuco_ir_add_instr_imm48(ir, obj, FUCO_OPCODE_PUSHQ, 
+            fuco_ir_add_instr_imm48(ir, obj, FUCO_OPCODE_QPUSH, 
                                    *(uint64_t *)node->token->data);
             break;
 
         case FUCO_NODE_RETURN:
             fuco_node_generate_ir_propagate(node, ir, obj);
-            fuco_ir_add_instr_imm48_label(ir, obj, FUCO_OPCODE_RETQ, 
+            fuco_ir_add_instr_imm48_label(ir, obj, FUCO_OPCODE_QRET, 
                                           ir->objects[obj].paramsize_label);
             break;
 

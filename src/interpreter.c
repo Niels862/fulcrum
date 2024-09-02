@@ -85,7 +85,7 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
                 program.ip = imm48 - 1;
                 break;
 
-            case FUCO_OPCODE_RETQ:
+            case FUCO_OPCODE_QRET:
                 retq = fuco_program_qpop(&program);
                 program.sp = program.bp;
                 program.bp = fuco_program_qpop(&program);
@@ -94,18 +94,34 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
                 fuco_program_qpush(&program, retq);
                 break;
 
-            case FUCO_OPCODE_PUSHQ:
+            case FUCO_OPCODE_QPUSH:
                 fuco_program_qpush(&program, immq);
                 break;
 
-            case FUCO_OPCODE_LOADQ:
+            case FUCO_OPCODE_QLOAD:
                 immq = *(uint64_t *)(program.stack + simm48);
                 fuco_program_qpush(&program, immq);
                 break;
 
-            case FUCO_OPCODE_RLOADQ:
+            case FUCO_OPCODE_QRLOAD:
                 immq = *(uint64_t *)(program.stack + program.bp + simm48);
                 fuco_program_qpush(&program, immq);
+                break;
+
+            case FUCO_OPCODE_JUMP:
+                program.ip = immq - 1;
+                break;
+
+            case FUCO_OPCODE_BRTRUE:
+                if (fuco_program_qpop(&program) != 0) {
+                    program.ip = immq - 1;
+                }
+                break;
+
+            case FUCO_OPCODE_BRFALSE:
+                if (fuco_program_qpop(&program) == 0) {
+                    program.ip = immq - 1;
+                }
                 break;
 
             case FUCO_OPCODE_IADD:
