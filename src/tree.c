@@ -922,11 +922,15 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
             break;
 
         case FUCO_NODE_IF_ELSE:
-            /* TODO */
+            if (fuco_node_resolve_local_propagate(node, table, scope, ctx)) {
+                return 1;
+            }
             break;
 
         case FUCO_NODE_WHILE:
-            /* TODO */
+            if (fuco_node_resolve_local_propagate(node, table, scope, ctx)) {
+                return 1;
+            }
             break;
 
         case FUCO_NODE_TYPE_IDENTIFIER:
@@ -951,6 +955,40 @@ void fuco_node_generate_ir_propagate(fuco_node_t *node, fuco_ir_t *ir,
         fuco_node_generate_ir(node->children[i], ir, obj);
     }
 }
+
+void fuco_node_generate_ir_if_else(fuco_node_t *node, fuco_ir_t *ir, 
+                                   size_t obj) {
+    assert(node->type == FUCO_NODE_IF_ELSE);
+
+    fuco_ir_label_t label_end = fuco_ir_next_label(ir);
+    fuco_ir_label_t label_false = fuco_ir_next_label(ir);
+
+    fuco_node_t *cond = node->children[FUCO_LAYOUT_IF_ELSE_COND];
+    fuco_node_generate_ir(cond, ir, obj);
+
+    fuco_ir_add_instr_imm48_label(ir, obj, FUCO_OPCODE_BRFALSE, label_false);
+
+    fuco_node_t *true_body = node->children[FUCO_LAYOUT_IF_ELSE_TRUE_BODY];
+    fuco_node_generate_ir(true_body, ir, obj);
+    fuco_ir_add_instr_imm48_label(ir, obj, FUCO_OPCODE_JUMP, label_end);
+
+    fuco_ir_add_label(ir, obj, label_false);
+
+    fuco_node_t *false_body = node->children[FUCO_LAYOUT_IF_ELSE_FALSE_BODY];
+    fuco_node_generate_ir(false_body, ir, obj);
+
+    fuco_ir_add_label(ir, obj, label_end);
+}
+
+void fuco_node_generate_ir_while(fuco_node_t *node, fuco_ir_t *ir, 
+                                 size_t obj) {
+    FUCO_UNUSED(ir), FUCO_UNUSED(obj);
+
+    assert(node->type == FUCO_NODE_WHILE);
+
+    FUCO_NOT_IMPLEMENTED();
+}
+
 
 void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir, 
                            size_t obj) {
@@ -1015,7 +1053,7 @@ void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir,
             break;
 
         case FUCO_NODE_IF_ELSE:
-            /* TODO */
+            fuco_node_generate_ir_if_else(node, ir, obj);
             break;
 
         case FUCO_NODE_WHILE:

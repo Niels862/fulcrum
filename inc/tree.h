@@ -172,6 +172,12 @@ int fuco_node_resolve_local(fuco_node_t *node, fuco_symboltable_t *table,
 void fuco_node_generate_ir_propagate(fuco_node_t *node, fuco_ir_t *ir, 
                                      size_t obj);
 
+void fuco_node_generate_ir_if_else(fuco_node_t *node, fuco_ir_t *ir, 
+                                   size_t obj);
+
+void fuco_node_generate_ir_while(fuco_node_t *node, fuco_ir_t *ir, 
+                                 size_t obj);
+
 void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir, 
                            size_t obj);
 
