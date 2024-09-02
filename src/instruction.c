@@ -39,11 +39,11 @@ char *fuco_opcode_get_mnemonic(fuco_opcode_t opcode) {
         case FUCO_OPCODE_IMOD:
             return "imod";
 
-        case FUCO_OPCODE_EQ:
-            return "eq";
+        case FUCO_OPCODE_IEQ:
+            return "ieq";
 
-        case FUCO_OPCODE_NE:
-            return "ne";
+        case FUCO_OPCODE_INE:
+            return "ine";
 
         case FUCO_OPCODE_ILT:
             return "ilt";
@@ -75,8 +75,8 @@ fuco_instr_layout_t fuco_opcode_get_layout(fuco_opcode_t opcode) {
         case FUCO_OPCODE_IMUL:
         case FUCO_OPCODE_IDIV:
         case FUCO_OPCODE_IMOD:
-        case FUCO_OPCODE_EQ:
-        case FUCO_OPCODE_NE:
+        case FUCO_OPCODE_IEQ:
+        case FUCO_OPCODE_INE:
         case FUCO_OPCODE_ILT:
         case FUCO_OPCODE_ILE:
         case FUCO_OPCODE_IGT:
@@ -105,8 +105,8 @@ size_t fuco_opcode_get_arity(fuco_opcode_t opcode) {
         case FUCO_OPCODE_IMUL:
         case FUCO_OPCODE_IDIV:
         case FUCO_OPCODE_IMOD:
-        case FUCO_OPCODE_EQ:
-        case FUCO_OPCODE_NE:
+        case FUCO_OPCODE_IEQ:
+        case FUCO_OPCODE_INE:
         case FUCO_OPCODE_ILT:
         case FUCO_OPCODE_ILE:
         case FUCO_OPCODE_IGT:
@@ -130,8 +130,8 @@ fuco_node_t *fuco_opcode_get_argtype(fuco_opcode_t opcode,
         case FUCO_OPCODE_IMUL:
         case FUCO_OPCODE_IDIV:
         case FUCO_OPCODE_IMOD:
-        case FUCO_OPCODE_EQ:
-        case FUCO_OPCODE_NE:
+        case FUCO_OPCODE_IEQ:
+        case FUCO_OPCODE_INE:
         case FUCO_OPCODE_ILT:
         case FUCO_OPCODE_ILE:
         case FUCO_OPCODE_IGT:
@@ -154,8 +154,8 @@ fuco_node_t *fuco_opcode_get_rettype(fuco_opcode_t opcode,
         case FUCO_OPCODE_IDIV:
         case FUCO_OPCODE_IMOD:
         /* TODO: actually (...) -> Bool */
-        case FUCO_OPCODE_EQ:
-        case FUCO_OPCODE_NE:
+        case FUCO_OPCODE_IEQ:
+        case FUCO_OPCODE_INE:
         case FUCO_OPCODE_ILT:
         case FUCO_OPCODE_ILE:
         case FUCO_OPCODE_IGT:

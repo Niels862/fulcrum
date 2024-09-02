@@ -19,11 +19,11 @@ def inline [ % ](x: Int, y: Int) -> Int {
 }
 
 def inline [ == ](x: Int, y: Int) -> Int {
-    return %eq(x, y);
+    return %ieq(x, y);
 }
 
 def inline [ != ](x: Int, y: Int) -> Int {
-    return %ne(x, y);
+    return %ine(x, y);
 }
 
 def inline [ < ](x: Int, y: Int) -> Int {
