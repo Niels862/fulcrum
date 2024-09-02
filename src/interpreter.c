@@ -138,6 +138,42 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
                 fuco_program_qpush(&program, x1 % x2);
                 break;
 
+            case FUCO_OPCODE_EQ:
+                x1 = fuco_program_qpop(&program);
+                x2 = fuco_program_qpop(&program);
+                fuco_program_qpush(&program, x1 == x2);
+                break;
+
+            case FUCO_OPCODE_NE:
+                x1 = fuco_program_qpop(&program);
+                x2 = fuco_program_qpop(&program);
+                fuco_program_qpush(&program, x1 != x2);
+                break;
+
+            case FUCO_OPCODE_ILT:
+                x1 = fuco_program_qpop(&program);
+                x2 = fuco_program_qpop(&program);
+                fuco_program_qpush(&program, x1 < x2);
+                break;
+
+            case FUCO_OPCODE_ILE:
+                x1 = fuco_program_qpop(&program);
+                x2 = fuco_program_qpop(&program);
+                fuco_program_qpush(&program, x1 <= x2);
+                break;
+
+            case FUCO_OPCODE_IGT:
+                x1 = fuco_program_qpop(&program);
+                x2 = fuco_program_qpop(&program);
+                fuco_program_qpush(&program, x1 > x2);
+                break;
+
+            case FUCO_OPCODE_IGE:
+                x1 = fuco_program_qpop(&program);
+                x2 = fuco_program_qpop(&program);
+                fuco_program_qpush(&program, x1 >= x2);
+                break;
+
             case FUCO_OPCODE_EXIT:
                 exit_code = fuco_program_qpop(&program);
                 running = false;

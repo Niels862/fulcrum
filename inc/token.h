@@ -52,6 +52,12 @@ typedef enum {
     FUCO_TOKEN_ASTERISK,
     FUCO_TOKEN_SLASH,
     FUCO_TOKEN_PERCENT,
+    FUCO_TOKEN_EQ,
+    FUCO_TOKEN_NE,
+    FUCO_TOKEN_GT,
+    FUCO_TOKEN_GE,
+    FUCO_TOKEN_LT,
+    FUCO_TOKEN_LE,
 
     FUCO_N_TOKENTYPES
 } fuco_tokentype_t;

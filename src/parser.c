@@ -5,6 +5,12 @@
 #include <assert.h>
 
 fuco_operator_specification_t fuco_operator_specs[] = {
+    { .associativity = FUCO_ASSOCIATIVE_LEFT,
+      { FUCO_TOKEN_EQ, FUCO_TOKEN_NE } 
+    }, 
+    { .associativity = FUCO_ASSOCIATIVE_LEFT,
+      { FUCO_TOKEN_GT, FUCO_TOKEN_GE, FUCO_TOKEN_LT, FUCO_TOKEN_LE } 
+    },
     { .associativity = FUCO_ASSOCIATIVE_LEFT, 
       { FUCO_TOKEN_PLUS, FUCO_TOKEN_MINUS } 
     },
@@ -29,7 +35,13 @@ void fuco_parser_setup_instrs(fuco_parser_t *parser) {
         FUCO_OPCODE_ISUB,
         FUCO_OPCODE_IMUL,
         FUCO_OPCODE_IDIV,
-        FUCO_OPCODE_IMOD
+        FUCO_OPCODE_IMOD,
+        FUCO_OPCODE_EQ,
+        FUCO_OPCODE_NE,
+        FUCO_OPCODE_ILT,
+        FUCO_OPCODE_ILE,
+        FUCO_OPCODE_IGT,
+        FUCO_OPCODE_IGE
     };
 
     for (size_t i = 0; i < sizeof(instrs) / sizeof(*instrs); i++) {
@@ -496,7 +508,7 @@ fuco_node_t *fuco_parse_args(fuco_parser_t *parser) {
 
     if (!fuco_parser_check(parser, FUCO_TOKEN_BRACKET_CLOSE)) {
         do {
-            if ((arg = fuco_parse_value(parser)) == NULL) {
+            if ((arg = fuco_parse_expression(parser)) == NULL) {
                 fuco_node_free(node);
                 return NULL;
             }

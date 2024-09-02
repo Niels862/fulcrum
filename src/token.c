@@ -89,6 +89,12 @@ fuco_tokenkind_t fuco_tokentype_kind(fuco_tokentype_t type) {
         case FUCO_TOKEN_ASTERISK:
         case FUCO_TOKEN_SLASH:
         case FUCO_TOKEN_PERCENT:
+        case FUCO_TOKEN_EQ:
+        case FUCO_TOKEN_NE:
+        case FUCO_TOKEN_GT:
+        case FUCO_TOKEN_GE:
+        case FUCO_TOKEN_LT:
+        case FUCO_TOKEN_LE:
             return FUCO_TOKENKIND_OPERATOR;
 
         default:
@@ -201,6 +207,24 @@ char *fuco_tokentype_string(fuco_tokentype_t type) {
 
         case FUCO_TOKEN_PERCENT:
             return "%"; 
+
+        case FUCO_TOKEN_EQ:
+            return "==";
+
+        case FUCO_TOKEN_NE:
+            return "!=";
+
+        case FUCO_TOKEN_GT:
+            return ">";
+
+        case FUCO_TOKEN_GE:
+            return ">=";
+
+        case FUCO_TOKEN_LT:
+            return "<";
+
+        case FUCO_TOKEN_LE:
+            return "<=";
 
         default:
             break;

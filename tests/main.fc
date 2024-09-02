@@ -18,22 +18,30 @@ def inline [ % ](x: Int, y: Int) -> Int {
     return %imod(x, y);
 }
 
+def inline [ == ](x: Int, y: Int) -> Int {
+    return %eq(x, y);
+}
+
+def inline [ != ](x: Int, y: Int) -> Int {
+    return %ne(x, y);
+}
+
+def inline [ < ](x: Int, y: Int) -> Int {
+    return %ilt(x, y);
+}
+
+def inline [ <= ](x: Int, y: Int) -> Int {
+    return %ile(x, y);
+}
+
+def inline [ > ](x: Int, y: Int) -> Int {
+    return %igt(x, y);
+}
+
+def inline [ >= ](x: Int, y: Int) -> Int {
+    return %ige(x, y);
+}
+
 def main() -> Int {
-    while 1 {
-        return 5;
-    }
-
-    if 5 + 3 {
-        return 2;
-    }
-
-    if 0 {
-        return 7;
-    } {
-        while 0 {
-            return 4;
-        }
-    }
-
-    return 16 / 2 + 3;
+    return 5 / 2 == 2;
 }
