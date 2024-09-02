@@ -675,6 +675,8 @@ int fuco_node_coerce_type(fuco_node_t **pnode, fuco_node_t *type,
 
     fuco_typematch_t match = fuco_node_type_match(node->data.datatype, type);
     if (match != FUCO_TYPEMATCH_MATCH) {
+        FUCO_NOT_IMPLEMENTED();
+        
         return 1;
     }
 
@@ -839,6 +841,13 @@ int fuco_node_resolve_instr(fuco_node_t *node, fuco_symboltable_t *table,
     fuco_node_t *args = node->children[FUCO_LAYOUT_INSTR_ARGS];
 
     size_t arity = fuco_opcode_get_arity(node->opcode);
+    if (args->count != arity) {
+        fuco_syntax_error(&node->token->source, 
+                          "%s expects %ld arguments, but got %ld", 
+                          fuco_token_string(node->token), arity, node->count);
+        return 1;
+    }
+
     for (size_t i = 0; i < arity; i++) {
         fuco_node_t *type = fuco_opcode_get_argtype(node->opcode, table, i);
 

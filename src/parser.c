@@ -41,7 +41,9 @@ void fuco_parser_setup_instrs(fuco_parser_t *parser) {
         FUCO_OPCODE_ILT,
         FUCO_OPCODE_ILE,
         FUCO_OPCODE_IGT,
-        FUCO_OPCODE_IGE
+        FUCO_OPCODE_IGE,
+        FUCO_OPCODE_ITOF,
+        FUCO_OPCODE_FTOI
     };
 
     for (size_t i = 0; i < sizeof(instrs) / sizeof(*instrs); i++) {

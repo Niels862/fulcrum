@@ -57,6 +57,7 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
     int64_t exit_code = -1;
     
     uint64_t x1, x2;
+    double f1;
 
     uint64_t instr_count = 0;
     bool running = true;
@@ -188,6 +189,18 @@ int32_t fuco_interpret(fuco_instr_t *instrs) {
                 x1 = fuco_program_qpop(&program);
                 x2 = fuco_program_qpop(&program);
                 fuco_program_qpush(&program, x1 >= x2);
+                break;
+
+            case FUCO_OPCODE_ITOF:
+                fuco_program_pop(&program, &x1, sizeof(uint64_t));
+                f1 = (double)x1;
+                fuco_program_push(&program, &f1, sizeof(double));
+                break;
+
+            case FUCO_OPCODE_FTOI:
+                fuco_program_pop(&program, &f1, sizeof(double));
+                x1 = (uint64_t)f1;
+                fuco_program_push(&program, &x1, sizeof(uint64_t));
                 break;
 
             case FUCO_OPCODE_EXIT:

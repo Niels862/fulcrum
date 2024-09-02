@@ -66,6 +66,12 @@ char *fuco_opcode_get_mnemonic(fuco_opcode_t opcode) {
         case FUCO_OPCODE_IGE:
             return "ige";
 
+        case FUCO_OPCODE_ITOF:
+            return "itof";
+
+        case FUCO_OPCODE_FTOI:
+            return "ftoi";
+
         case FUCO_OPCODE_EXIT:
             return "exit";
 
@@ -90,6 +96,8 @@ fuco_instr_layout_t fuco_opcode_get_layout(fuco_opcode_t opcode) {
         case FUCO_OPCODE_ILE:
         case FUCO_OPCODE_IGT:
         case FUCO_OPCODE_IGE:
+        case FUCO_OPCODE_ITOF:
+        case FUCO_OPCODE_FTOI:
         case FUCO_OPCODE_EXIT:
             return FUCO_INSTR_LAYOUT_NO_IMM;
 
@@ -112,6 +120,10 @@ fuco_instr_layout_t fuco_opcode_get_layout(fuco_opcode_t opcode) {
 
 size_t fuco_opcode_get_arity(fuco_opcode_t opcode) {
     switch (opcode) {
+        case FUCO_OPCODE_ITOF:
+        case FUCO_OPCODE_FTOI:
+            return 1;
+
         case FUCO_OPCODE_IADD:
         case FUCO_OPCODE_ISUB:
         case FUCO_OPCODE_IMUL:
@@ -148,7 +160,11 @@ fuco_node_t *fuco_opcode_get_argtype(fuco_opcode_t opcode,
         case FUCO_OPCODE_ILE:
         case FUCO_OPCODE_IGT:
         case FUCO_OPCODE_IGE:     
+        case FUCO_OPCODE_ITOF:
             return fuco_symboltable_get_type(table, FUCO_SYMID_INT);
+
+        case FUCO_OPCODE_FTOI:
+            return fuco_symboltable_get_type(table, FUCO_SYMID_FLOAT);
 
         default:
             break;
@@ -172,7 +188,11 @@ fuco_node_t *fuco_opcode_get_rettype(fuco_opcode_t opcode,
         case FUCO_OPCODE_ILE:
         case FUCO_OPCODE_IGT:
         case FUCO_OPCODE_IGE:
+        case FUCO_OPCODE_FTOI:
             return fuco_symboltable_get_type(table, FUCO_SYMID_INT);
+
+        case FUCO_OPCODE_ITOF:
+            return fuco_symboltable_get_type(table, FUCO_SYMID_FLOAT);
 
         default:
             break;
