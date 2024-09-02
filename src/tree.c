@@ -982,11 +982,23 @@ void fuco_node_generate_ir_if_else(fuco_node_t *node, fuco_ir_t *ir,
 
 void fuco_node_generate_ir_while(fuco_node_t *node, fuco_ir_t *ir, 
                                  size_t obj) {
-    FUCO_UNUSED(ir), FUCO_UNUSED(obj);
-
     assert(node->type == FUCO_NODE_WHILE);
 
-    FUCO_NOT_IMPLEMENTED();
+    fuco_ir_label_t label_repeat = fuco_ir_next_label(ir);
+    fuco_ir_label_t label_end = fuco_ir_next_label(ir);
+
+    fuco_ir_add_label(ir, obj, label_repeat);
+
+    fuco_node_t *cond = node->children[FUCO_LAYOUT_WHILE_COND];
+    fuco_node_generate_ir(cond, ir, obj);
+    fuco_ir_add_instr_imm48_label(ir, obj, FUCO_OPCODE_BRFALSE, label_end);
+
+    fuco_node_t *body = node->children[FUCO_LAYOUT_WHILE_BODY];
+    fuco_node_generate_ir(body, ir, obj);
+
+    fuco_ir_add_instr_imm48_label(ir, obj, FUCO_OPCODE_JUMP, label_repeat);
+
+    fuco_ir_add_label(ir, obj, label_end);
 }
 
 
@@ -1057,7 +1069,7 @@ void fuco_node_generate_ir(fuco_node_t *node, fuco_ir_t *ir,
             break;
 
         case FUCO_NODE_WHILE:
-            /* TODO */
+            fuco_node_generate_ir_while(node, ir, obj);
             break;
     }
 }
