@@ -82,8 +82,26 @@ fuco_symbol_t *fuco_scope_lookup_token(fuco_scope_t *scope,
 fuco_symbol_t *fuco_scope_lookup_conversion(fuco_scope_t *scope, 
                                             fuco_node_t *from, 
                                             fuco_node_t *to) {
-    FUCO_UNUSED(scope), FUCO_UNUSED(from), FUCO_UNUSED(to);
+    char *str = fuco_tokentype_string(FUCO_TOKEN_CONVERT);
+    fuco_symbol_t *conv = fuco_scope_lookup(scope, str, NULL, false);
     
+    while (conv != NULL) {
+        fuco_node_t *def = conv->def;
+        fuco_node_t *params = def->children[FUCO_LAYOUT_FUNCTION_PARAMS];
+        fuco_node_t *from_type = params->children[0]
+                                       ->children[FUCO_LAYOUT_PARAM_TYPE];
+        fuco_node_t *to_type = def->children[FUCO_LAYOUT_FUNCTION_RET_TYPE];
+
+        if (fuco_node_type_equal(from_type, from) 
+            && fuco_node_type_equal(to_type, to)) {
+            fuco_syntax_error(&conv->token->source, "found match here");
+
+            return conv;
+        }
+
+        conv = conv->link;
+    }
+
     return NULL;
 }
 
