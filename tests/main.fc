@@ -1,3 +1,7 @@
+def convert(x: Int) -> Float {
+    return %itof(x);
+}
+
 def inline [ + ](x: Int, y: Int) -> Int {
     return %iadd(x, y);
 }
@@ -49,6 +53,6 @@ def fib(x: Int) -> Int {
     return fib(x - 1) + fib(x - 2);
 }
 
-def main() -> Int {
-    return fib(38);
+def main() -> Float {
+    return 12;
 }

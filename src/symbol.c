@@ -34,8 +34,8 @@ void fuco_scope_init(fuco_scope_t *scope, fuco_scope_t *prev) {
     /* The maps do not own the identifiers so they are not freed */
     fuco_map_init(&scope->names, fuco_string_hash, 
                   fuco_string_equal, NULL, NULL);
-    fuco_map_init(&scope->conversions, fuco_string_hash, 
-                  fuco_string_equal, NULL, NULL);
+    fuco_map_init(&scope->conversions, fuco_node_signature_hash, 
+                  fuco_node_signature_equal, NULL, NULL);
     scope->prev = prev;
 }
 
@@ -79,6 +79,14 @@ fuco_symbol_t *fuco_scope_lookup_token(fuco_scope_t *scope,
                              &token->source, true);
 }
 
+fuco_symbol_t *fuco_scope_lookup_conversion(fuco_scope_t *scope, 
+                                            fuco_node_t *from, 
+                                            fuco_node_t *to) {
+    FUCO_UNUSED(scope), FUCO_UNUSED(from), FUCO_UNUSED(to);
+    
+    return NULL;
+}
+
 fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope, 
                                  fuco_token_t *token, fuco_symbol_t *symbol) {        
     void **value = fuco_map_insert(&scope->names, 
@@ -91,28 +99,25 @@ fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope,
             case FUCO_SYMBOL_NULL:
                 FUCO_UNREACHED();
 
+            case FUCO_SYMBOL_TYPE:
             case FUCO_SYMBOL_VARIABLE:
                 fuco_collision_error(token);
                 return NULL;
 
             case FUCO_SYMBOL_FUNCTION:
-                if (prev_symbol->type == FUCO_SYMBOL_TYPE) {
-                    if (prev_symbol->link != NULL) {
-                        symbol->link = prev_symbol->link;
-                    }
-
-                    prev_symbol->link = symbol;
-                    break;
-                }
-
-                __attribute__((fallthrough));
-            case FUCO_SYMBOL_TYPE:
                 if (prev_symbol->type == FUCO_SYMBOL_FUNCTION) {
                     *value = symbol;
                     symbol->link = prev_symbol;
                 } else {
                     fuco_collision_error(token);
                     return NULL;
+                }
+
+                if (token->type == FUCO_TOKEN_CONVERT) {
+                    if (fuco_map_insert(&scope->conversions, 
+                                        symbol->def, symbol)) {
+                        FUCO_UNREACHED();
+                    }
                 }
         }
     }

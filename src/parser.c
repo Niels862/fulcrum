@@ -164,12 +164,17 @@ fuco_node_t *fuco_parse_function_declaration(fuco_parser_t *parser) {
     FUCO_UNUSED(inlined);
 
     if (fuco_parser_accept(parser, FUCO_TOKEN_SQBRACKET_OPEN, NULL)) {
+        /* TODO: filter overloadable operators */
         fuco_parser_move(parser, node);
         fuco_parser_advance(parser);
 
         success = fuco_parser_expect(parser, FUCO_TOKEN_SQBRACKET_CLOSE, NULL);
-    } else {
-        success = fuco_parser_expect(parser, FUCO_TOKEN_IDENTIFIER, node);
+    } else if (!fuco_parser_accept(parser, FUCO_TOKEN_CONVERT, node)
+               && !fuco_parser_accept(parser, FUCO_TOKEN_IDENTIFIER, node)) {
+        fuco_syntax_error(&parser->tstream->source, 
+                          "expected function identifier, but got %s", 
+                          fuco_token_static_string(parser->tstream));
+        success = false;
     }
 
     success = success 

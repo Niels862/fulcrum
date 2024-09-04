@@ -94,6 +94,10 @@ fuco_symbol_t *fuco_scope_lookup(fuco_scope_t *scope, char *ident,
 fuco_symbol_t *fuco_scope_lookup_token(fuco_scope_t *scope, 
                                        fuco_token_t *token);
 
+fuco_symbol_t *fuco_scope_lookup_conversion(fuco_scope_t *scope, 
+                                            fuco_node_t *from, 
+                                            fuco_node_t *to);
+                                            
 fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope, 
                                  fuco_token_t *token, fuco_symbol_t *symbol);
 
