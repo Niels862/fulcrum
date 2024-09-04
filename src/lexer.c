@@ -59,16 +59,16 @@ size_t fuco_filebuf_read(fuco_filebuf_t *filebuf, FILE *file) {
     return filebuf->size;
 }
 
-void fuco_lexer_init(fuco_lexer_t *lexer, char *filename) {
+void fuco_lexer_init(fuco_lexer_t *lexer) {
     lexer->filebuf.i = lexer->filebuf.size = 0;
     lexer->filebuf.eof = true; /* Start at EOF -> 'next' file opened */
 
     fuco_strbuf_init(&lexer->strbuf);
     fuco_tokenlist_init(&lexer->list);
     fuco_textsource_init(&lexer->curr, NULL);
+    fuco_queue_init(&lexer->jobs);
 
     lexer->file = NULL;
-    lexer->filename = filename;
     lexer->c = '\0';
 }
 
@@ -81,24 +81,27 @@ void fuco_lexer_destruct(fuco_lexer_t *lexer) {
     }
 }
 
+void fuco_lexer_add_job(fuco_lexer_t *lexer, char *filename) {
+    fuco_queue_enqueue(&lexer->jobs, filename);
+}
+
 int fuco_lexer_open_next_file(fuco_lexer_t *lexer) {
-    assert(lexer->filename != NULL); /* Should be checked by caller */
+    assert(!fuco_queue_empty(&lexer->jobs));
     
     if (lexer->file != NULL) {
         fclose(lexer->file);
     }
 
-    lexer->file = fopen(lexer->filename, "r");
+    char *filename = fuco_queue_dequeue(&lexer->jobs);
+    
+    lexer->file = fopen(filename, "r");
 
     if (lexer->file == NULL) {
-        fuco_syntax_error(NULL, "could not open file: %s", 
-                          lexer->filename);
+        fuco_syntax_error(NULL, "could not open file: %s", filename);
         return 1;
     }
 
-    fuco_textsource_init(&lexer->curr, lexer->filename);
-
-    lexer->filename = NULL;
+    fuco_textsource_init(&lexer->curr, filename);
 
     lexer->filebuf.i = lexer->filebuf.size = 0;
     lexer->filebuf.eof = false;
@@ -223,7 +226,7 @@ fuco_tstream_t fuco_lexer_lex(fuco_lexer_t *lexer) {
         } else if (lexer->c == -1) {
             fuco_lexer_append_token(lexer, FUCO_TOKEN_END_OF_FILE, NULL, NULL);
 
-            if (lexer->filename == NULL) {
+            if (fuco_queue_empty(&lexer->jobs)) {
                 return fuco_tokenlist_terminate(&lexer->list);
             } else {
                 if (fuco_lexer_open_next_file(lexer)) {

@@ -1,11 +1,15 @@
 #ifndef FUCO_LEXER_H
 #define FUCO_LEXER_H
 
+#define _POSIX_C_SOURCE 200809L
+
 #include "tokenlist.h"
 #include "textsource.h"
 #include "strutils.h"
+#include "queue.h"
 #include <stdint.h>
 #include <stdbool.h>
+#include <sys/stat.h>
 
 #define FUCO_LEXER_FILE_BUF_SIZE 1024
 
@@ -22,8 +26,8 @@ typedef struct {
     fuco_tokenlist_t list;
     fuco_textsource_t start;
     fuco_textsource_t curr;
+    fuco_queue_t jobs;
     FILE *file;
-    char *filename; /* Will be replaced by a queue of files (jobs) later */
     int c;
 } fuco_lexer_t;
 
@@ -43,9 +47,11 @@ uint64_t *fuco_parse_integer(char *lexeme);
 
 size_t fuco_filebuf_read(fuco_filebuf_t *filebuf, FILE *file);
 
-void fuco_lexer_init(fuco_lexer_t *lexer, char *filename);
+void fuco_lexer_init(fuco_lexer_t *lexer);
 
 void fuco_lexer_destruct(fuco_lexer_t *lexer);
+
+void fuco_lexer_add_job(fuco_lexer_t *lexer, char *filename);
 
 int fuco_lexer_open_next_file(fuco_lexer_t *lexer);
 

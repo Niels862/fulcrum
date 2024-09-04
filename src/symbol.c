@@ -35,6 +35,7 @@ void fuco_scope_init(fuco_scope_t *scope, fuco_scope_t *prev) {
     fuco_map_init(&scope->names, fuco_string_hash, 
                   fuco_string_equal, NULL, NULL);
     scope->prev = prev;
+    scope->equivalent = NULL;
 }
 
 void fuco_scope_destruct(fuco_scope_t *scope) {

@@ -53,6 +53,7 @@ typedef struct fuco_scope_t {
     /* from lexeme (char *) to symbol (fuco_symbol_t *) */
     fuco_map_t names;
     struct fuco_scope_t *prev;
+    struct fuco_scope_t **equivalent;
 } fuco_scope_t;
 
 #define FUCO_SYMBOL_CHUNK_SIZE 512

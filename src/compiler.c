@@ -4,7 +4,7 @@
 #include "utils.h"
 
 void fuco_compiler_init(fuco_compiler_t *compiler, char *filename) {
-    fuco_lexer_init(&compiler->lexer, filename);
+    fuco_lexer_init(&compiler->lexer);
     fuco_parser_init(&compiler->parser);
     fuco_symboltable_init(&compiler->table);
     fuco_ir_init(&compiler->ir);
@@ -26,6 +26,8 @@ void fuco_compiler_destruct(fuco_compiler_t *compiler) {
 }
 
 int fuco_compiler_run(fuco_compiler_t *compiler) {
+    fuco_lexer_add_job(&compiler->lexer, compiler->filename);
+
     fuco_tstream_t tstream = fuco_lexer_lex(&compiler->lexer);
     
     if (tstream == NULL) {
