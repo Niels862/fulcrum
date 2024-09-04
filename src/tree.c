@@ -406,7 +406,12 @@ void fuco_node_unparse_write(fuco_node_t *node, FILE *file) {
                 fprintf(file, "%%");
             }
 
-            fprintf(file, "%s", fuco_token_string(node->token));
+            if (node->token == NULL) {
+                /* FIXME: when explicit cast is added, print that here */
+                fprintf(file, "<anonymous>");
+            } else {
+                fprintf(file, "%s", fuco_token_string(node->token));
+            }
 
             sub = node->children[FUCO_LAYOUT_CALL_ARGS];
             fuco_node_unparse_write(sub, file);
@@ -494,37 +499,6 @@ bool fuco_node_has_type(fuco_node_t *node) {
     FUCO_UNREACHED();
 }
 
-/* TODO: better hash function. Use mixing */
-fuco_hashvalue_t fuco_node_type_hash(void *vnode) {
-    fuco_node_t *node = vnode;
-
-    fuco_hashvalue_t hash = (node->symbol == NULL ? 0 : node->symbol->id)
-                            ^ node->type;
-
-    for (size_t i = 0; i < node->count; i++) {
-        hash ^= fuco_node_type_hash(node->children[i]);
-    }
-
-    return hash;
-}
-
-fuco_hashvalue_t fuco_node_signature_hash(void *vnode) {
-    fuco_node_t *node = vnode;
-
-    assert(node->type == FUCO_NODE_FUNCTION);
-
-    fuco_hashvalue_t hash = 0;
-
-    fuco_node_t *params = node->children[FUCO_LAYOUT_FUNCTION_PARAMS];
-    for (size_t i = 0; i < params->count; i++) {
-        hash ^= fuco_node_type_hash(params->children[FUCO_LAYOUT_PARAM_TYPE]);
-    }
-
-    hash ^= fuco_node_type_hash(node->children[FUCO_LAYOUT_FUNCTION_RET_TYPE]);
-
-    return hash;
-}
-
 bool fuco_node_type_equal(fuco_node_t *node, fuco_node_t *other) {
     switch (node->type) {
         case FUCO_NODE_TYPE_IDENTIFIER: 
@@ -539,42 +513,6 @@ bool fuco_node_type_equal(fuco_node_t *node, fuco_node_t *other) {
     }
 
     FUCO_UNREACHED();    
-}
-
-bool fuco_node_signature_equal(void *vnode, void *vother) {
-    fuco_node_t *node = vnode, *other = vother;
-
-    assert(node->type == FUCO_NODE_FUNCTION);
-    assert(other->type == FUCO_NODE_FUNCTION);
-
-    fuco_node_t *node_params = node->children[FUCO_LAYOUT_FUNCTION_PARAMS],
-                *other_params = node->children[FUCO_LAYOUT_FUNCTION_PARAMS];
-
-    if (node_params->count != other_params->count) {
-        return false;
-    }
-
-    size_t arity = node_params->count;
-    for (size_t i = 0; i < arity; i++) {
-        fuco_node_t *node_param = node_params->children[i],
-                    *other_param = other_params->children[i];
-
-        fuco_node_t *node_type = node_param->children[FUCO_LAYOUT_PARAM_TYPE],
-                    *other_type = other_param->children[FUCO_LAYOUT_PARAM_TYPE];
-
-        if (!fuco_node_type_equal(node_type, other_type)) {
-            return false;
-        }
-    }
-
-    fuco_node_t *node_rettype = node->children[FUCO_LAYOUT_FUNCTION_RET_TYPE],
-                *other_rettype = node->children[FUCO_LAYOUT_FUNCTION_RET_TYPE];
-
-    if (!fuco_node_type_equal(node_rettype, other_rettype)) {
-        return false;
-    }
-
-    return true;
 }
 
 void fuco_node_setup_scopes(fuco_node_t *node, fuco_scope_t *scope) {
@@ -716,9 +654,7 @@ int fuco_node_gather_functions(fuco_node_t *node, fuco_symboltable_t *table,
 }
 
 int fuco_node_coerce_type(fuco_node_t **pnode, fuco_node_t *type, 
-                          fuco_scope_t *scope) {
-    FUCO_UNUSED(scope);
-    
+                          fuco_scope_t *scope) {    
     fuco_node_t *node = *pnode;
     assert(node->data.datatype != NULL);
 
@@ -732,11 +668,17 @@ int fuco_node_coerce_type(fuco_node_t **pnode, fuco_node_t *type,
                               "no suitable conversion found");
             return 1;
         }
+
+        fuco_node_t *conv_node = fuco_node_call_new(1, node);
+
+        conv_node->symbol = conv;
+        conv_node->data.datatype = type;
+
+        *pnode = conv_node;
     }
 
     return 0;
 }
-
 
 int fuco_node_resolve_local_propagate(fuco_node_t *node, 
                                       fuco_symboltable_t *table, 

@@ -52,8 +52,6 @@ typedef struct fuco_symbol_t {
 typedef struct fuco_scope_t {
     /* from lexeme (char *) to symbol (fuco_symbol_t *) */
     fuco_map_t names;
-    /* from from-type node (fuco_node_t *) to symbol (fuco_symbol_t *) */
-    fuco_map_t conversions;
     struct fuco_scope_t *prev;
 } fuco_scope_t;
 

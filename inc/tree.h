@@ -126,14 +126,7 @@ void fuco_node_validate(fuco_node_t *node);
 
 bool fuco_node_has_type(fuco_node_t *node);
 
-fuco_hashvalue_t fuco_node_type_hash(void *node);
-
-fuco_hashvalue_t fuco_node_signature_hash(void *node);
-
 bool fuco_node_type_equal(fuco_node_t *node, fuco_node_t *other);
-
-/* Both should be NODE_FUNCTIONs */
-bool fuco_node_signature_equal(void *node, void *other);
 
 void fuco_node_setup_scopes(fuco_node_t *node, fuco_scope_t *scope);
 

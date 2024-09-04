@@ -34,14 +34,11 @@ void fuco_scope_init(fuco_scope_t *scope, fuco_scope_t *prev) {
     /* The maps do not own the identifiers so they are not freed */
     fuco_map_init(&scope->names, fuco_string_hash, 
                   fuco_string_equal, NULL, NULL);
-    fuco_map_init(&scope->conversions, fuco_node_signature_hash, 
-                  fuco_node_signature_equal, NULL, NULL);
     scope->prev = prev;
 }
 
 void fuco_scope_destruct(fuco_scope_t *scope) {
     fuco_map_destruct(&scope->names);
-    fuco_map_destruct(&scope->conversions);
 }
 
 fuco_symbol_t *fuco_scope_traverse(fuco_scope_t **pscope, char *ident) {
@@ -83,19 +80,19 @@ fuco_symbol_t *fuco_scope_lookup_conversion(fuco_scope_t *scope,
                                             fuco_node_t *from, 
                                             fuco_node_t *to) {
     char *str = fuco_tokentype_string(FUCO_TOKEN_CONVERT);
+    
+    /* FUTURE: Like call resolution, also search outer scopes (traverse) */
     fuco_symbol_t *conv = fuco_scope_lookup(scope, str, NULL, false);
     
     while (conv != NULL) {
         fuco_node_t *def = conv->def;
         fuco_node_t *params = def->children[FUCO_LAYOUT_FUNCTION_PARAMS];
-        fuco_node_t *from_type = params->children[0]
-                                       ->children[FUCO_LAYOUT_PARAM_TYPE];
+
+        fuco_node_t *from_type = params->children[0]->data.datatype;
         fuco_node_t *to_type = def->children[FUCO_LAYOUT_FUNCTION_RET_TYPE];
 
         if (fuco_node_type_equal(from_type, from) 
             && fuco_node_type_equal(to_type, to)) {
-            fuco_syntax_error(&conv->token->source, "found match here");
-
             return conv;
         }
 
@@ -129,13 +126,6 @@ fuco_symbol_t *fuco_scope_insert(fuco_scope_t *scope,
                 } else {
                     fuco_collision_error(token);
                     return NULL;
-                }
-
-                if (token->type == FUCO_TOKEN_CONVERT) {
-                    if (fuco_map_insert(&scope->conversions, 
-                                        symbol->def, symbol)) {
-                        FUCO_UNREACHED();
-                    }
                 }
         }
     }
