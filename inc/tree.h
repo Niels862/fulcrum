@@ -82,13 +82,6 @@ struct fuco_node_t {
     struct fuco_node_t *children[];
 };
 
-typedef enum {
-    FUCO_TYPEMATCH_NOMATCH, 
-    FUCO_TYPEMATCH_MATCH,
-
-    FUCO_TYPEMATCH_N /* amount of options for type matches */
-} fuco_typematch_t;
-
 extern fuco_node_t fuco_node_empty;
 
 fuco_node_layout_t fuco_nodetype_get_layout(fuco_nodetype_t type);
@@ -132,8 +125,6 @@ void fuco_node_unparse_write(fuco_node_t *node, FILE *file);
 void fuco_node_validate(fuco_node_t *node);
 
 bool fuco_node_has_type(fuco_node_t *node);
-
-fuco_typematch_t fuco_node_type_match(fuco_node_t *node, fuco_node_t *other);
 
 fuco_hashvalue_t fuco_node_hash(void *node);
 

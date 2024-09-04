@@ -494,22 +494,6 @@ bool fuco_node_has_type(fuco_node_t *node) {
     FUCO_UNREACHED();
 }
 
-fuco_typematch_t fuco_node_type_match(fuco_node_t *node, fuco_node_t *other) {
-    switch (node->type) {
-        case FUCO_NODE_TYPE_IDENTIFIER:
-            assert(other->type == FUCO_NODE_TYPE_IDENTIFIER);
-
-            if (node->symbol->id == other->symbol->id) {
-                return FUCO_TYPEMATCH_MATCH;
-            } else {
-                return FUCO_TYPEMATCH_NOMATCH;
-            }
-
-        default:
-            FUCO_UNREACHED();
-    }
-}
-
 /* TODO: better hash function. Use mixing */
 fuco_hashvalue_t fuco_node_hash(void *data) {
     fuco_node_t *node = data;
@@ -524,8 +508,23 @@ fuco_hashvalue_t fuco_node_hash(void *data) {
     return hash;
 }
 
-bool fuco_node_type_equal(void *node, void *other) {
-    return fuco_node_type_match(node, other) == FUCO_TYPEMATCH_MATCH;
+bool fuco_node_type_equal(void *data_node, void *data_other) {
+    fuco_node_t *node = data_node;
+    fuco_node_t *other = data_other;
+
+    switch (node->type) {
+        case FUCO_NODE_TYPE_IDENTIFIER: 
+            if (other->type != FUCO_NODE_TYPE_IDENTIFIER) {
+                return false;
+            }
+
+            return node->symbol->id == other->symbol->id;
+        
+        default:
+            break;
+    }
+
+    FUCO_UNREACHED();    
 }
 
 void fuco_node_setup_scopes(fuco_node_t *node, fuco_scope_t *scope) {
@@ -673,8 +672,7 @@ int fuco_node_coerce_type(fuco_node_t **pnode, fuco_node_t *type,
     fuco_node_t *node = *pnode;
     assert(node->data.datatype != NULL);
 
-    fuco_typematch_t match = fuco_node_type_match(node->data.datatype, type);
-    if (match != FUCO_TYPEMATCH_MATCH) {
+    if (!fuco_node_type_equal(node->data.datatype, type)) {
         FUCO_NOT_IMPLEMENTED();
         
         return 1;
@@ -754,9 +752,9 @@ int fuco_node_resolve_local_call(fuco_node_t *node, fuco_symboltable_t *table,
         return 1;
     }
 
-    fuco_symbol_t *candidates[FUCO_TYPEMATCH_N];
-    bool multiple[FUCO_TYPEMATCH_N];
-    for (size_t i = 0; i < FUCO_TYPEMATCH_N; i++) {
+    fuco_symbol_t *candidates[2];
+    bool multiple[2];
+    for (size_t i = 0; i < 2; i++) {
         candidates[i] = NULL;
         multiple[i] = false;
     }
@@ -766,7 +764,7 @@ int fuco_node_resolve_local_call(fuco_node_t *node, fuco_symboltable_t *table,
     while (symbol != NULL) {
         fuco_node_t *func = symbol->def;
         fuco_node_t *params = func->children[FUCO_LAYOUT_FUNCTION_PARAMS];
-        fuco_typematch_t match = FUCO_TYPEMATCH_MATCH, arg_match;
+        bool match = true, arg_match;
 
         fuco_node_t *arg_type, *param, *param_type;
 
@@ -779,12 +777,12 @@ int fuco_node_resolve_local_call(fuco_node_t *node, fuco_symboltable_t *table,
                 assert(arg_type != NULL);
                 assert(param_type != NULL);
 
-                arg_match = fuco_node_type_match(arg_type, param_type);
+                arg_match = fuco_node_type_equal(arg_type, param_type);
                 
-                match = FUCO_MIN(match, arg_match);
+                match = match && arg_match;
 
                 /* early termination if not a match */
-                if (match == FUCO_TYPEMATCH_NOMATCH) {
+                if (match == false) {
                     break;
                 }
             }
@@ -800,7 +798,7 @@ int fuco_node_resolve_local_call(fuco_node_t *node, fuco_symboltable_t *table,
     }
     
     /* searches for best matching ('highest') overload */
-    for (size_t i = FUCO_TYPEMATCH_N; i > FUCO_TYPEMATCH_NOMATCH + 1; i--) {
+    for (size_t i = 2; i > 1; i--) {
         size_t idx = i - 1;
         
         if (candidates[idx] != NULL) {
